@@ -1,0 +1,29 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with: {ruby-version: "3.3"}
+      - run: ruby scripts/validate.rb
+      - run: ruby scripts/trigger_eval.rb --check
+      - run: bash -n plugins/done/scripts/quality-gate-stop.sh
+      - name: Validate Claude Code plugin manifest
+        run: |
+          npm install -g @anthropic-ai/claude-code@latest
+          claude plugin validate .
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+  skill-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run SkillSpector static scan
+        run: bash tooling/skillspector-scan.sh /tmp/skillspector

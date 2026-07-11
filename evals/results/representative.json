@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-11T03:06:30Z",
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "not_run": 0
+  },
+  "results": [
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "technical-research",
+      "type": "positive",
+      "case_id": 1,
+      "status": "passed",
+      "actual": "technical-research",
+      "error": null
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "technical-research",
+      "type": "positive",
+      "case_id": 1,
+      "status": "passed",
+      "actual": "technical-research",
+      "error": null
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "technical-research",
+      "type": "positive",
+      "case_id": 1,
+      "status": "passed",
+      "actual": "technical-research",
+      "error": null
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "technical-research",
+      "type": "positive",
+      "case_id": 1,
+      "status": "passed",
+      "actual": "technical-research",
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "gog",
+  "version": "0.1.0",
+  "description": "Read-only Google Workspace skills for gog CLI",
+  "author": {
+    "name": "Agent Toolbox Contributors"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Gog",
+    "shortDescription": "Use Gog in Codex.",
+    "longDescription": "Read-only Google Workspace skills for gog CLI",
+    "developerName": "Agent Toolbox Contributors",
+    "category": "Productivity",
+    "capabilities": [
+
+    ],
+    "defaultPrompt": "Help me use Gog."
+  }
+}

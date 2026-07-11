@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Code Review — [PR Title / Branch]</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
+      --text: #1e293b; --muted: #64748b; --code-bg: #f1f5f9;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: var(--bg); color: var(--text); padding: 2rem 1rem; line-height: 1.6; }
+
+    /* Layout: sidebar + main */
+    .pr-layout { display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem;
+                 max-width: 1100px; margin: 0 auto; align-items: start; }
+    @media (max-width: 640px) { .pr-layout { grid-template-columns: 1fr; } }
+
+    /* Sidebar */
+    .file-tree { position: sticky; top: 1rem; background: var(--surface);
+                 border: 1px solid var(--border); border-radius: 8px; padding: .75rem; }
+    .file-tree h3 { font-size: .75rem; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+    .file-tree a { display: block; padding: .2rem .4rem; color: #3b82f6; text-decoration: none;
+                   border-radius: 4px; font-size: .8rem; word-break: break-all; }
+    .file-tree a:hover { background: #eff6ff; }
+    .file-tree .has-critical::before { content: '🔴 '; }
+    .file-tree .has-warning::before  { content: '🟡 '; }
+    .file-tree .clean::before        { content: '✅ '; }
+
+    /* Summary card */
+    .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+                    padding: 1.25rem; margin-bottom: 1.5rem; }
+    .summary-card h1 { font-size: 1.25rem; margin-bottom: .25rem; }
+    .meta-row { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .8rem; color: var(--muted); margin: .5rem 0 1rem; }
+    .stats { display: flex; gap: .75rem; flex-wrap: wrap; }
+    .stat-chip { font-size: .75rem; font-weight: 700; border-radius: 20px; padding: .2em .7em; }
+    .stat-red    { background: #fee2e2; color: #991b1b; }
+    .stat-yellow { background: #fef9c3; color: #854d0e; }
+    .stat-blue   { background: #eff6ff; color: #1d4ed8; }
+    .stat-green  { background: #f0fdf4; color: #166534; }
+
+    /* Severity legend */
+    .legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .8rem; margin-bottom: 1.5rem; }
+    .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: .3rem; }
+
+    /* File section */
+    .file-section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+                    margin-bottom: 1.5rem; overflow: hidden; }
+    .file-header { background: var(--code-bg); padding: .5rem 1rem; font-size: .8rem;
+                   font-family: 'Menlo', 'Monaco', monospace; border-bottom: 1px solid var(--border);
+                   color: var(--muted); }
+
+    /* Two-panel diff */
+    .diff-layout { display: grid; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 640px) { .diff-layout { grid-template-columns: 1fr; } }
+    .diff-panel { overflow-x: auto; padding: .5rem; background: var(--code-bg);
+                  font-family: 'Menlo', 'Monaco', monospace; font-size: 12px; }
+    .annotation-panel { padding: .75rem; border-left: 1px solid var(--border); }
+    .ctx { display: block; color: var(--muted); white-space: pre; }
+    .del { display: block; background: #fee2e2; color: #991b1b; white-space: pre; }
+    .add { display: block; background: #dcfce7; color: #166534; white-space: pre; }
+    .line-num { display: inline-block; width: 3ch; color: #94a3b8; user-select: none; margin-right: .5rem; }
+
+    /* Annotation cards */
+    .annotation { border-radius: 6px; padding: .6rem .8rem; margin-bottom: .5rem; font-size: .85rem; }
+    .annotation.critical { background: #fee2e2; border-left: 4px solid #ef4444; }
+    .annotation.warning  { background: #fef9c3; border-left: 4px solid #eab308; }
+    .annotation.info     { background: #eff6ff; border-left: 4px solid #3b82f6; }
+    .annotation.praise   { background: #f0fdf4; border-left: 4px solid #22c55e; }
+    .annotation strong { display: block; margin-bottom: .2rem; text-transform: capitalize; }
+
+    /* Conclusion */
+    .conclusion { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+    .conclusion h2 { font-size: 1rem; margin-bottom: .75rem; }
+    textarea { width: 100%; min-height: 80px; border: 1px solid var(--border); border-radius: 6px;
+               padding: .5rem; font-family: inherit; resize: vertical; background: var(--surface); color: var(--text); }
+    .btn { background: #3b82f6; color: #fff; border: none; border-radius: 6px;
+           padding: .45rem .9rem; cursor: pointer; font-size: .875rem; margin-top: .5rem; }
+    .btn:hover { opacity: .9; }
+  </style>
+</head>
+<body>
+<div class="pr-layout">
+
+  <!-- File tree sidebar -->
+  <aside class="file-tree">
+    <h3>Files changed</h3>
+    <a href="#file-auth" class="has-critical">src/auth/middleware.ts</a>
+    <a href="#file-api"  class="has-warning">src/api/routes.ts</a>
+    <a href="#file-test" class="clean">src/auth/__tests__/middleware.test.ts</a>
+  </aside>
+
+  <main>
+    <!-- Summary card -->
+    <div class="summary-card">
+      <h1>PR Review: [PR Title]</h1>
+      <div class="meta-row">
+        <span>Author: [name]</span>
+        <span>Branch: [branch-name] → main</span>
+        <span>Reviewed: [date]</span>
+      </div>
+      <div class="stats">
+        <span class="stat-chip stat-red">2 Critical</span>
+        <span class="stat-chip stat-yellow">1 Warning</span>
+        <span class="stat-chip stat-blue">3 Info</span>
+        <span class="stat-chip stat-green">1 Praise</span>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <span><span class="swatch" style="background:#ef4444"></span><strong>Critical</strong> — must fix before merge</span>
+      <span><span class="swatch" style="background:#eab308"></span><strong>Warning</strong> — should fix</span>
+      <span><span class="swatch" style="background:#3b82f6"></span><strong>Info</strong> — suggestion</span>
+      <span><span class="swatch" style="background:#22c55e"></span><strong>Praise</strong> — good pattern</span>
+    </div>
+
+    <!-- File 1 -->
+    <div class="file-section" id="file-auth">
+      <div class="file-header">src/auth/middleware.ts</div>
+      <div class="diff-layout">
+        <div class="diff-panel">
+          <span class="ctx"><span class="line-num">40</span>export async function authenticate(req) {</span>
+          <span class="del"><span class="line-num">41</span>  const token = req.headers.authorization;</span>
+          <span class="add"><span class="line-num">41</span>  const token = req.headers.authorization?.split(' ')[1];</span>
+          <span class="ctx"><span class="line-num">42</span>  if (!token) return res.status(401).json({ error: 'No token' });</span>
+          <span class="del"><span class="line-num">43</span>  return jwt.verify(token, process.env.SECRET);</span>
+          <span class="add"><span class="line-num">43</span>  return jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });</span>
+          <span class="ctx"><span class="line-num">44</span>}</span>
+        </div>
+        <div class="annotation-panel">
+          <div class="annotation critical">
+            <strong>Critical (line 41)</strong>
+            Old code passes the full "Bearer &lt;token&gt;" string to jwt.verify. Verification always fails or parses incorrectly. New code correctly strips the prefix.
+          </div>
+          <div class="annotation critical">
+            <strong>Critical (line 43)</strong>
+            Pinning algorithms to HS256 prevents the "alg:none" attack. Using config over raw env improves testability. Good fix.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File 2 -->
+    <div class="file-section" id="file-api">
+      <div class="file-header">src/api/routes.ts</div>
+      <div class="diff-layout">
+        <div class="diff-panel">
+          <span class="ctx"><span class="line-num">18</span>router.post('/login', async (req, res) => {</span>
+          <span class="del"><span class="line-num">19</span>  const user = await db.users.findOne({ email: req.body.email });</span>
+          <span class="add"><span class="line-num">19</span>  const user = await db.users.findOne({ email: req.body.email?.toLowerCase() });</span>
+          <span class="ctx"><span class="line-num">20</span>  if (!user) return res.status(404).json({ error: 'Not found' });</span>
+        </div>
+        <div class="annotation-panel">
+          <div class="annotation warning">
+            <strong>Warning (line 19)</strong>
+            Lowercase normalization is good but should happen at registration time too, otherwise users who register with mixed case won't match.
+          </div>
+          <div class="annotation praise">
+            <strong>Praise (line 19)</strong>
+            Using optional chaining here prevents crashes on malformed requests. Good defensive pattern.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progressive disclosure: clean file's full diff kept available but collapsed -->
+    <!-- Surface stays focused on files that need attention; detail is one click away, not deleted. -->
+    <div class="file-section" id="file-test">
+      <div class="file-header">src/auth/__tests__/middleware.test.ts ✅</div>
+      <details>
+        <summary style="cursor:pointer;padding:.5rem 1rem;font-size:.85rem;color:var(--muted)">
+          Full diff — clean, no findings (8 lines added)
+        </summary>
+        <div class="diff-panel">
+          <span class="add"><span class="line-num">12</span>  it('strips Bearer prefix before verify', async () => {</span>
+          <span class="add"><span class="line-num">13</span>    const res = await authenticate(mockReq('Bearer abc'));</span>
+          <span class="add"><span class="line-num">14</span>    expect(jwt.verify).toHaveBeenCalledWith('abc', config.jwtSecret, expect.anything());</span>
+          <span class="add"><span class="line-num">15</span>  });</span>
+        </div>
+      </details>
+    </div>
+
+    <!-- Conclusion -->
+    <div class="conclusion">
+      <h2>Conclusion</h2>
+      <p style="font-size:.875rem;color:var(--muted);margin-bottom:.75rem">
+        Write your verdict, then copy it back to Claude to continue.
+      </p>
+      <textarea id="verdict" placeholder="Overall verdict: request changes / approve because..."></textarea>
+      <button class="btn" onclick="
+        navigator.clipboard.writeText(document.getElementById('verdict').value)
+          .then(() => { this.textContent = '✓ Copied!'; setTimeout(() => this.textContent = 'Copy as prompt', 2000); })
+      ">Copy as prompt</button>
+    </div>
+  </main>
+</div>
+</body>
+</html>

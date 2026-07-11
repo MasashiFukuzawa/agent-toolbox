@@ -1,0 +1,35 @@
+{
+  "skill_name": "codex-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "codex-reviewで $HOME/project のコードを高精度でレビューして（effort: high）",
+      "expected_output": "effort が明示されているので high を尊重し、codex exec -s read-only -m gpt-5.6-sol -C <dir> -c model_reasoning_effort='high' を実行して、my-todo のレビュー結果を要約・詳細・推奨対応の形式で報告する",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "OpenAIのモデルでセカンドオピニオンを。カレントディレクトリ、effort はデフォルトで。設計上の問題があれば指摘してほしい。",
+      "expected_output": "effort 未指定（デフォルト）なので自動判定で既定の xhigh を選び、codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort='xhigh' を実行して、設計面の分析を構造化して報告する",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "codex-reviewを使って今のuncommittedの変更を確認してほしい",
+      "expected_output": "effort 未指定なので自動判定で既定の xhigh を選び、codex exec review -m gpt-5.6-sol -c model_reasoning_effort='xhigh' --uncommitted を run_in_background:true で起動し、起動直後に予告を出してから差分レビュー結果を報告する",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "このプロジェクトを codex-review でレビューして",
+      "expected_output": "effort の指定が無いので自動判定で既定の xhigh を選び、codex exec -s read-only -m gpt-5.6-sol -C <dir> -c model_reasoning_effort='xhigh' を run_in_background:true で起動する。起動直後に『バックグラウンドで開始した・応答が無くても継続中・中断不要・完了時に報告する』と予告し、完了通知後にメタヘッダを除いたレビュー結果を報告する",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "（run_in_background を持たないホストで）codex-review でこのプロジェクトをレビューして",
+      "expected_output": "ホストが run_in_background を持たないため foreground フォールバック（手順5）にルートする。foreground で実行タイムアウトを十分に確保し（Claude Code の Bash 相当なら 600000ms）、起動直前に foreground 用の予告（「これからレビューを実行します…」。背景用の『バックグラウンドで開始した』は流用しない）を出す。effort は自動判定で既定 xhigh。結果は標準出力（戻り値）から取得し（背景用の出力ファイル Read/BashOutput は使わない）、メタヘッダを除いて要約・詳細・推奨対応の形式で報告する。タイムアウトで kill された場合は盲目的に再実行せず effort を一段下げる（xhigh→high）か対象を絞る",
+      "files": []
+    }
+  ]
+}

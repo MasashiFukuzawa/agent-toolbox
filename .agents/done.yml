@@ -1,0 +1,13 @@
+version: 1
+verify:
+  quick:
+    - ruby scripts/validate.rb
+    - ruby scripts/trigger_eval.rb --check
+  standard:
+    - ruby scripts/validate.rb
+    - ruby scripts/trigger_eval.rb --check
+    - bash -n plugins/done/scripts/quality-gate-stop.sh
+  full:
+    - ruby scripts/validate.rb
+    - ruby scripts/trigger_eval.rb --check
+    - bash -n plugins/done/scripts/quality-gate-stop.sh

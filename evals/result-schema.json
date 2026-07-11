@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "summary", "results"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "generated_at": {"type": "string"},
+    "summary": {
+      "type": "object",
+      "required": ["total", "passed", "failed", "not_run"],
+      "properties": {
+        "total": {"type": "integer"},
+        "passed": {"type": "integer"},
+        "failed": {"type": "integer"},
+        "not_run": {"type": "integer"}
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["host", "environment", "skill", "type", "case_id", "status"],
+        "properties": {
+          "host": {"enum": ["claude-code", "codex"]},
+          "environment": {"enum": ["isolated", "superset"]},
+          "status": {"enum": ["passed", "failed", "not_run"]},
+          "actual": {"type": ["string", "null"]},
+          "error": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "skill_name": "claude-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "claude-reviewを使って $HOME/project のコードをレビューしてください。Effort は medium で。",
+      "expected_output": "effort が明示されているので medium を尊重し、claude -p コマンドを --model claude-opus-4-8 --effort medium で実行して、my-todo プロジェクトのコードレビュー結果を要約・詳細・推奨対応の形式で報告する",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "認証周りのセキュリティについてセカンドオピニオンが欲しい。カレントディレクトリで claude-review を xhigh effort で動かして。",
+      "expected_output": "claude -p コマンドを --model claude-opus-4-8 --effort xhigh で実行し、セキュリティ観点の分析結果を構造化して報告する",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Claudeの別インスタンスに $HOME/project を軽くチェックしてもらいたい（low effort）",
+      "expected_output": "effort が明示されているので low を尊重し、claude -p コマンドを --model claude-opus-4-8 --effort low で実行して、dev-journal の概要レビューを報告する",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "claude-review で全体を見て",
+      "expected_output": "effort の指定が無いので自動判定で既定の xhigh を選ぶ。claude -p \"...\" --model claude-opus-4-8 --effort xhigh --add-dir <dir> --disallowedTools 'Edit,Write,NotebookEdit' を Bash の run_in_background: true で起動し、起動直後に『バックグラウンドで開始した・数分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する。完了通知で出力ファイルを Read/BashOutput して結果を要約・詳細・推奨対応の形式で報告する",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "（run_in_background を持たないホストで）claude-review で全体を見て",
+      "expected_output": "ホストが run_in_background を持たないため foreground フォールバック（手順5）にルートする。foreground で timeout を 600000ms 確保し、起動直前に foreground 用の予告（「これからレビューを実行します…」。背景用の『バックグラウンドで開始しました』は流用しない）を出す。effort は自動判定で既定 xhigh。結果は標準出力（戻り値）から取得し（背景用の出力ファイル Read/BashOutput は使わない）、要約・詳細・推奨対応の形式で報告する。タイムアウトで kill された場合は盲目的に再実行せず effort を一段下げる（xhigh→high）か対象を絞る",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "done",
+  "version": "0.1.0",
+  "description": "Repository-defined quality gate",
+  "author": {
+    "name": "Agent Toolbox Contributors"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Done",
+    "shortDescription": "Use Done in Codex.",
+    "longDescription": "Repository-defined quality gate",
+    "developerName": "Agent Toolbox Contributors",
+    "category": "Productivity",
+    "capabilities": [
+
+    ],
+    "defaultPrompt": "Help me use Done."
+  }
+}

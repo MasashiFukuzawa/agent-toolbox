@@ -1,0 +1,81 @@
+{
+  "skill_name": "codebase-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/codebase-audit",
+      "expected_output": "Controller asks 3 questions in one message: (1) repo paths, (2) additional domains with 9 defaults listed, (3) scan depth. Does NOT dispatch or start analysis without repo paths.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Response asks for repo path(s) (not just repo names)",
+          "type": "qualitative"
+        },
+        {
+          "text": "Response lists all 9 default analysis domains",
+          "type": "qualitative"
+        },
+        {
+          "text": "Response asks about scan depth and explains quick vs deep",
+          "type": "qualitative"
+        },
+        {
+          "text": "All 3 questions are in one message",
+          "type": "qualitative"
+        },
+        {
+          "text": "Does NOT start analysis without repo paths",
+          "type": "qualitative"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "コードベースを全部レビューして改善点を洗い出してほしい。$HOME/projects/project-a だけでいい。quickで頼む。",
+      "expected_output": "Controller recognizes path=$HOME/projects/project-a and depth=quick. Either asks only about additional domains (the one unknown param), or proceeds directly to analysis. Does NOT ask for params already specified.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Controller recognizes $HOME/projects/project-a as the target path",
+          "type": "qualitative"
+        },
+        {
+          "text": "Controller recognizes quick as the scan depth",
+          "type": "qualitative"
+        },
+        {
+          "text": "Controller does NOT re-ask for path or depth",
+          "type": "qualitative"
+        },
+        {
+          "text": "Controller either starts analysis or only asks about additional domains",
+          "type": "qualitative"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "/codebase-audit\n\nパス: $HOME/projects/project-a, $HOME/projects/project-b\n追加領域: パフォーマンス・スケーラビリティ設計\n深度: deep",
+      "expected_output": "All params provided. Controller begins analysis (or confirms and begins). Analysis uses the A×B framework with パフォーマンス・スケーラビリティ設計 as domain 10, depth=deep. Output format follows the markdown template with per-repo sections + cross-repo analysis.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "No redundant clarification questions asked",
+          "type": "qualitative"
+        },
+        {
+          "text": "Analysis covers both repos ($HOME/projects/project-a and $HOME/projects/project-b)",
+          "type": "qualitative"
+        },
+        {
+          "text": "パフォーマンス・スケーラビリティ設計 is included as an additional domain",
+          "type": "qualitative"
+        },
+        {
+          "text": "Output follows the structured report format with domain sections and [評価軸][優先度] tags",
+          "type": "qualitative"
+        }
+      ]
+    }
+  ]
+}

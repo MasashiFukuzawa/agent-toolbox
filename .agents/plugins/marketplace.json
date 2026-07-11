@@ -1,0 +1,44 @@
+{
+  "name": "agent-toolbox",
+  "interface": {
+    "displayName": "Agent Toolbox"
+  },
+  "plugins": [
+    {
+      "name": "toolbox",
+      "source": {
+        "source": "local",
+        "path": "./plugins/toolbox"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "done",
+      "source": {
+        "source": "local",
+        "path": "./plugins/done"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "gog",
+      "source": {
+        "source": "local",
+        "path": "./plugins/gog"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

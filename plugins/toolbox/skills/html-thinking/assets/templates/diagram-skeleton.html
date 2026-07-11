@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagram — [System/Concept Name]</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #f8fafc; --surface: #fff; --border: #e2e8f0; --text: #1e293b; --muted: #64748b; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: var(--bg); color: var(--text); padding: 2rem 1rem; line-height: 1.6; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+    .meta { color: var(--muted); font-size: .875rem; margin-bottom: 1.5rem; }
+    .diagram-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+                   padding: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; }
+    .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; font-size: .875rem; }
+    .legend-item { display: flex; align-items: center; gap: .4rem; }
+    .legend-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--border); }
+    section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+              padding: 1.25rem; margin-bottom: 1rem; }
+    section h2 { font-size: 1rem; margin-bottom: .5rem; }
+    section p { font-size: .9rem; color: var(--muted); }
+
+    /* SVG defaults */
+    svg .node          { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 1.5; }
+    svg .node-highlight{ fill: #bfdbfe; stroke: #3b82f6; stroke-width: 2; }
+    svg .node-warn     { fill: #fef9c3; stroke: #eab308; stroke-width: 1.5; }
+    svg .edge          { stroke: #64748b; stroke-width: 1.5; fill: none; }
+    svg .edge-dashed   { stroke-dasharray: 5; }
+    svg text           { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                         font-size: 12px; fill: #1e293b; }
+    svg .edge-label    { font-size: 10px; fill: #64748b; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Diagram — [System/Concept Name]</h1>
+  <p class="meta">Context: [one sentence describing what this diagram shows]</p>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#e2e8f0;border-color:#94a3b8"></div>
+      <span>Service / Component</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#bfdbfe;border-color:#3b82f6"></div>
+      <span>Entry point</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#fef9c3;border-color:#eab308"></div>
+      <span>External / 3rd party</span>
+    </div>
+  </div>
+
+  <!-- Main diagram -->
+  <div class="diagram-box">
+    <svg viewBox="0 0 600 220" style="width:100%;display:block"
+         role="img" aria-label="System architecture diagram showing [A], [B], and [C]">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#64748b"/>
+        </marker>
+        <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#3b82f6"/>
+        </marker>
+      </defs>
+
+      <!-- Node A: Entry point -->
+      <rect x="20" y="90" width="110" height="44" rx="6" class="node-highlight"/>
+      <text x="75" y="117" text-anchor="middle" font-weight="600">Client</text>
+
+      <!-- Edge A → B -->
+      <line x1="130" y1="112" x2="200" y2="112" class="edge" marker-end="url(#arrow)"/>
+      <text x="165" y="105" text-anchor="middle" class="edge-label">HTTP</text>
+
+      <!-- Node B -->
+      <rect x="200" y="90" width="110" height="44" rx="6" class="node"/>
+      <text x="255" y="117" text-anchor="middle">API Gateway</text>
+
+      <!-- Edge B → C (sync) -->
+      <line x1="310" y1="112" x2="380" y2="112" class="edge" marker-end="url(#arrow)"/>
+      <text x="345" y="105" text-anchor="middle" class="edge-label">gRPC</text>
+
+      <!-- Node C -->
+      <rect x="380" y="90" width="110" height="44" rx="6" class="node"/>
+      <text x="435" y="117" text-anchor="middle">Auth Service</text>
+
+      <!-- Edge B → D (async, dashed) -->
+      <path d="M255,134 C255,175 355,175 415,160" class="edge edge-dashed" marker-end="url(#arrow)"/>
+      <text x="320" y="183" text-anchor="middle" class="edge-label">event (async)</text>
+
+      <!-- Node D: External -->
+      <rect x="380" y="160" width="110" height="44" rx="6" class="node-warn"/>
+      <text x="435" y="187" text-anchor="middle">Audit DB</text>
+    </svg>
+  </div>
+
+  <!-- Annotation sections -->
+  <section>
+    <h2>A → B: [What this connection does]</h2>
+    <p>[Explanation of the interaction — protocol, payload, why this path exists, any notable constraints or error handling.]</p>
+  </section>
+
+  <section>
+    <h2>B → C: [What this connection does]</h2>
+    <p>[Explanation.]</p>
+  </section>
+
+  <details style="border:1px solid var(--border);border-radius:8px">
+    <summary style="padding:.75rem 1rem;cursor:pointer;font-weight:600">Open questions</summary>
+    <div style="padding:.75rem 1rem">
+      <ul style="padding-left:1.25rem;font-size:.9rem">
+        <li>Should [X] be synchronous or async?</li>
+        <li>Who owns the retry logic for [Y]?</li>
+      </ul>
+    </div>
+  </details>
+
+</div>
+</body>
+</html>

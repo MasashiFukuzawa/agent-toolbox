@@ -1,0 +1,82 @@
+{
+  "_comment": "このファイルをコピーして .agents/autopilot.json として各repoのルートに配置する。",
+  "_security": "中央スキル (skills/autopilot/SKILL.md) に企業名・org名・repo名・project番号・各種ID・MCPサーバ名を書かないこと。実値はここ（そのrepoのテナント境界内）にのみ存在する。",
+  "repo": "<owner>/<repo-name>",
+  "taskSource": {
+    "mode": "github-projects",
+    "_modeOptions": [
+      "github-projects",
+      "plan-doc",
+      "none"
+    ],
+    "githubProjects": {
+      "owner": "<your-org-or-user>",
+      "projectNumber": 0,
+      "pickFrom": [
+        "Ready",
+        "Inbox"
+      ],
+      "_pickFromNote": "優先度の高い列から順に列挙する。この順序で最初にヒットした列のタスクが選ばれる。",
+      "orderBy": "Priority",
+      "_orderByOptions": [
+        "Priority",
+        "CreatedAt",
+        "UpdatedAt"
+      ]
+    },
+    "planDoc": {
+      "_note": "mode が plan-doc の場合に使う。どちらか一方だけ指定する。",
+      "path": "docs/plan.md",
+      "issueQuery": ""
+    }
+  },
+  "review": {
+    "engine": "auto",
+    "_engineOptions": [
+      "auto",
+      "codex",
+      "claude"
+    ],
+    "_autoNote": "auto = 起動エンジンの逆を使う（claude上→codex-review / codex上→claude-review）",
+    "_note": "engine フィールドは現在 SKILL.md の逆エンジン選択ルールで自動判定されるため参照されない（将来の明示指定用として予約）"
+  },
+  "baseBranch": "main",
+  "_baseBranchNote": "PR のマージ先ブランチ。main 以外（master / develop 等）の場合は変更する。",
+  "deploy": {
+    "needed": false,
+    "_neededNote": "デプロイ不要なrepoは false にする",
+    "steps": [
+      {
+        "_example_note": "以下は例。実際のコマンドに置き換える。",
+        "run": "gh workflow run <workflow-file>.yml --repo <owner>/<repo> -f param=<value>",
+        "monitor": "gh run watch --repo <owner>/<repo>"
+      }
+    ],
+    "_platformInfraNote": "terraform を使う infra repo の場合: run に gh workflow run を使い、生の terraform apply は絶対に書かない"
+  },
+  "stagingVerify": {
+    "method": "manual",
+    "_methodOptions": [
+      "mcp",
+      "manual",
+      "skip"
+    ],
+    "mcpServer": "<staging-mcp-server-name>",
+    "_mcpNote": "method が mcp の場合のみ使う。MCP サーバ名はrepo固有なのでここに書く。",
+    "notes": ""
+  },
+  "notes": "このrepo固有の注意点を自由記述する。autopilot 起動時に参照される。",
+  "gates": {
+    "_note": "破壊的操作の自動実行許可。未設定時の既定は human（PR作成まで自律・その先は停止してエスカレーション）。",
+    "merge": "human",
+    "_mergeOptions": [
+      "auto",
+      "human"
+    ],
+    "deploy": "human",
+    "_deployOptions": [
+      "auto",
+      "human"
+    ]
+  }
+}

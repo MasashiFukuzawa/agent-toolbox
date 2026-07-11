@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implementation Plan — [Title Here]</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
+      --text: #1e293b; --muted: #64748b;
+      --green: #22c55e; --green-bg: #f0fdf4; --green-border: #86efac;
+      --blue: #3b82f6;  --blue-bg: #eff6ff;  --blue-border: #93c5fd;
+      --red: #ef4444;   --red-bg: #fff1f2;   --red-border: #fda4af;
+      --yellow-bg: #fefce8; --yellow-border: #fde047;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: var(--bg); color: var(--text); padding: 2rem 1rem; line-height: 1.6; }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 1.75rem; margin-bottom: .25rem; }
+    .meta { color: var(--muted); font-size: .875rem; margin-bottom: 2rem; }
+    .tl-dr { background: var(--blue-bg); border: 1px solid var(--blue-border);
+              border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 2rem; }
+    .tl-dr h2 { font-size: 1rem; color: var(--blue); margin-bottom: .5rem; }
+    .tl-dr ul { padding-left: 1.25rem; }
+
+    /* Phase bar */
+    .phases { display: flex; margin-bottom: 2rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    .phase { flex: 1; padding: .6rem .75rem; background: var(--surface); font-size: .8rem;
+             border-right: 1px solid var(--border); text-align: center; }
+    .phase:last-child { border-right: none; }
+    .phase.active { background: var(--blue); color: #fff; font-weight: 600; }
+
+    /* Option grid */
+    .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+    .option { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+    .option.recommended { border-color: var(--green); }
+    .option h2 { font-size: 1.1rem; margin-bottom: .25rem; }
+    .badge { display: inline-block; font-size: .7rem; font-weight: 700; border-radius: 4px;
+             padding: .15em .5em; text-transform: uppercase; margin-bottom: .75rem; }
+    .badge-green  { background: var(--green-bg); color: #166534; border: 1px solid var(--green-border); }
+    .badge-yellow { background: var(--yellow-bg); color: #854d0e; border: 1px solid var(--yellow-border); }
+    .badge-red    { background: var(--red-bg);    color: #991b1b; border: 1px solid var(--red-border); }
+    .option h3 { font-size: .8rem; text-transform: uppercase; color: var(--muted); margin: .75rem 0 .25rem; }
+    .option ul { padding-left: 1.1rem; font-size: .9rem; }
+    .option ul li { margin-bottom: .2rem; }
+
+    /* Send-as-prompt */
+    .prompt-row { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .prompt-btn { background: var(--blue); color: #fff; border: none; border-radius: 6px;
+                  padding: .5rem 1rem; cursor: pointer; font-size: .875rem; }
+    .prompt-btn:hover { opacity: .9; }
+
+    /* Decision log */
+    details { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; }
+    summary { padding: .75rem 1rem; cursor: pointer; font-weight: 600; user-select: none; }
+    details > *:not(summary) { padding: .75rem 1rem; }
+    textarea { width: 100%; min-height: 80px; border: 1px solid var(--border); border-radius: 6px;
+               padding: .5rem; font-family: inherit; resize: vertical; background: var(--surface); color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Implementation Plan — [Title Here]</h1>
+  <p class="meta">Author: [Name] · Date: [Date] · Status: Draft</p>
+
+  <div class="tl-dr">
+    <h2>TL;DR</h2>
+    <ul>
+      <li>We need to [goal] because [reason].</li>
+      <li>Recommendation: Option A — [one sentence why].</li>
+      <li>Timeline: [X weeks] starting [when].</li>
+    </ul>
+  </div>
+
+  <!-- Phase bar -->
+  <div class="phases">
+    <div class="phase active">1. Discovery</div>
+    <div class="phase">2. Design</div>
+    <div class="phase">3. Implement</div>
+    <div class="phase">4. Ship</div>
+  </div>
+
+  <!-- Options -->
+  <div class="options">
+    <div class="option recommended">
+      <h2>Option A</h2>
+      <span class="badge badge-green">Recommended</span>
+      <p>[One-paragraph description of approach A.]</p>
+      <h3>Pros</h3>
+      <ul>
+        <li>Faster to implement</li>
+        <li>Lower operational complexity</li>
+      </ul>
+      <h3>Cons</h3>
+      <ul>
+        <li>Requires migration of existing data</li>
+      </ul>
+      <h3>Rough estimate</h3>
+      <p>2 engineers × 3 weeks</p>
+    </div>
+
+    <div class="option">
+      <h2>Option B</h2>
+      <span class="badge badge-yellow">Viable</span>
+      <p>[One-paragraph description of approach B.]</p>
+      <h3>Pros</h3>
+      <ul>
+        <li>No data migration needed</li>
+      </ul>
+      <h3>Cons</h3>
+      <ul>
+        <li>Higher long-term maintenance</li>
+        <li>Harder to extend later</li>
+      </ul>
+      <h3>Rough estimate</h3>
+      <p>1 engineer × 5 weeks</p>
+    </div>
+
+    <div class="option">
+      <h2>Option C</h2>
+      <span class="badge badge-red">Avoid</span>
+      <p>[One-paragraph description of approach C and why it is not recommended.]</p>
+      <h3>Key risk</h3>
+      <ul>
+        <li>[Primary reason to avoid]</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Send-as-prompt buttons -->
+  <div class="prompt-row">
+    <button class="prompt-btn" onclick="
+      navigator.clipboard.writeText('We chose Option A for the [Title] implementation plan. Please proceed with: [next step].')
+        .then(() => { this.textContent = '✓ Copied!'; setTimeout(() => this.textContent = 'Copy "Choose A" as prompt', 2000); })
+    ">Copy "Choose A" as prompt</button>
+    <button class="prompt-btn" onclick="
+      navigator.clipboard.writeText('We chose Option B for the [Title] implementation plan. Please proceed with: [next step].')
+        .then(() => { this.textContent = '✓ Copied!'; setTimeout(() => this.textContent = 'Copy "Choose B" as prompt', 2000); })
+    ">Copy "Choose B" as prompt</button>
+  </div>
+
+  <!-- Decision log -->
+  <details>
+    <summary>Decision log</summary>
+    <p style="font-size:.875rem;color:var(--muted);margin-bottom:.5rem">
+      Record your decision here, then copy it back to Claude to continue.
+    </p>
+    <textarea id="decision-log" placeholder="We chose Option ___ because..."></textarea>
+    <br><br>
+    <button class="prompt-btn" onclick="
+      navigator.clipboard.writeText(document.getElementById('decision-log').value)
+        .then(() => { this.textContent = '✓ Copied!'; setTimeout(() => this.textContent = 'Copy log as prompt', 2000); })
+    ">Copy log as prompt</button>
+  </details>
+
+</div>
+</body>
+</html>

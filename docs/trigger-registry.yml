@@ -1,0 +1,81 @@
+defaults: &defaults
+  supported_hosts: [claude-code, codex]
+  runtime_dependencies: []
+  side_effect_level: read-only
+  positive_triggers: []
+  nearest_neighbors: []
+  negative_triggers: []
+  ambiguous_precedence: "明示された対象と目的を優先"
+  renamed_from: []
+skills:
+  technical-research:
+    canonical_name: technical-research
+    category: research
+    supported_hosts: [claude-code, codex]
+    runtime_dependencies: []
+    side_effect_level: read-only
+    positive_triggers: ["技術調査して", "公式ドキュメントを確認して", "実装前に調べて"]
+    nearest_neighbors: [codebase-audit]
+    negative_triggers: ["既知の単純修正", "コードベース全体の監査"]
+    ambiguous_precedence: "包括監査なら codebase-audit を優先"
+    renamed_from: [research-first, documentation-lookup]
+  git-worktrees:
+    canonical_name: git-worktrees
+    category: git
+    supported_hosts: [claude-code, codex]
+    runtime_dependencies: [git]
+    side_effect_level: workspace-write
+    positive_triggers: ["worktreeを作って", "並列開発したい", "worktreeを掃除して"]
+    nearest_neighbors: [autopilot]
+    negative_triggers: ["通常の単一ブランチ作業"]
+    ambiguous_precedence: "複数タスクの全工程自律実行なら autopilot を優先"
+    renamed_from: [worktree-flow]
+  behavioral-testing:
+    canonical_name: behavioral-testing
+    category: testing
+    supported_hosts: [claude-code, codex]
+    runtime_dependencies: []
+    side_effect_level: workspace-write
+    positive_triggers: ["テストを追加して", "テスト設計をレビューして", "壊れやすいテストを直して"]
+    nearest_neighbors: [verification-loop]
+    negative_triggers: ["既存テストを実行するだけ"]
+    ambiguous_precedence: "実装途中の反復実行なら verification-loop を優先"
+    renamed_from: [write-meaningful-tests]
+  claude-review:
+    canonical_name: claude-review
+    category: review
+    supported_hosts: [claude-code, codex]
+    runtime_dependencies: [claude]
+    side_effect_level: read-only
+    positive_triggers: ["Claudeでレビューして", "Anthropicの別視点が欲しい", "claude-reviewで"]
+    nearest_neighbors: [codex-review]
+    negative_triggers: ["Codexでレビューして", "第三者レビューして"]
+    ambiguous_precedence: "provider未指定なら選択を確認"
+    renamed_from: []
+  codex-review:
+    canonical_name: codex-review
+    category: review
+    supported_hosts: [claude-code, codex]
+    runtime_dependencies: [codex]
+    side_effect_level: read-only
+    positive_triggers: ["Codexでレビューして", "OpenAIの別視点が欲しい", "codex-reviewで"]
+    nearest_neighbors: [claude-review]
+    negative_triggers: ["Claudeでレビューして", "第三者レビューして"]
+    ambiguous_precedence: "provider未指定なら選択を確認"
+    renamed_from: []
+  adr: {<<: *defaults, canonical_name: adr, category: architecture, side_effect_level: workspace-write, positive_triggers: ["ADRにして"], nearest_neighbors: [codebase-audit], negative_triggers: ["単一PRレビュー"]}
+  ascii-diagram: {<<: *defaults, canonical_name: ascii-diagram, category: visualization, positive_triggers: ["ASCII図で"], nearest_neighbors: [html-thinking], negative_triggers: ["保存する一枚物"]}
+  autopilot: {<<: *defaults, canonical_name: autopilot, category: orchestration, side_effect_level: external-write, positive_triggers: ["バックログを自律で処理して"], nearest_neighbors: [git-worktrees], negative_triggers: ["単発タスク"]}
+  browser-operations: {<<: *defaults, canonical_name: browser-operations, category: browser, side_effect_level: external-write, positive_triggers: ["ブラウザを操作して"], nearest_neighbors: [e2e-capability-verification], negative_triggers: ["staging E2E検証"]}
+  cloudflare-data-pipeline: {<<: *defaults, canonical_name: cloudflare-data-pipeline, category: cloudflare, positive_triggers: ["D1とQueuesの整合性を設計して"], nearest_neighbors: [cloudflare-worker-cd], negative_triggers: ["単一WorkerのCD"]}
+  cloudflare-worker-cd: {<<: *defaults, canonical_name: cloudflare-worker-cd, category: cloudflare, side_effect_level: workspace-write, positive_triggers: ["WorkersのCDを設計して"], nearest_neighbors: [cloudflare-data-pipeline], negative_triggers: ["複数サービスのデータ整合性"]}
+  codebase-audit: {<<: *defaults, canonical_name: codebase-audit, category: review, positive_triggers: ["コードベース全体を監査して"], nearest_neighbors: [codex-review], negative_triggers: ["単一PRレビュー"]}
+  context-handoff: {<<: *defaults, canonical_name: context-handoff, category: communication, side_effect_level: workspace-write, positive_triggers: ["引き継ぎを作って"], nearest_neighbors: [progress-report], negative_triggers: ["判断者向け進捗報告"]}
+  e2e-capability-verification: {<<: *defaults, canonical_name: e2e-capability-verification, category: testing, side_effect_level: external-write, positive_triggers: ["stagingでE2E確認して"], nearest_neighbors: [browser-operations], negative_triggers: ["アドホックなブラウザ操作"]}
+  html-thinking: {<<: *defaults, canonical_name: html-thinking, category: visualization, side_effect_level: workspace-write, positive_triggers: ["HTMLで図解して"], nearest_neighbors: [ascii-diagram], negative_triggers: ["会話内の小さな図"]}
+  progress-report: {<<: *defaults, canonical_name: progress-report, category: communication, side_effect_level: workspace-write, positive_triggers: ["進捗を報告して"], nearest_neighbors: [context-handoff], negative_triggers: ["再開可能な引き継ぎ"]}
+  structured-text-parsing: {<<: *defaults, canonical_name: structured-text-parsing, category: parsing, positive_triggers: ["ログから抽出して"], nearest_neighbors: [technical-research], negative_triggers: ["曖昧な自然言語理解"]}
+  verification-loop: {<<: *defaults, canonical_name: verification-loop, category: testing, side_effect_level: workspace-write, positive_triggers: ["実装中の検証を回して"], nearest_neighbors: [done], negative_triggers: ["最終品質ゲート"]}
+  done: {<<: *defaults, canonical_name: done, category: delivery, side_effect_level: workspace-write, positive_triggers: ["完了前の品質ゲートを通して"], nearest_neighbors: [verification-loop], negative_triggers: ["実装途中の反復検証"]}
+  gog-calendar: {<<: *defaults, canonical_name: gog-calendar, category: google-workspace, runtime_dependencies: [gog], positive_triggers: ["カレンダーを確認して"], nearest_neighbors: [gog-chat-readonly], negative_triggers: ["Chatを検索して"]}
+  gog-chat-readonly: {<<: *defaults, canonical_name: gog-chat-readonly, category: google-workspace, runtime_dependencies: [gog], positive_triggers: ["Google Chatを検索して"], nearest_neighbors: [gog-calendar], negative_triggers: ["メッセージを送信して"]}
