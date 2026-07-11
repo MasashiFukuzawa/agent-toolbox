@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+[[ $# -ge 2 ]] || { echo "usage: pwauth <profile-key> <playwright-cli command> [args...]" >&2; exit 2; }
+key="$1"
+shift
+[[ "$key" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || { echo "invalid profile key" >&2; exit 2; }
+command -v playwright-cli >/dev/null || { echo "playwright-cli is not installed" >&2; exit 127; }
+root="${HOME}/.mcp/browser-profiles"
+profile="$root/$key"
+mkdir -p "$profile"
+chmod 700 "${HOME}/.mcp" "$root" "$profile"
+if [[ "$1" == "open" ]]; then
+  exec playwright-cli "-s=$key" --persistent "--profile=$profile" --browser=chrome --headed "$@"
+fi
+exec playwright-cli "-s=$key" "$@"

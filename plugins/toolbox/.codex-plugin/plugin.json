@@ -8,13 +8,13 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Toolbox",
-    "shortDescription": "Use Toolbox in Codex.",
+    "shortDescription": "Reusable engineering workflows with explicit safety boundaries.",
     "longDescription": "Reusable engineering agent skills",
     "developerName": "Agent Toolbox Contributors",
     "category": "Productivity",
     "capabilities": [
 
     ],
-    "defaultPrompt": "Help me use Toolbox."
+    "defaultPrompt": "Choose the relevant Toolbox skill for this engineering task, respect its negative boundaries, and explain any safety gate before acting."
   }
 }

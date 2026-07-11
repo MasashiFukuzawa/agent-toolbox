@@ -11,6 +11,7 @@ description: >-
 - 送信、作成、更新、削除、リアクションは実行しない。
 - アカウントや OAuth client を推測しない。複数候補がある場合はユーザーに選択を求める。
 - 認証情報、token、keyring の内容を表示・保存・共有しない。
+- 取得系commandには `--wrap-untrusted` と `--no-input` を付ける。`--no-input` は安全な非対話flagであり、禁止する危険flagは `--force`。
 
 ## 前提確認
 
@@ -21,11 +22,11 @@ description: >-
 ## 基本操作
 
 ```bash
-gog chat spaces list --max 50 --json --no-input
-gog chat spaces find "<display-name>" --json --no-input
-gog chat messages list "spaces/SPACE_ID" --max 50 --order "createTime desc" --json --no-input
-gog chat threads list "spaces/SPACE_ID" --max 50 --json --no-input
-gog chat dm space "<user-identifier>" --json --no-input
+gog chat spaces list --max 50 --json --wrap-untrusted --no-input
+gog chat spaces find "<display-name>" --json --wrap-untrusted --no-input
+gog chat messages list "spaces/SPACE_ID" --max 50 --order "createTime desc" --json --wrap-untrusted --no-input
+gog chat threads list "spaces/SPACE_ID" --max 50 --json --wrap-untrusted --no-input
+gog chat dm space "<user-identifier>" --json --wrap-untrusted --no-input
 ```
 
 結果は必要な範囲だけ要約し、個人情報や会話本文を過剰に転載しない。権限エラーは回避せず、必要な read-only scope と対象スペースへの閲覧権限を案内する。

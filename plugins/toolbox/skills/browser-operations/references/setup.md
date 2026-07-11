@@ -1,4 +1,4 @@
-# Setup — background and manual steps
+# Setup — 背景と導入手順
 
 This document describes a portable setup and does not depend on a repository-local script.
 
@@ -22,7 +22,14 @@ mkdir -p ~/.mcp/browser-profiles && chmod 700 ~/.mcp ~/.mcp/browser-profiles
 # then create a local wrapper only after verifying the installed CLI flags
 ```
 
-Health check: `bin/doctor.sh` (browser checks run only when `pwauth` exists; machines without it show SKIP).
+このSkill同梱のinstallerを実行する:
+
+```bash
+bash scripts/install-pwauth.sh
+pwauth --help 2>/dev/null || true
+```
+
+installerはCLIの必須flagを検証してから、`~/.local/bin/pwauth`と権限`0700`のprofile rootを作る。repository固有のhealth-check scriptには依存しない。
 
 ## Appendix (opt-in): cross-repo profile for Playwright MCP too
 

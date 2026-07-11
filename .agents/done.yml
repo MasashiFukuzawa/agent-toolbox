@@ -1,13 +1,20 @@
 version: 1
+repo: agent-toolbox
 verify:
   quick:
-    - ruby scripts/validate.rb
-    - ruby scripts/trigger_eval.rb --check
+    - uv run ruff check .
+    - uv run pytest
+    - uv run python -m scripts.validate
+    - uv run python -m scripts.trigger_eval --check
   standard:
-    - ruby scripts/validate.rb
-    - ruby scripts/trigger_eval.rb --check
+    - uv run ruff check .
+    - uv run pytest
+    - uv run python -m scripts.validate
+    - uv run python -m scripts.trigger_eval --check
     - bash -n plugins/done/scripts/quality-gate-stop.sh
   full:
-    - ruby scripts/validate.rb
-    - ruby scripts/trigger_eval.rb --check
+    - uv run ruff check .
+    - uv run pytest
+    - uv run python -m scripts.validate
+    - uv run python -m scripts.trigger_eval --check
     - bash -n plugins/done/scripts/quality-gate-stop.sh

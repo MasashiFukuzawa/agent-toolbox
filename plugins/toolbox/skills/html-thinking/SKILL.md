@@ -3,11 +3,11 @@ name: html-thinking
 description: >-
   計画、比較、図解、レビューを自己完結 HTML の一枚物として可視化する。表や SVG、並列レイアウトが理解を助ける時に使う。会話内の小さな図には ascii-diagram を使う。「HTML一枚物で」「比較を視覚化して」を正のトリガーとし、production UIや対話内ですぐ読む小さな図には使わない。
 ---
-# HTML as a Thinking Medium
+# 思考・伝達媒体としてのHTML
 
-Markdown is for reading-through. HTML is for actually reading. When information has spatial structure — parallel options, hierarchies, timelines, dependency graphs — Markdown flattens it into a stream. A self-contained HTML file restores that structure and gets read. This skill is about *thinking*, not building; the artifact will likely be deleted within a week of being opened.
+Markdownでは平坦になる並列案、階層、timeline、依存graphを、自己完結HTMLの空間構造で読みやすくする。本Skillはproduction UIを作るものではなく、意思決定や説明のための一枚物を作る。
 
-## When to use / When not to use
+## 使う時・使わない時
 
 **Use this skill when:**
 - Comparing multiple approaches, architectures, or designs side by side
@@ -19,11 +19,11 @@ Markdown is for reading-through. HTML is for actually reading. When information 
 
 **Do not use this skill when:**
 - A few bullet points or a short table in a chat reply would suffice
-- The user wants a production UI, design system, or shipped component → use `frontend-design`
+- production UI、design system、出荷するcomponentが必要 → 本Skillの対象外。利用可能なら専用のfrontend design Skillを使う
 - The user explicitly wants continuous-parameter tuning (live sliders, real-time preview) → that is a prototype, outside this skill's scope
 - The output needs to be edited by a non-technical user in something other than a browser
 
-## Key question contract (MANDATORY — before writing any HTML)
+## key question契約（HTMLを書く前に必須）
 
 State in ONE line: **who** will read this page and **what single question** it must answer or what decision it must enable (e.g. "ユーザーが2つの設計案からどちらを採用するか決める"). If you cannot fill this line from context, ask the user exactly one clarifying question before generating.
 
@@ -31,7 +31,7 @@ State in ONE line: **who** will read this page and **what single question** it m
 - Write the key question as an HTML comment at the top of the file (`<!-- key question: ... -->`) so later edits stay anchored to it.
 - Self-check after writing: open the page cold and ask "does the first screen answer the key question in 5 seconds?" If the reader must scroll or expand to get the point, restructure.
 
-## Core principles
+## 基本原則
 
 1. **Information density over word count.** A well-structured 80-line HTML page carries more than a 300-line Markdown doc. Prefer tables, side-by-side columns, and SVG over prose repetition.
 
@@ -63,7 +63,7 @@ State in ONE line: **who** will read this page and **what single question** it m
 
    Not every `<details>` needs all three (raw-data blocks don't), but any "explain this decision/change" block does.
 
-## Output contract
+## 出力contract
 
 Every HTML file produced by this skill must satisfy:
 
@@ -91,7 +91,7 @@ Every HTML file produced by this skill must satisfy:
 - Target file size under 30 KB; if larger, split into multiple files or cut scope
 - If any 2nd-tier external resource is used, add a comment at the very top: `<!-- requires: CDN: tailwind, chart.js — will not render offline -->`
 
-## Use case patterns
+## 用途別pattern
 
 For each pattern, a minimal structural skeleton is shown. Read `references/` for fuller recipes.
 
@@ -147,7 +147,7 @@ Dense HTML `<table>` with sticky first column, color-coded cells (green/yellow/r
 ### 9. Custom editing UI (not a primary trigger)
 Drag-and-drop card sorters, form editors for config — powerful but treat as a separate scope from thinking artifacts. Only build if the user explicitly asks for an interactive editor, not as a default.
 
-## Self-containment rules
+## 自己完結rules
 
 **Tier 1 — always OK:** Pure HTML/CSS/JS. Inline SVG. System font stacks. `data:` URIs for small images.
 
@@ -170,7 +170,7 @@ Drag-and-drop card sorters, form editors for config — powerful but treat as a 
 
 Full checklist: `references/self-containment-checklist.md`
 
-## Interaction patterns (optional layer)
+## interaction pattern（任意）
 
 Add interactivity only when it solves one of these problems. If none apply, use static HTML.
 
@@ -212,7 +212,7 @@ This is the mechanism behind Core Principle 7 — apply it as the default, not a
 ```
 No JS required. Renders well in print. Use for long reference sections, raw data, supporting evidence, rejected alternatives, derivations, and any block that adds depth but would clutter the overview. The `<summary>` should name the content and hint at its size so the reader can decide whether to expand. Nest `<details>` when detail has its own sub-detail.
 
-## Relationship to frontend-design
+## production frontendとの関係
 
 | Aspect | html-thinking (this skill) | frontend-design |
 |---|---|---|
@@ -223,7 +223,7 @@ No JS required. Renders well in print. Use for long reference sections, raw data
 | Framework | Plain HTML/CSS/JS, no build step | React, Vue, etc. — full stack OK |
 | Output | One `.html` file you can email | Files inside a project repo |
 
-**Rule of thumb:** if the file would be deleted within a week of being read, use this skill. If it ships, use `frontend-design`. The two are not mutually exclusive — `frontend-design` can borrow the information-architecture guidance here when its target UI is data-heavy.
+**目安:** 読まれて一週間以内に捨てる資料なら本Skillを使う。出荷・保守するUIなら利用可能な専用frontend design Skillを使う。後者は外部Skillであり、本pluginの必須依存ではない。
 
 ## Anti-patterns
 

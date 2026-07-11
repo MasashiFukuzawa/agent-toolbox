@@ -1,6 +1,6 @@
 {
   "_comment": "このファイルをコピーして .agents/autopilot.json として各repoのルートに配置する。",
-  "_security": "中央スキル (skills/autopilot/SKILL.md) に企業名・org名・repo名・project番号・各種ID・MCPサーバ名を書かないこと。実値はここ（そのrepoのテナント境界内）にのみ存在する。",
+  "_security": "この設定は信頼されたrepository管理者だけが変更する。configへの書込権限はrun/monitorに指定した任意commandの実行権限と同等である。組織名・repo名・各種IDはこのtenant境界内だけに置く。",
   "repo": "<owner>/<repo-name>",
   "taskSource": {
     "mode": "github-projects",

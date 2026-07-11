@@ -1,19 +1,62 @@
 # Agent Toolbox
 
-Claude Code と Codex で利用できる、汎用エージェントスキルの公開コレクションです。
+Agent Toolbox is a public collection of reusable engineering skills for Claude Code and Codex. It ships three independently installable plugins and keeps host-neutral skill instructions in one source tree.
 
 ## Plugins
 
-- `toolbox`: 設計、調査、レビュー、検証、可視化のスキル
-- `done`: リポジトリ定義に従う品質ゲート。Claude Code 用 Stop hook を同梱
-- `gog`: `gog` CLI を使う Google Calendar / Chat 読み取りスキル
+| Plugin | Skills | Purpose | Runtime dependency |
+| --- | ---: | --- | --- |
+| `toolbox` | 18 | Research, review, testing, delivery, browser operations, and visual communication | Per-skill; see each `SKILL.md` |
+| `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
+| `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 
-各スキルの frontmatter はホスト共通の `name` と `description` だけを使います。必要な CLI や安全契約は本文に記載します。
+### Skill catalog
 
-## Security
+`adr`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-thinking`, `progress-report`, `structured-text-parsing`, `technical-research`, `verification-loop`, `done`, `gog-calendar`, and `gog-chat-readonly`.
 
-認証情報、組織固有情報、個人情報をリポジトリへ追加しないでください。`scripts/validate.rb` はスキル規約、内部参照、代表的な機密パターンを検査します。
+## Install
+
+### Claude Code
+
+```text
+/plugin marketplace add MasashiFukuzawa/agent-toolbox
+/plugin install toolbox@agent-toolbox
+/plugin install done@agent-toolbox
+/plugin install gog@agent-toolbox
+```
+
+Use `/plugin` to update or uninstall a plugin. Claude Code discovers the marketplace from `.claude-plugin/marketplace.json`.
+
+### Codex
+
+Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `done`, or `gog` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release.
+
+The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill before reporting repository changes complete.
+
+## Security model
+
+- Skills never include credentials, personal paths, company-specific names, or private incident reports.
+- Browser profiles and Google OAuth data remain outside the repository.
+- `gog` skills permit read-only commands only and wrap untrusted Workspace content.
+- Repository checks validate frontmatter, manifests, local links, trigger metadata, and common secret patterns. CI also runs gitleaks.
+
+Review a skill's guardrails before using it with authenticated services or write-capable tools.
+
+## Development
+
+Python 3.11+ and [uv](https://docs.astral.sh/uv/) are required for repository tooling.
+
+```bash
+uv sync --dev
+uv run ruff check .
+uv run pytest
+uv run python -m scripts.validate
+uv run python -m scripts.trigger_eval --check
+bash -n plugins/done/scripts/quality-gate-stop.sh
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution rules and [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## License
 
-Apache-2.0
+Apache-2.0. See [LICENSE](LICENSE).

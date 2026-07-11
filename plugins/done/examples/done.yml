@@ -1,0 +1,38 @@
+version: 1
+repo: example-repository
+
+verify:
+  quick:
+    - ruff check .
+    - pytest -q
+  standard:
+    - ruff check .
+    - pytest
+  full:
+    - ruff check .
+    - pytest
+    - python -m build
+
+tier_floors:
+  full:
+    - "migrations/**"
+    - ".github/workflows/**"
+    - "**/auth/**"
+  quick:
+    - "docs/**"
+    - "**/*.md"
+
+docs:
+  checks:
+    - README and public interfaces match the implementation
+
+review:
+  criteria:
+    - correctness and failure handling
+    - security and tenant boundaries
+    - backward compatibility
+  external:
+    default: none
+    allowed:
+      - claude
+      - codex

@@ -8,13 +8,13 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Done",
-    "shortDescription": "Use Done in Codex.",
+    "shortDescription": "Run the repository-defined final quality gate.",
     "longDescription": "Repository-defined quality gate",
     "developerName": "Agent Toolbox Contributors",
     "category": "Productivity",
     "capabilities": [
 
     ],
-    "defaultPrompt": "Help me use Done."
+    "defaultPrompt": "Run the Done quality gate from this repository's .agents/done.yml and emit PASS only after every required check succeeds."
   }
 }

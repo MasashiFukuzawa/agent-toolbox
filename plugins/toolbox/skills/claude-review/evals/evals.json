@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "claude-reviewを使って $HOME/project のコードをレビューしてください。Effort は medium で。",
-      "expected_output": "effort が明示されているので medium を尊重し、claude -p コマンドを --model claude-opus-4-8 --effort medium で実行して、my-todo プロジェクトのコードレビュー結果を要約・詳細・推奨対応の形式で報告する",
+      "expected_output": "effort が明示されているので medium を尊重し、claude -p コマンドを --model claude-opus-4-8 --effort medium で実行して、対象プロジェクトのコードレビュー結果を要約・詳細・推奨対応の形式で報告する",
       "files": []
     },
     {
@@ -16,7 +16,7 @@
     {
       "id": 3,
       "prompt": "Claudeの別インスタンスに $HOME/project を軽くチェックしてもらいたい（low effort）",
-      "expected_output": "effort が明示されているので low を尊重し、claude -p コマンドを --model claude-opus-4-8 --effort low で実行して、dev-journal の概要レビューを報告する",
+      "expected_output": "effort が明示されているので low を尊重し、claude -p コマンドを --model claude-opus-4-8 --effort low で実行して、対象プロジェクトの概要レビューを報告する",
       "files": []
     },
     {

@@ -3,13 +3,13 @@ name: browser-operations
 description: >-
   Playwright CLI やブラウザ制御手段を選び、ログイン引き継ぎと永続セッションを安全に扱う。アドホックなブラウザ操作に使う。staging E2E の能力検証には使わない。「ブラウザで確認」「ログインを引き継いで」を正のトリガーとし、認証済みstagingの破壊的フロー検証には e2e-capability-verification を使う。
 ---
-# Browser Operations
+# ブラウザ操作
 
-Use this skill when operating a website ad hoc, when a login wall appears, or when choosing between browser tools.
+アドホックなWeb操作、ログイン画面でのユーザー引き継ぎ、ブラウザtool選択を安全に行う。
 
-**Routing rule**: if the repo has an E2E wrapper, staging-verification context, or a destructive-flow gate, `e2e-capability-verification` is canonical — not this skill. For everything else (ad-hoc browsing, cooperative login, cross-repo sessions), this skill is canonical.
+**振り分け**: repositoryにE2E wrapperがある、staging検証である、または破壊的flow gateが必要なら `e2e-capability-verification` を使う。アドホック操作、協調ログイン、repositoryをまたぐsessionは本Skillを使う。
 
-## Guardrails
+## ガードレール
 
 - Never touch, connect to, or point any tool at the user's daily-use Chrome profile (`~/Library/Application Support/Google/Chrome`). Never open `--remote-debugging-port`.
 - Agent profile dirs (`~/.mcp/browser-profiles/`) are credential-equivalent: do not read, print, commit, share, or sync their contents.
@@ -21,7 +21,7 @@ Use this skill when operating a website ad hoc, when a login wall appears, or wh
 - Never ask the user to paste passwords, tokens, or cookies into the prompt.
 - Chrome DevTools MCP's shared profile and all artifacts (screenshots, traces, `.playwright-cli/` snapshots of authenticated pages) are credential-like: keep them local, never commit or share them.
 
-## Tool selection
+## tool選択
 
 | Task | Tool |
 |---|---|
@@ -33,7 +33,7 @@ Rule of thumb: "operate the page and get a result" → CLI. "Find out why it is 
 
 The CLI is preferred for token efficiency: it writes results (snapshots, screenshots) to `.playwright-cli/` on disk so you read only what you need. Command map and details: `references/tool-selection.md`.
 
-## Using @playwright/cli
+## @playwright/cli の使用
 
 - No auth needed: plain `playwright-cli` (in-memory profile, headless by default). Example: `playwright-cli open <url>`, `playwright-cli snapshot`, `playwright-cli click <ref>`, `playwright-cli close`.
 - Auth needed: **always** go through the `pwauth` wrapper — never hand-roll `--profile` flags:
@@ -47,7 +47,7 @@ pwauth <profile-key> close
 - `<profile-key>` = one site / trust boundary, derived from the domain: `github`, `notion`, `service-staging`. Lowercase `[a-z0-9-]`. Reuse the same key across repos — that is what makes sessions survive repo switches.
 - If `pwauth` is missing, follow `references/setup.md`. Do not assume a repository-local setup script exists.
 
-## Cooperative authentication protocol
+## 協調認証protocol
 
 When you hit a login wall:
 
@@ -61,7 +61,7 @@ When you hit a login wall:
 
 Verbatim handoff templates, SSO/MFA/CAPTCHA variants, and failure triage: `references/auth-session-protocol.md`.
 
-## Session persistence
+## session永続化
 
 - Playwright lane: `~/.mcp/browser-profiles/<key>` — one dir per site, shared across repos, used only via `pwauth`.
 - Chrome DevTools lane: `~/.cache/chrome-devtools-mcp/chrome-profile-*` — one shared dir, managed by the MCP itself.
@@ -69,7 +69,7 @@ Verbatim handoff templates, SSO/MFA/CAPTCHA variants, and failure triage: `refer
 - Same key + same time = lock conflict (see Guardrails). Different keys run in parallel fine.
 - Corrupted profile: delete the single `~/.mcp/browser-profiles/<key>` dir and re-login that one site.
 
-## Token efficiency
+## token効率
 
 - Prefer the CLI; read `.playwright-cli/` artifacts selectively instead of streaming everything into context.
 - Prefer targeted element refs and `snapshot <target>` over full-page snapshots.

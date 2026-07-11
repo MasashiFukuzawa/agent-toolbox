@@ -49,7 +49,8 @@ D1
 □ partially indexed / repair needed を表現できるか
 
 Vectorize
-□ deleteByIds は必ず batch 分割しているか（100 ID 超で失敗するクラスがある）
+□ deleteByIds は必ずbounded batchへ分割しているか
+  （固定値を記憶せず、実装時点のCloudflare公式docsと利用SDK/CLIのhelpで上限を確認）
 □ upsert も bounded batch にしているか（巨大 payload の単発 request を作らない）
 □ D1 更新前に live vector を消していないか
 □ orphan / stale vector を後から repair できるか

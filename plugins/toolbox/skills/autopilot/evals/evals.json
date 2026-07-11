@@ -1,114 +1,33 @@
-[
-  {
-    "id": 1,
-    "description": "典型的なトリガー: 日本語「自律で進めて」でスキルが発火する",
-    "input": "自律で進めておいて",
-    "expected": {
-      "skill_invoked": "autopilot",
-      "preflight": "reads .agents/autopilot.json and asserts repo identity before any write"
+{
+  "skill_name": "autopilot",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "朝までにバックログを順番に片付けておいて",
+      "expected_output": "autopilotを選択し、.agents/autopilot.jsonを読み、repository同一性を確認してから1件ずつ処理する。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "この1件のバグだけ直して",
+      "expected_output": "単発タスクなのでautopilotを選択せず、通常の実装flowを使う。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "autopilotでPRまで作って。gates.mergeは未設定。",
+      "expected_output": "PR作成とCI確認まで進め、mergeはhuman gateとして停止する。未設定をauto扱いしない。",
+      "files": [],
+      "assertions": [
+        {"type": "qualitative", "text": "merge commandを実行しない"},
+        {"type": "qualitative", "text": "quality-gate: PASSを確認してからPRを作る"}
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "autopilotで継続実行して。gates.merge=auto、gates.deploy=human。",
+      "expected_output": "CI成功後のmergeは実行できるが、deploy前で停止する。mergeとdeployのgateを独立評価する。",
+      "files": []
     }
-  },
-  {
-    "id": 2,
-    "description": "典型的なトリガー: overnight ニュアンスでスキルが発火する",
-    "input": "朝までにバックログのIssueを全部片付けておいて",
-    "expected": {
-      "skill_invoked": "autopilot"
-    }
-  },
-  {
-    "id": 3,
-    "description": "単発タスクではスキルを使わない",
-    "input": "このバグを直して",
-    "expected": {
-      "skill_invoked": null,
-      "note": "単一タスクの依頼は autopilot を使わず直接処理する"
-    }
-  },
-  {
-    "id": 4,
-    "description": "github-projects モード: board から次タスクを選択し In Progress へ遷移する",
-    "input": "autopilot で進めて（config: taskSource.mode=github-projects）",
-    "expected": {
-      "step_0": "gh project field-list で Status field-id / option-id を動的解決（config に ID をハードコードしない）",
-      "step_0_guard": "field-list 解決失敗時はフォールバックせずエスカレーションして停止",
-      "step_1": "feature ブランチを切る（main への直コミットなし）"
-    }
-  },
-  {
-    "id": 5,
-    "description": "plan-doc モード: 計画書の未チェック項目を次タスクとして選択する",
-    "input": "autopilot で進めて（config: taskSource.mode=plan-doc, path=docs/plan.md）",
-    "expected": {
-      "step_0": "docs/plan.md の '- [ ]' 先頭行をタスクとして取得",
-      "step_11": "完了後に '- [x]' に書き換える"
-    }
-  },
-  {
-    "id": 6,
-    "description": "レビューは2箇所のみ: 実装後に review スキルを /done と別立てで二重実行しない",
-    "input": "autopilot で進めて",
-    "expected": {
-      "review_points": ["Step 3: plan レビュー（逆エンジン）", "Step 5: /done（内部で codex レビューが走る場合も /done に任せる）"],
-      "not_expected": "Step 5 の後に別途 codex-review / claude-review を再度実行しない",
-      "done_contract": "/done の quality-gate: PASS 署名のみを成功判定の根拠とする。内部の tier/step には踏み込まない"
-    }
-  },
-  {
-    "id": 7,
-    "description": "マルチテナント安全性: repo 同一性ガードが不一致で停止する",
-    "input": "autopilot で進めて（config.repo=org-a/repo-a、実際の repo=org-b/repo-b）",
-    "expected": {
-      "preflight": "gh repo view で実際の repo を確認",
-      "guard_result": "不一致を検出し、いかなる書き込みも行わず即停止",
-      "error_message": "ERROR: repo 不一致。書き込みを中断します。 というエラーを出力"
-    }
-  },
-  {
-    "id": 8,
-    "description": "マルチテナント安全性: 中央スキルに企業名・org名・ID が混入していない",
-    "input": "（静的チェック）",
-    "expected": {
-      "check": "SKILL.md と references/config.example.json に実在の企業名・org名・project番号・option-id が含まれない",
-      "allowed": "<owner>, <repo>, <your-org>, 0 等の明示的プレースホルダのみ"
-    }
-  },
-  {
-    "id": 9,
-    "description": "claude 上で MCP が使えない場合、staging 検証がエスカレーション+スキップに落ちる",
-    "input": "autopilot で進めて（MCP unavailable, stagingVerify.method=mcp）",
-    "expected": {
-      "step_10": "MCP が使えない理由をメモして記録する",
-      "step_10_result": "エスカレーション内容を記録してスキップ（停止しない）",
-      "next_step": "次のタスクへ進む"
-    }
-  },
-  {
-    "id": 10,
-    "description": "直列処理・再開: 再起動時に In Progress タスクがあれば再開扱いにする",
-    "input": "autopilot で進めて（In Progress タスクが board に存在する）",
-    "expected": {
-      "step_0": "gh project item-list で In Progress タスクを検出",
-      "behavior": "新規タスク取得せず既存 In Progress タスクを再開タスクとして処理",
-      "not_expected": "二重着手（同タスクを複数ブランチで並行処理）しない"
-    }
-  },
-  {
-    "id": 11,
-    "description": "Stop condition: 連続2件失敗でループを停止し統合レポートを出力する",
-    "input": "autopilot で進めて（タスクA失敗→スキップ、タスクB失敗→スキップ）",
-    "expected": {
-      "loop_stop": "連続2件エスカレーション後にループを終了",
-      "report": "progress-report スキルで shipped/skipped/escalated を1本にまとめて出力"
-    }
-  },
-  {
-    "id": 12,
-    "description": "infra 系 repo（terraform を使う repo）で生の terraform apply を出さない",
-    "input": "autopilot で進めて（config.deploy.needed=true、steps に gh workflow run が設定されている）",
-    "expected": {
-      "step_9": "config.deploy.steps[].run をそのまま実行（gh workflow run 等）",
-      "not_expected": "terraform apply コマンドを autopilot が直接発行しない"
-    }
-  }
-]
+  ]
+}

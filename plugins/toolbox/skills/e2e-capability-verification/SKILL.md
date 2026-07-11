@@ -3,13 +3,13 @@ name: e2e-capability-verification
 description: >-
   staging や test 環境で認証付き E2E と機能可否を安全に検証する。破壊的操作や storageState が関わる検証に使う。アドホックなブラウザ操作には browser-operations を使う。「stagingで可能か確認」「認証付きE2Eを検証」を正のトリガーとし、日常的なサイト閲覧やログイン引き継ぎには使わない。
 ---
-# E2E Capability Verification
+# E2E機能検証
 
-Use this skill when testing a web app through UI automation, staging, Playwright MCP, Browser, Chrome DevTools, Computer Use, or Playwright scripts, especially if a feature looks missing, a flow may mutate data, or authenticated browser state is required.
+UI automationやstagingでWeb appを検証する。機能が見当たらない、dataを変更し得る、または認証済みbrowser stateが必要な場合に特に適用する。
 
-**Routing rule**: repo E2E wrapper / staging-verification context / destructive-flow gate → this skill is canonical. Ad-hoc browser operation, browser-tool selection, cooperative login with the user, cross-repo personal sessions → `browser-operations` is canonical.
+**振り分け**: repositoryのE2E wrapper、staging検証、破壊的flow gateには本Skillを使う。アドホック操作、tool選択、協調ログイン、repositoryをまたぐ個人sessionには `browser-operations` を使う。
 
-## Non-negotiables
+## 必須ガードレール
 
 - Do not conclude "not possible" from visible UI alone. Check at least one code/API source too: routes, shared schemas, generated OpenAPI, tests, DB schema, or network calls.
 - Separate "no visible affordance" from "no capability". Say which one you have evidence for.
@@ -27,7 +27,7 @@ Use this skill when testing a web app through UI automation, staging, Playwright
 - For unattended E2E, prefer the repo's CI-native secret store plus workload identity path over human-approved local secret access.
 - If an E2E identity change crosses IAM, perimeter, secret-store, or deployment-stack boundaries, treat it as an infra change. Check the repo runbook for cross-stack apply order before changing app tests or workflows.
 
-## Token-efficient workflow
+## token効率のよいworkflow
 
 1. Define a small verification matrix: render, happy path, error path, persistence, cleanup, authorization if relevant.
 2. Inspect code with `rg` before broad UI exploration: routes, mutation hooks, button labels, API client, tests.
@@ -44,7 +44,7 @@ Use this skill when testing a web app through UI automation, staging, Playwright
 7. Record only high-signal evidence: URL, user/tenant shown, action performed, request status, visible result, screenshot path if created.
 8. For long E2E suites, codify the flow as a script and emit a compact JSON/Markdown report. Consider Webwright-style generated browser scripts when exploration must become repeatable.
 
-## Authenticated E2E preflight
+## 認証付きE2Eのpreflight
 
 Before authenticated staging/browser E2E:
 
@@ -67,7 +67,7 @@ For repos with a 1Password-based staging auth setup, the preferred flow is:
 2. Start the repo-provided Playwright MCP wrapper, commonly `pnpm mcp:staging:playwright`, so it can load storageState in an isolated context after metadata precheck.
 3. If either command fails because `op` is missing, the Environment is unavailable, or access is denied, escalate that prerequisite to the human/credential owner and stop. Do not fall back to raw password prompts, `.env`, personal Chrome profiles, or manual secret exports.
 
-## Session persistence & profile strategy
+## session永続化とprofile戦略
 
 For ad-hoc (non-verification) browsing where the user's own login should persist across repos, use the per-site profile flow in `browser-operations` instead of the strategies below. For verification work, choose a persistence strategy before opening any browser tool. The decision order is:
 
@@ -90,7 +90,7 @@ For ad-hoc (non-verification) browsing where the user's own login should persist
 
 **Profile boundary rule** (reinforcing the Non-negotiable above): agent profiles and human daily-use browser profiles must always be physically separate. Never mount your personal Chrome profile as an agent's browser context, even temporarily.
 
-## Unattended E2E and infra-boundary changes
+## 無人E2Eとinfra境界の変更
 
 Use local secret wrappers for human-present development checks. For unattended quality gates, prefer CI-native secret injection and workload identity so agents can continue without a human approval prompt while still avoiding raw credentials in prompts, logs, or repositories.
 
@@ -102,7 +102,7 @@ When modifying E2E credentials, browser test workflow identity, secret access, n
 4. Do not treat the change as app-only just because the failing symptom appears in a browser E2E job.
 5. If the correct apply order is unclear, ask for infra review before implementation.
 
-## Capability triage checklist
+## 機能切り分けchecklist
 
 When a feature seems absent:
 
@@ -119,7 +119,7 @@ Only after this checklist say one of:
 - "No evidence of capability in UI/API/schema/tests."
 - "Capability is intentionally blocked by product/security/data-integrity boundary."
 
-## Destructive-flow guardrail
+## 破壊的flowのガードレール
 
 Before create/update/delete on staging:
 
@@ -130,13 +130,13 @@ Before create/update/delete on staging:
 5. Confirm postcondition through UI and network/API, not just a toast.
 6. If cleanup fails, document only safe residual metadata and the escalation path immediately.
 
-## Evidence handling
+## 証跡の扱い
 
 - Do not share artifacts, traces, screenshots, network logs, cookies, tokens, `storageState` contents, request/response bodies with raw PII, provider raw payloads, OCR full text, private object keys, or presigned URLs.
 - When evidence is needed, summarize sanitized facts: route path, status code, visible state, safe object type/id, marker, and failure category.
 - Keep sensitive artifacts local and out of Issues, PRs, Slack, GitHub Actions artifacts, and final reports unless the repo runbook explicitly allows a sanitized artifact class.
 
-## Failure triage
+## 失敗の切り分け
 
 When authenticated E2E fails:
 

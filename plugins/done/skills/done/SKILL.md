@@ -106,6 +106,8 @@ tier: <quick|standard|full>
 
 ## 導入方法（repo 側）
 
-1. repo の git root に `.agents/done.yml` を作成（`docs/examples/done.yml` 参照。**設定ファイルの存在が Stop hook の opt-in スイッチ**）
+1. repo の git root に `.agents/done.yml` を作成（同梱の [example](../../examples/done.yml) と [JSON Schema](../../schema/done.schema.json) を参照。**設定ファイルの存在が Stop hook の opt-in スイッチ**）
 2. Claude Code では追加の hook 配線は不要。plugin 同梱の Stop hook が plugin enable 時に適用される。repo ローカルの `.claude/settings.json` へ重複配線しない
 3. Codex v1 では Stop hook を設定せず、完了直前に `done` skill を手動実行する
+
+必須fieldは `version: 1`、非空の `repo`、および文字列command配列を持つ `verify.quick` / `verify.standard` / `verify.full`。`tier_floors`、`docs`、`review`は任意で、省略時にhost固有の暗黙値を補わない。外部review providerの既定は `none` とし、明示された場合だけ起動する。
