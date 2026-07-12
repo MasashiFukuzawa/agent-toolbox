@@ -116,6 +116,6 @@ Use a `<rect>` per task on a shared time axis. Annotate milestones with `<circle
 - **Do** use `text-anchor="middle"` + explicit x/y for centered labels
 - **Do** set `role="img" aria-label="..."` for accessibility
 - **Don't** overlap text with edges — offset edge labels with a small y adjustment
-- **Don't** go below font-size 10px — illegible on mobile
+- **Don't** go below font-size 10px — illegible at reduced display sizes
 - **Don't** use raster images (PNG/JPG) inside SVG — they break self-containment (unless base64)
 - **Don't** reach for D3 or mermaid unless the diagram has 15+ nodes or the user specified Mermaid

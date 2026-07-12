@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-12T03:42:17.641643+00:00",
+  "generated_at": "2026-07-12T10:00:30.992982+00:00",
   "summary": {
     "total": 792,
     "passed": 0,
@@ -1271,7 +1271,7 @@
     {
       "host": "claude-code",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 1,
       "status": "not_run",
@@ -1281,7 +1281,7 @@
     {
       "host": "claude-code",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 2,
       "status": "not_run",
@@ -1291,7 +1291,7 @@
     {
       "host": "claude-code",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 3,
       "status": "not_run",
@@ -1301,7 +1301,7 @@
     {
       "host": "claude-code",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "nearest_negative",
       "case_id": 1,
       "status": "not_run",
@@ -1311,7 +1311,7 @@
     {
       "host": "claude-code",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "nearest_negative",
       "case_id": 2,
       "status": "not_run",
@@ -1321,7 +1321,7 @@
     {
       "host": "claude-code",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -1331,7 +1331,7 @@
     {
       "host": "claude-code",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "ambiguous",
       "case_id": 2,
       "status": "not_run",
@@ -1341,7 +1341,7 @@
     {
       "host": "claude-code",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -1351,7 +1351,7 @@
     {
       "host": "claude-code",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "no_skill_negative",
       "case_id": 1,
       "status": "not_run",
@@ -3251,7 +3251,7 @@
     {
       "host": "claude-code",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 1,
       "status": "not_run",
@@ -3261,7 +3261,7 @@
     {
       "host": "claude-code",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 2,
       "status": "not_run",
@@ -3271,7 +3271,7 @@
     {
       "host": "claude-code",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 3,
       "status": "not_run",
@@ -3281,7 +3281,7 @@
     {
       "host": "claude-code",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "nearest_negative",
       "case_id": 1,
       "status": "not_run",
@@ -3291,7 +3291,7 @@
     {
       "host": "claude-code",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "nearest_negative",
       "case_id": 2,
       "status": "not_run",
@@ -3301,7 +3301,7 @@
     {
       "host": "claude-code",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -3311,7 +3311,7 @@
     {
       "host": "claude-code",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "ambiguous",
       "case_id": 2,
       "status": "not_run",
@@ -3321,7 +3321,7 @@
     {
       "host": "claude-code",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -3331,7 +3331,7 @@
     {
       "host": "claude-code",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "no_skill_negative",
       "case_id": 1,
       "status": "not_run",
@@ -5231,7 +5231,7 @@
     {
       "host": "codex",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 1,
       "status": "not_run",
@@ -5241,7 +5241,7 @@
     {
       "host": "codex",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 2,
       "status": "not_run",
@@ -5251,7 +5251,7 @@
     {
       "host": "codex",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 3,
       "status": "not_run",
@@ -5261,7 +5261,7 @@
     {
       "host": "codex",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "nearest_negative",
       "case_id": 1,
       "status": "not_run",
@@ -5271,7 +5271,7 @@
     {
       "host": "codex",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "nearest_negative",
       "case_id": 2,
       "status": "not_run",
@@ -5281,7 +5281,7 @@
     {
       "host": "codex",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -5291,7 +5291,7 @@
     {
       "host": "codex",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "ambiguous",
       "case_id": 2,
       "status": "not_run",
@@ -5301,7 +5301,7 @@
     {
       "host": "codex",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -5311,7 +5311,7 @@
     {
       "host": "codex",
       "environment": "isolated",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "no_skill_negative",
       "case_id": 1,
       "status": "not_run",
@@ -7211,7 +7211,7 @@
     {
       "host": "codex",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 1,
       "status": "not_run",
@@ -7221,7 +7221,7 @@
     {
       "host": "codex",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 2,
       "status": "not_run",
@@ -7231,7 +7231,7 @@
     {
       "host": "codex",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "positive",
       "case_id": 3,
       "status": "not_run",
@@ -7241,7 +7241,7 @@
     {
       "host": "codex",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "nearest_negative",
       "case_id": 1,
       "status": "not_run",
@@ -7251,7 +7251,7 @@
     {
       "host": "codex",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "nearest_negative",
       "case_id": 2,
       "status": "not_run",
@@ -7261,7 +7261,7 @@
     {
       "host": "codex",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -7271,7 +7271,7 @@
     {
       "host": "codex",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "ambiguous",
       "case_id": 2,
       "status": "not_run",
@@ -7281,7 +7281,7 @@
     {
       "host": "codex",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -7291,7 +7291,7 @@
     {
       "host": "codex",
       "environment": "superset",
-      "skill": "html-thinking",
+      "skill": "html-artifact",
       "type": "no_skill_negative",
       "case_id": 1,
       "status": "not_run",

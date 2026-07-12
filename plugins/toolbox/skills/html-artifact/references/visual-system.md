@@ -67,15 +67,14 @@ The first viewport must answer the key question. The title states the issue; the
 - **Recommendation card:** surface background, 1px line, 4px green left rule, 12–14px radius, restrained shadow.
 - **Thesis band:** `--ink` background, light text, serif values, thin translucent separators.
 - **Cards:** use only for bounded evidence. Prefer one strong container over many tiny cards. Radius 14–16px; border plus subtle shadow.
-- **Tables:** surface background, separate borders when rounded corners matter, mono column headings, generous horizontal padding. Wrap in an overflow container on narrow screens.
+- **Tables:** surface background, separate borders when rounded corners matter, mono column headings, generous horizontal padding.
 - **Diagrams:** paper/surface nodes with semantic accents; dark ink edges; arrowheads; explicit labels. Keep decorative grid behind, never inside, the data layer.
 - **Details:** serif or strong sans summary, clear focus style, compact body. Collapsed detail must not contain the only statement of the conclusion.
 
-## Responsive, interaction, and print
+## Desktop scope, interaction, and print
 
-- At `max-width: 760px`, collapse mast and multi-column evidence to one column; reduce outer padding to 24px; keep touch targets at least 44px.
+- Mobile support is outside the default scope. Do not add breakpoint-specific layouts or run mobile viewport QA unless the user explicitly requests it.
 - Keep body text at 16px where practical, secondary text at least 12–14px, and interactive text at least 14px.
-- Never preserve a desktop side rail at the cost of a narrow main column. Tables and code may scroll horizontally inside their own region.
 - Add visible `:focus-visible` styles. Honor `prefers-reduced-motion`; motion is optional and must not carry meaning.
 - Tables use `<caption>` when context is not otherwise explicit and `scope` on row/column headers.
 - Clipboard actions need success and failure feedback; do not assume `navigator.clipboard` is available from `file://`.
@@ -97,5 +96,4 @@ Keep tokens, typography roles, spacing rhythm, and semantic colors stable. Vary 
 - Does the page still look intentional with web fonts blocked?
 - Is every color meaningful, and is every semantic state also labeled?
 - Are there fewer, stronger surfaces instead of a dashboard of cards?
-- Does 375px preserve reading order, labels, tables, and controls?
 - Does print preview remain legible without clipped content or unnecessary ink?

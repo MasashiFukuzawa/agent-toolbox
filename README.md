@@ -12,7 +12,7 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 ### Skill catalog
 
-`adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-thinking`, `progress-report`, `structured-text-parsing`, `technical-research`, `verification-loop`, `done`, `gog-calendar`, and `gog-chat-readonly`.
+`adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `progress-report`, `structured-text-parsing`, `technical-research`, `verification-loop`, `done`, `gog-calendar`, and `gog-chat-readonly`.
 
 ## Install
 

@@ -1,6 +1,6 @@
 # Self-Containment Checklist
 
-A self-contained HTML file opens in any browser, works offline, and is still readable six months later. Use this checklist before delivering any html-thinking artifact.
+A self-contained HTML file opens in any browser, works offline, and is still readable six months later. Use this checklist before delivering any html-artifact output.
 
 ## Tier 1 — Always OK (no comment required)
 

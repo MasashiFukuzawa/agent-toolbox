@@ -9,6 +9,7 @@ Renames in this repository:
 - `research-first` + `documentation-lookup` → `technical-research`
 - `worktree-flow` → `git-worktrees`
 - `write-meaningful-tests` → `behavioral-testing`
+- `html-thinking` → `html-artifact`
 
 ## Frontmatter
 
