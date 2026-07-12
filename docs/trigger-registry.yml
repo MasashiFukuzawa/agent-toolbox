@@ -6,7 +6,6 @@ defaults: &defaults
   nearest_neighbors: []
   negative_triggers: []
   ambiguous_precedence: "明示された対象と目的を優先"
-  renamed_from: []
 skills:
   technical-research:
     canonical_name: technical-research
@@ -18,7 +17,6 @@ skills:
     nearest_neighbors: [codebase-audit]
     negative_triggers: ["既知の単純修正", "コードベース全体の監査"]
     ambiguous_precedence: "包括監査なら codebase-audit を優先"
-    renamed_from: [research-first, documentation-lookup]
   git-worktrees:
     canonical_name: git-worktrees
     category: git
@@ -29,7 +27,6 @@ skills:
     nearest_neighbors: [autopilot]
     negative_triggers: ["通常の単一ブランチ作業"]
     ambiguous_precedence: "複数タスクの全工程自律実行なら autopilot を優先"
-    renamed_from: [worktree-flow]
   behavioral-testing:
     canonical_name: behavioral-testing
     category: testing
@@ -40,7 +37,6 @@ skills:
     nearest_neighbors: [verification-loop]
     negative_triggers: ["既存テストを実行するだけ"]
     ambiguous_precedence: "実装途中の反復実行なら verification-loop を優先"
-    renamed_from: [write-meaningful-tests]
   claude-review:
     canonical_name: claude-review
     category: review
@@ -51,7 +47,6 @@ skills:
     nearest_neighbors: [codex-review]
     negative_triggers: ["Codexでレビューして", "第三者レビューして"]
     ambiguous_precedence: "provider未指定なら選択を確認"
-    renamed_from: []
   codex-review:
     canonical_name: codex-review
     category: review
@@ -62,7 +57,6 @@ skills:
     nearest_neighbors: [claude-review]
     negative_triggers: ["Claudeでレビューして", "第三者レビューして"]
     ambiguous_precedence: "provider未指定なら選択を確認"
-    renamed_from: []
   adr: {<<: *defaults, canonical_name: adr, category: architecture, side_effect_level: workspace-write, positive_triggers: ["ADRにして"], nearest_neighbors: [codebase-audit], negative_triggers: ["単一PRレビュー"]}
   ascii-diagram: {<<: *defaults, canonical_name: ascii-diagram, category: visualization, positive_triggers: ["ASCII図で"], nearest_neighbors: [html-artifact], negative_triggers: ["保存する一枚物"]}
   autopilot: {<<: *defaults, canonical_name: autopilot, category: orchestration, side_effect_level: external-write, positive_triggers: ["バックログを自律で処理して"], nearest_neighbors: [git-worktrees], negative_triggers: ["単発タスク"]}
@@ -72,7 +66,7 @@ skills:
   codebase-audit: {<<: *defaults, canonical_name: codebase-audit, category: review, positive_triggers: ["コードベース全体を監査して"], nearest_neighbors: [codex-review], negative_triggers: ["単一PRレビュー"]}
   context-handoff: {<<: *defaults, canonical_name: context-handoff, category: communication, side_effect_level: workspace-write, positive_triggers: ["引き継ぎを作って"], nearest_neighbors: [progress-report], negative_triggers: ["判断者向け進捗報告"]}
   e2e-capability-verification: {<<: *defaults, canonical_name: e2e-capability-verification, category: testing, side_effect_level: external-write, positive_triggers: ["stagingでE2E確認して"], nearest_neighbors: [browser-operations], negative_triggers: ["アドホックなブラウザ操作"]}
-  html-artifact: {<<: *defaults, canonical_name: html-artifact, category: visualization, side_effect_level: workspace-write, positive_triggers: ["HTMLで図解して", "HTML一枚物を作って", "比較をHTMLで可視化して"], nearest_neighbors: [ascii-diagram], negative_triggers: ["会話内の小さな図"], renamed_from: [html-thinking]}
+  html-artifact: {<<: *defaults, canonical_name: html-artifact, category: visualization, side_effect_level: workspace-write, positive_triggers: ["HTMLで図解して", "HTML一枚物を作って", "比較をHTMLで可視化して"], nearest_neighbors: [ascii-diagram], negative_triggers: ["会話内の小さな図"]}
   progress-report: {<<: *defaults, canonical_name: progress-report, category: communication, side_effect_level: workspace-write, positive_triggers: ["進捗を報告して"], nearest_neighbors: [context-handoff], negative_triggers: ["再開可能な引き継ぎ"]}
   ai-native-engineering: {<<: *defaults, canonical_name: ai-native-engineering, category: architecture, positive_triggers: ["この機能の実装計画を作って", "認証基盤をどう設計する", "MVPのスコープを決めたい", "まず簡易版で始めてよいか判断して", "将来の拡張をどこまで考慮する", "どれくらいで実装できる", "この構成はoverengineeringかレビューして"], nearest_neighbors: [adr, autopilot, technical-research], negative_triggers: ["仕様と手段が確定した単純修正", "技術調査だけ", "進捗報告だけ"], ambiguous_precedence: "判断を作る段階ではai-native-engineering、決定の記録はadr、複数タスクの自律実行はautopilot、根拠調査はtechnical-researchを優先"}
   structured-text-parsing: {<<: *defaults, canonical_name: structured-text-parsing, category: parsing, positive_triggers: ["ログから抽出して"], nearest_neighbors: [technical-research], negative_triggers: ["曖昧な自然言語理解"]}

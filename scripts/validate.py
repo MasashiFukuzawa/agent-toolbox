@@ -25,7 +25,6 @@ REQUIRED_REGISTRY_FIELDS = {
     "nearest_neighbors",
     "negative_triggers",
     "ambiguous_precedence",
-    "renamed_from",
 }
 
 
