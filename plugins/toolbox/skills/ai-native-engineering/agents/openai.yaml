@@ -1,4 +1,0 @@
-interface:
-  display_name: "AI-native Engineering"
-  short_description: "Make durable engineering decisions for AI delivery"
-  default_prompt: "Apply $ai-native-engineering to this design, plan, estimate, or scope decision and explain the lifecycle tradeoffs."

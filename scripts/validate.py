@@ -107,6 +107,8 @@ def _validate_manifests(errors: list[str]) -> None:
     for relative in ("examples/done.yml", "schema/done.schema.json"):
         if not (done_plugin / relative).is_file():
             errors.append(f"done plugin distribution is missing: {relative}")
+    if list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml")):
+        errors.append("skill-local agents/openai.yaml is not adopted in this repository")
 
 
 def _validate_results(errors: list[str]) -> None:

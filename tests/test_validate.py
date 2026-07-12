@@ -26,3 +26,7 @@ def test_trigger_baseline_covers_every_registered_case() -> None:
 def test_semantic_evaluation_matches_current_skill() -> None:
     errors, _warnings = validate()
     assert not any("semantic evaluation" in error for error in errors)
+
+
+def test_skill_local_openai_metadata_is_not_published() -> None:
+    assert list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml")) == []

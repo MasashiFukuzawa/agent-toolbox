@@ -1,7 +1,8 @@
 {
   "schema_version": 1,
-  "skill_sha256": "c2fcfa04dc975b74bff5cb433a4dc6a92d006d5008b1574b2c885e49c48282b0",
+  "skill_sha256": "0604a73c95ae03941ee04f66309d9d454d978492ec09750b1a857b9de9994eef",
   "evals_sha256": "94d1a7e9a651405efe4be87619f06613ca0fd63404d011e300209f731dadfdd4",
+  "reuse_note": "Semantic results were retained after a frontmatter-description-only trigger expansion; the instruction body and semantic eval cases are unchanged.",
   "executors": [
     {
       "host": "codex",
