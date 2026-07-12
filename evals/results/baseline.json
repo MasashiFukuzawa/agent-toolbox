@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-11T03:04:30Z",
+  "generated_at": "2026-07-12T02:59:48.224831+00:00",
   "summary": {
-    "total": 756,
+    "total": 792,
     "passed": 0,
     "failed": 0,
-    "not_run": 756
+    "not_run": 792
   },
   "results": [
     {
@@ -1451,6 +1451,96 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "structured-text-parsing",
       "type": "positive",
       "case_id": 1,
@@ -3341,6 +3431,96 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "structured-text-parsing",
       "type": "positive",
       "case_id": 1,
@@ -5231,6 +5411,96 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "structured-text-parsing",
       "type": "positive",
       "case_id": 1,
@@ -7112,6 +7382,96 @@
       "host": "codex",
       "environment": "superset",
       "skill": "progress-report",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
       "type": "no_skill_negative",
       "case_id": 1,
       "status": "not_run",

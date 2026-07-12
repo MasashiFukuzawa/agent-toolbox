@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
@@ -118,6 +119,22 @@ def _validate_results(errors: list[str]) -> None:
             for status in ("passed", "failed", "not_run"):
                 if summary[status] != sum(row["status"] == status for row in rows):
                     errors.append(f"trigger result {status} mismatch: {path.relative_to(ROOT)}")
+            if path.name == "baseline.json":
+                from scripts.trigger_eval import build_matrix
+
+                matrix = build_matrix()
+                expected = {
+                    (host, environment, case["skill"], case["type"], case["id"])
+                    for host in matrix["hosts"]
+                    for environment in matrix["environments"]
+                    for case in matrix["cases"]
+                }
+                actual = {
+                    (row["host"], row["environment"], row["skill"], row["type"], row["case_id"])
+                    for row in rows
+                }
+                if actual != expected:
+                    errors.append("baseline trigger result is stale or incomplete")
         except (OSError, KeyError, json.JSONDecodeError) as exc:
             errors.append(f"invalid trigger result {path.relative_to(ROOT)}: {exc}")
 
@@ -134,6 +151,28 @@ def _validate_skill_evals(errors: list[str]) -> None:
                     errors.append(f"incomplete eval case: {path.relative_to(ROOT)}")
         except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
             errors.append(f"invalid skill eval {path.relative_to(ROOT)}: {exc}")
+    for path in ROOT.glob("plugins/*/skills/*/evals/semantic-results.json"):
+        try:
+            result = json.loads(path.read_text())
+            skill_path = path.parents[1] / "SKILL.md"
+            evals_path = path.parent / "evals.json"
+            skill_hash = hashlib.sha256(skill_path.read_bytes()).hexdigest()
+            evals_hash = hashlib.sha256(evals_path.read_bytes()).hexdigest()
+            if result["skill_sha256"] != skill_hash or result["evals_sha256"] != evals_hash:
+                errors.append(f"stale semantic evaluation: {path.relative_to(ROOT)}")
+            evals = json.loads(evals_path.read_text())["evals"]
+            expected = {case["id"]: len(case.get("assertions", [])) for case in evals}
+            for executor in result["executors"]:
+                if executor["status"] == "passed":
+                    actual = {case["id"]: len(case["assertions"]) for case in executor["cases"]}
+                    if actual != expected or not all(
+                        case["passed"] and all(case["assertions"]) for case in executor["cases"]
+                    ):
+                        errors.append(f"incomplete semantic evaluation: {path.relative_to(ROOT)}")
+                elif executor["status"] == "not_run" and not executor.get("reason"):
+                    errors.append(f"semantic evaluation skip needs reason: {path.relative_to(ROOT)}")
+        except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+            errors.append(f"invalid semantic evaluation {path.relative_to(ROOT)}: {exc}")
 
 
 def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:

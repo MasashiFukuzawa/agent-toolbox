@@ -6,13 +6,13 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 18 | Research, review, testing, delivery, browser operations, and visual communication | Per-skill; see each `SKILL.md` |
+| `toolbox` | 19 | Research, review, testing, delivery, browser operations, and engineering decisions | Per-skill; see each `SKILL.md` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 
 ### Skill catalog
 
-`adr`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-thinking`, `progress-report`, `structured-text-parsing`, `technical-research`, `verification-loop`, `done`, `gog-calendar`, and `gog-chat-readonly`.
+`adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-thinking`, `progress-report`, `structured-text-parsing`, `technical-research`, `verification-loop`, `done`, `gog-calendar`, and `gog-chat-readonly`.
 
 ## Install
 

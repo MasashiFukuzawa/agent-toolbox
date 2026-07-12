@@ -16,3 +16,13 @@ def test_done_documentation_is_inside_plugin_distribution() -> None:
     assert (ROOT / "plugins/done/schema/done.schema.json").is_file()
     assert "../../examples/done.yml" in skill
     assert "../../schema/done.schema.json" in skill
+
+
+def test_trigger_baseline_covers_every_registered_case() -> None:
+    errors, _warnings = validate()
+    assert "baseline trigger result is stale or incomplete" not in errors
+
+
+def test_semantic_evaluation_matches_current_skill() -> None:
+    errors, _warnings = validate()
+    assert not any("semantic evaluation" in error for error in errors)

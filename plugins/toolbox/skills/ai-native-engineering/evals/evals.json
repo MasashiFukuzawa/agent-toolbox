@@ -1,0 +1,48 @@
+{
+  "skill_name": "ai-native-engineering",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "本番運用する新サービスの計画です。最初は利用者が少ないので、認可、DB migration、rollback、監査可能性は後回しにして機能開発を優先する案をレビューして。AIエージェントは数日間並列稼働できます。",
+      "expected_output": "後戻りコスト、必要性の確度、AI圧縮率、人間依存を評価する。運用上避けられず全体へ波及する認可・migration・rollback等を初期基盤として前倒しし、現在の人間工数だけを理由に妥協しない。最大構成を無条件に採らず、必要な境界と品質を具体化する。",
+      "files": [],
+      "assertions": [
+        {"type": "qualitative", "text": "[critical] 人間の工数感ではなく後戻りコストを根拠に、必要な本番基盤を初期scopeへ置く"},
+        {"type": "qualitative", "text": "[critical] 最大構成を無条件に採らず、現在必要な品質境界を具体化する"},
+        {"type": "qualitative", "text": "AIで圧縮できる実装と、人間が確定すべき運用・権限判断を分ける"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "現在は1種類の通知しかありませんが、将来あらゆる通知先を追加できるplugin frameworkと管理UIを今から作るべきですか。外部providerは未選定です。",
+      "expected_output": "未観測の差異を発明する投機的抽象化と判断して、機能と管理UIは需要を待つ。一方、外部SDKやdomain modelの結合を避ける薄い境界など、後戻りを安くする非投機的な設計は検討する。単なる最小化ではなく、将来の変更半径を根拠に説明する。",
+      "files": [],
+      "assertions": [
+        {"type": "qualitative", "text": "[critical] plugin frameworkと管理UIを、未観測の差異を発明する投機的抽象化と判定する"},
+        {"type": "qualitative", "text": "[critical] frameworkを作らないだけで終わらず、現在の外部依存を局所化する薄い境界を検討する"},
+        {"type": "qualitative", "text": "後からの変更半径を根拠に、今行う設計と需要を待つ機能を分ける"}
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "新しい業務UIとデータ基盤を含む計画をAI前提で見積もって。仕様確認は複数部署が必要で、UIは担当者の目視確認、外部審査には10営業日かかります。",
+      "expected_output": "schema・tool・test等の高圧縮工程、architecture等の中圧縮工程、要求確認・UI目視・外部審査等の低圧縮工程を分離する。AI実行、人間関与、カレンダー支配要因を別々に示し、低圧縮工程を早く開始して待ち時間に並列実装する。",
+      "files": [],
+      "assertions": [
+        {"type": "qualitative", "text": "[critical] AI実行、人間関与、カレンダー支配要因を別々に示す"},
+        {"type": "qualitative", "text": "[critical] 仕様確認、UI目視、外部審査を低圧縮工程として早期に開始する"},
+        {"type": "qualitative", "text": "作業分解や実測なしに精密な倍率・calendar rangeを補わない"}
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "本番投入しない、今日だけ使って捨てるローカルprototypeです。架空データのみで外部接続もありません。どこまで基盤を作るべきですか。",
+      "expected_output": "低い後戻りコストと限定されたhard scopeを尊重し、本番用認証・監査・infra等を押し付けない。仮説確認に必要な最低限の安全性だけを残し、AI-native engineeringを全案件の大型化に誤用しない。",
+      "files": [],
+      "assertions": [
+        {"type": "qualitative", "text": "[critical] 使い捨てprototypeへ本番基盤を押し付けない"},
+        {"type": "qualitative", "text": "仮説判定の再現性と外部接続禁止など、scopeに応じた最低限の品質は維持する"}
+      ]
+    }
+  ]
+}

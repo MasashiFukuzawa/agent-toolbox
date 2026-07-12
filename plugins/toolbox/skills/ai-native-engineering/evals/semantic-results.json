@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "skill_sha256": "c2fcfa04dc975b74bff5cb433a4dc6a92d006d5008b1574b2c885e49c48282b0",
+  "evals_sha256": "94d1a7e9a651405efe4be87619f06613ca0fd63404d011e300209f731dadfdd4",
+  "executors": [
+    {
+      "host": "codex",
+      "status": "passed",
+      "cases": [
+        {"id": 1, "passed": true, "assertions": [true, true, true]},
+        {"id": 2, "passed": true, "assertions": [true, true, true]},
+        {"id": 3, "passed": true, "assertions": [true, true, true]},
+        {"id": 4, "passed": true, "assertions": [true, true]}
+      ],
+      "unclear_instruction_points": []
+    },
+    {
+      "host": "claude-code",
+      "status": "not_run",
+      "reason": "executor session limit; retry after the provider reset window",
+      "cases": []
+    }
+  ]
+}
