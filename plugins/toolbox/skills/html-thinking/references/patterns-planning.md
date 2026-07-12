@@ -22,11 +22,11 @@ Use when the user wants 2–5 approaches evaluated in parallel. Each column gets
 **CSS skeleton:**
 ```css
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
-.option { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
-.option.recommended { border-color: #22c55e; background: #f0fdf4; }
+.option { border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; }
+.option.recommended { border-color: var(--green); background: var(--green-bg); }
 .badge { display: inline-block; font-size: .75rem; font-weight: 700; border-radius: 4px; padding: .2em .5em; }
-.badge-green { background: #dcfce7; color: #166534; }
-.badge-red   { background: #fee2e2; color: #991b1b; }
+.badge-green { background: var(--green-bg); color: var(--green-dark); }
+.badge-red   { background: var(--red-bg); color: var(--red); }
 ```
 
 **Decision log pattern:** A collapsible `<details>` at the bottom lets the reader record which option they chose and why, then copy it back as a prompt:
@@ -61,13 +61,13 @@ Use when the user wants a phased plan with tasks, owners, and dependencies.
 **Phase timeline CSS (horizontal steps):**
 ```css
 .phases { display: flex; gap: 0; }
-.phase { flex: 1; padding: .5rem 1rem; background: #e2e8f0; position: relative; }
+.phase { flex: 1; padding: .5rem 1rem; background: var(--paper-deep); position: relative; }
 .phase::after {
   content: ''; position: absolute; right: -12px; top: 0; width: 0; height: 100%;
-  border: 20px solid transparent; border-left-color: #e2e8f0; z-index: 1;
+  border: 20px solid transparent; border-left-color: var(--paper-deep); z-index: 1;
 }
-.phase.active { background: #3b82f6; color: #fff; }
-.phase.active::after { border-left-color: #3b82f6; }
+.phase.active { background: var(--green); color: #fff; }
+.phase.active::after { border-left-color: var(--green); }
 ```
 
 **Task list with status:**
@@ -94,16 +94,16 @@ Use when the user wants to score N options against M criteria.
 **Sticky column trick:**
 ```css
 table { border-collapse: collapse; }
-td:first-child, th:first-child { position: sticky; left: 0; background: #fff; z-index: 1; }
+td:first-child, th:first-child { position: sticky; left: 0; background: var(--surface); z-index: 1; }
 ```
 
 **Score cell color coding:**
 ```css
-.score-5 { background: #22c55e; color: #fff; }
-.score-4 { background: #86efac; }
-.score-3 { background: #fef08a; }
-.score-2 { background: #fdba74; }
-.score-1 { background: #f87171; color: #fff; }
+.score-5 { background: var(--green); color: #fff; }
+.score-4 { background: var(--green-bg); }
+.score-3 { background: var(--amber-bg); }
+.score-2 { background: #f3d5a5; }
+.score-1 { background: var(--red); color: #fff; }
 ```
 
 ---

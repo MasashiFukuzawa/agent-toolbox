@@ -7,9 +7,11 @@ description: >-
 
 このスキルは Claude Code / Codex / Cursor のどのホスト（エージェント）からも呼ばれる前提で書かれている。ホスト固有の手順は「実行時間と中断の防止」のホスト分岐に従う。
 
+**用途境界:** 本スキルは第三者レビュー専用で、read-only + 既定 `xhigh`。実装ワーカーとしてCLI agentを委譲する場合は別のオーケストレーター手順を使い、write権限 + 通常 `medium` とする。レビューと実装委譲を同じ設定で混用しない。
+
 ## ガードレール（必須・逸脱禁止）
 
-1. **read-only 厳守**: レビュー用 Claude に書き込みを行わせない（実行後に `git status` で作業ツリー汚染がないか確認し、汚染があれば即報告する）
+1. **read-only 厳守**: 起動コマンドには必ず **`--permission-mode plan` と `--disallowedTools "Edit,Write,NotebookEdit"` の両方**を入れる。片方でも欠けたコマンドは実行してはならない。レビュー後に `git status` で作業ツリー汚染がないか確認し、汚染があれば即報告する
 2. **ネスト起動禁止**: レビュー用 Claude に別の `claude -p` / `codex exec` / review 系 skill を起動させない（依頼文に再帰防止文を必ず含める）
 3. **書き込み系操作の禁止**: commit / push / PR 作成 / GitHub コメント / Issue 作成・更新を行わせない。結果はテキストで返させる
 4. **明示指定の尊重**: ユーザーが effort / model を明示した場合、自動判定で上書きしない（上げるのも下げるのも禁止）
@@ -84,19 +86,30 @@ CLAUDE_REVIEW_PROMPT
 )" \
   --model claude-opus-4-8 \
   --effort <level> \
-  --add-dir <project_dir> \
-  --disallowedTools "Edit,Write,NotebookEdit"
+  --add-dir /path/to/project \
+  --permission-mode plan \
+  --disallowedTools "Edit,Write,NotebookEdit" \
+  < /dev/null
 ```
 
 **重要**: heredoc delimiter は必ず引用する（例: `<<'CLAUDE_REVIEW_PROMPT'`）。引用しない `<<EOF` は shell 展開を許すため使わない。プロンプト内に delimiter と同じ行が含まれる場合だけ、別の一意な delimiter 名に変える。
 **重要**: `--disallowedTools` は可変長フラグのため、プロンプトは必ずフラグ群より前（最初の引数）に置くこと。後ろに置くとプロンプトが認識されずエラーになる。
+**重要**: 実行直前に、生成したコマンドへ`--permission-mode plan`と`--disallowedTools`が両方存在することを再確認する。
+**重要**: 末尾の `< /dev/null` は必須。明示prompt以外のstdin待ちを防ぐ。stdin読取を示すメッセージが出ても、redirect済みで本文生成が進んでいればハングではない。
 **重要**: Claude Code 上ではこのコマンドを **`run_in_background: true` で起動する**（理由と手順は後述の「実行時間と中断の防止」を参照）。xhigh が既定のため処理は数分〜数十分かかりうるが、背景実行なら Bash の10分上限で kill されず、呼び出し元もブロックしない。`claude -p` は非対話の print モードで標準出力に結果を出すため、背景起動でも出力ファイルから完全に回収できる。
 
 - `--model claude-opus-4-8`: 使用モデルを明示固定（既定・選択肢は「モデルと effort」セクション参照）
 - `--effort <level>`: 既定 `xhigh`（自動判定）
 - `--add-dir <project_dir>`: 対象ディレクトリへのアクセスを明示的に許可する
+- `--permission-mode plan`: Bashを含む実行全体を非変更モードへ制約する
 - `--disallowedTools`: Edit/Write/NotebookEdit を禁止して読み取り専用を保証する
 - ファイルの読み取り・Bash・git などの読み取り系ツールは引き続き使用可能
+
+複数directoryを横断する場合、現行CLIの`--add-dir <directories...>`へ必要なpathを列挙する。共通親を広く許可するより、必要なdirectoryだけを許可し、promptにも対象pathを明示する。
+
+```bash
+--add-dir /path/to/repo-a /path/to/repo-b /path/to/shared
+```
 
 ### 実行例
 
@@ -113,7 +126,9 @@ CLAUDE_REVIEW_PROMPT
   --model claude-opus-4-8 \
   --effort xhigh \
   --add-dir $HOME/my-project \
-  --disallowedTools "Edit,Write,NotebookEdit"
+  --permission-mode plan \
+  --disallowedTools "Edit,Write,NotebookEdit" \
+  < /dev/null
 ```
 
 ```bash
@@ -129,7 +144,9 @@ CLAUDE_REVIEW_PROMPT
   --model claude-sonnet-5 \
   --effort medium \
   --add-dir $HOME/other-project \
-  --disallowedTools "Edit,Write,NotebookEdit"
+  --permission-mode plan \
+  --disallowedTools "Edit,Write,NotebookEdit" \
+  < /dev/null
 ```
 
 ## 実行時間と中断の防止
@@ -139,12 +156,12 @@ CLAUDE_REVIEW_PROMPT
 **まず実行ホストで分岐する**: Claude Code 上なら背景実行（手順1〜4）。`run_in_background` を持たないホスト（Codex/Cursor 等。自分が Codex として動作している場合を含む）は手順1〜4ではなく**手順5の foreground フォールバック**を使う。
 
 1. **`run_in_background: true` で起動する（Claude Code での本筋）**
-   Claude Code 上では Bash ツールの `run_in_background` を使う。foreground と違い10分上限で kill されず、呼び出し元をブロックしない。完了時に Claude Code がエージェントを自動再呼び出しし、出力も取得できる。
+   Claude Code 上では Bash ツールの `run_in_background` を使う。foreground と違い10分上限で kill されず、呼び出し元をブロックしない。起動結果が返すtask IDとoutput file pathを保存し、推測したpathを読まない。完了時に Claude Code がエージェントを自動再呼び出しし、出力も取得できる。
 2. **起動直後に呼び出し元へ予告する**（背景起動でターンが即 yield するので、この一言を必ず出す）
    > 「claude-review をバックグラウンドで開始しました。レビューには数十分かかる場合があります。応答が無くても処理は継続中（ハングではありません）なので、中断せず気長にお待ちください。完了時に結果を報告します。」
 3. **完了通知で再呼び出しされたら報告する**
-   背景起動時に Bash ツールが返す出力ファイルのパスを `Read` するか `BashOutput` で出力を取得し、下記「結果の整理と報告」の観点でまとめて呼び出し元に返す。
-4. **待機中は背景タスクを kill・キャンセル・再起動しない。** 数十分無出力でも推論継続中の正常状態として完了を待つ（40分超の無出力のみガードレール5に従いユーザーへ提示する）。
+   背景出力は数百KBになり得るため、ファイル全体を`Read`せず`tail`で末尾から確認し、`rg -n "VERDICT|must-fix" <output>`で論点位置を探す。同じ最終本文が再掲される場合は重複報告しない。
+4. **待機中は背景タスクを kill・キャンセル・再起動しない。** `xhigh`で10分超・10万token級、または数十分無出力でも正常になり得る（40分超の無出力のみガードレール5に従いユーザーへ提示する）。
 5. **背景実行を持たないホスト（Codex/Cursor 等）でのフォールバック**
    foreground で実行し、ホストの実行タイムアウトを可能な限り長く確保する（Claude Code の Bash 相当なら上限 `600000`ms=10分）。foreground はブロックするため発話窓は「実行直前」のみ。**起動直前に**次の foreground 用の予告を出す（手順2の文言は「バックグラウンドで開始」を含み foreground では不正確になるため、そのまま流用しない）。
    > 「これからレビューを実行します。完了まで数十分かかる場合があります。応答が無くても処理は継続中（ハングではありません）なので、中断せず気長にお待ちください。」
@@ -154,16 +171,31 @@ CLAUDE_REVIEW_PROMPT
 
 ## 結果の整理と報告
 
-Claude の出力をそのままユーザーに伝える。必要であれば以下の観点で整理する:
+Claudeの指摘は結論ではなく仮説として受け取り、採用前に該当path:lineと実装を自分で確認する。必要であれば以下の観点で整理する:
 
 1. **要約**: 主な発見事項（3点以内）
 2. **詳細**: 具体的な指摘（優先度順）
 3. **推奨対応**: 改善提案と実装方針
 4. **補足**: 追加調査が必要な項目
 
+### 推奨prompt contract
+
+- 論点を番号付きで列挙し、各論点に `VERDICT: AGREE / AGREE-WITH-CAVEAT / DISAGREE / RISK`、根拠、代替案を要求する
+- 「見落とされている論点」を重要度順・上限件数付きで要求する
+- 遠慮不要と明記し、懸念している弱点を具体的に列挙する
+- 各findingに`path:line`を必須化する
+- docsレビューでは契約定義・manifest・package設定など対象実装を列挙し、文書の現在形の主張と実装を突合させる。docs整合だけなら`medium`を選べる
+
+### 受け取り側の検証規律
+
+1. 指摘を機械的に採用・棄却せず、該当箇所と成立条件を確認する。
+2. セキュリティ境界は`fail-closed`等のラベルで合格にせず、何と何を比較し、どこで強制しているかを実装まで辿る。
+3. 修正後は元の検査に加え、secret/confusable等の関連scanを再実行する。
+4. 最後に`git status`を再確認し、レビュー用processによる汚染がないことを確認する。
+
 ## 注意事項
 
-- `--disallowedTools` により Edit/Write/NotebookEdit は使えず、ファイル変更は不可能
+- `--permission-mode plan` と `--disallowedTools` を併用し、Bashを含む変更操作とEdit/Write/NotebookEditを二重に制約する
 - Markdown やコード片を含むプロンプトを `claude -p "..."` に直接書かない。必ず single-quoted heredoc で渡す
 - モデル・effort の既定と選択肢は「モデルと effort」セクションの定義に従う
 - `claude-fable-5` はトークン消費が著しく多いためユーザー明示時のみ使用し、自動選択は絶対にしない

@@ -25,20 +25,20 @@ A code-review artifact is not a diff viewer — it is an annotated walkthrough. 
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
   font-family: 'Menlo', 'Monaco', monospace;
   font-size: 13px;
 }
-.diff-panel { padding: .5rem; background: #f8fafc; overflow-x: auto; }
-.annotation-panel { padding: .75rem; background: #fff; border-left: 1px solid #e2e8f0; }
+.diff-panel { padding: .5rem; background: var(--paper-deep); overflow-x: auto; }
+.annotation-panel { padding: .75rem; background: var(--surface); border-left: 1px solid var(--line); }
 
 /* Diff line coloring */
-.del { background: #fee2e2; color: #991b1b; display: block; }
-.add { background: #dcfce7; color: #166534; display: block; }
-.ctx { color: #64748b; display: block; }
-.line-num { display: inline-block; width: 3ch; color: #94a3b8; user-select: none; margin-right: .5rem; }
+.del { background: var(--red-bg); color: var(--red); display: block; }
+.add { background: var(--green-bg); color: var(--green-dark); display: block; }
+.ctx { color: var(--muted); display: block; }
+.line-num { display: inline-block; width: 3ch; color: var(--muted); user-select: none; margin-right: .5rem; }
 ```
 
 ```html
@@ -64,10 +64,10 @@ A code-review artifact is not a diff viewer — it is an annotated walkthrough. 
 
 ```css
 .annotation { border-radius: 6px; padding: .6rem .8rem; margin-bottom: .5rem; font-size: .875rem; }
-.critical { background: #fee2e2; border-left: 4px solid #ef4444; }
-.warning  { background: #fef9c3; border-left: 4px solid #eab308; }
-.info     { background: #eff6ff; border-left: 4px solid #3b82f6; }
-.praise   { background: #f0fdf4; border-left: 4px solid #22c55e; }
+.critical { background: var(--red-bg); border-left: 4px solid var(--red); }
+.warning  { background: var(--amber-bg); border-left: 4px solid var(--amber); }
+.info     { background: #edf0f1; border-left: 4px solid var(--slate); }
+.praise   { background: var(--green-bg); border-left: 4px solid var(--green); }
 ```
 
 **Severity guide to include in the artifact:**
@@ -85,8 +85,8 @@ For PRs with many files, a sticky sidebar with a file list helps navigation.
 ```css
 .pr-layout { display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem; align-items: start; }
 .file-tree { position: sticky; top: 1rem; font-size: .875rem; }
-.file-tree a { display: block; padding: .2rem .4rem; color: #3b82f6; text-decoration: none; border-radius: 4px; }
-.file-tree a:hover { background: #eff6ff; }
+.file-tree a { display: block; padding: .2rem .4rem; color: var(--green-dark); text-decoration: none; border-radius: 4px; }
+.file-tree a:hover { background: var(--green-bg); }
 .file-tree a.has-critical::before { content: '🔴 '; }
 .file-tree a.has-warning::before  { content: '🟡 '; }
 ```

@@ -27,15 +27,21 @@ Markdownでは平坦になる並列案、階層、timeline、依存graphを、�
 
 State in ONE line: **who** will read this page and **what single question** it must answer or what decision it must enable (e.g. "ユーザーが2つの設計案からどちらを採用するか決める"). If you cannot fill this line from context, ask the user exactly one clarifying question before generating.
 
-- The **first view** (what fits on screen without scrolling) is composed ONLY of content that answers the key question — verdict, comparison, map. Everything else goes below or into `<details>`.
+- The **first view** (validate at 1440×900 desktop and 375×812 mobile without scrolling) is composed ONLY of content that answers the key question — verdict, comparison, map. On mobile, the question, verdict, and at least one decisive piece of evidence must appear before the fold. Everything else goes below or into `<details>`.
 - Write the key question as an HTML comment at the top of the file (`<!-- key question: ... -->`) so later edits stay anchored to it.
 - Self-check after writing: open the page cold and ask "does the first screen answer the key question in 5 seconds?" If the reader must scroll or expand to get the point, restructure.
 
 ## 基本原則
 
+### Default visual language: Field Review
+
+Every artifact uses the Field Review visual system unless the user explicitly requests another style. Treat it as a stable editorial grammar, not a rigid template: warm paper, dark ink, forest-green primary accent, serif display type, plain sans body type, mono metadata, one decisive recommendation, and a small number of strong evidence surfaces.
+
+Before writing CSS, read `references/visual-system.md`. Start from the nearest file in `assets/templates/`; do not invent an unrelated palette or generic dashboard aesthetic. Content determines whether a thesis band, texture, cards, or motion are present—the tokens and hierarchy remain consistent.
+
 1. **Information density over word count.** A well-structured 80-line HTML page carries more than a 300-line Markdown doc. Prefer tables, side-by-side columns, and SVG over prose repetition.
 
-2. **Self-contained.** One `.html` file, openable in any browser with no network required (unless a 2nd-tier CDN is explicitly needed — see Self-containment rules). The reader should be able to email it, open it offline, and have it still work in six months.
+2. **Self-contained.** One `.html` file, openable in any browser with no network required (unless a 2nd-tier CDN is explicitly needed — see Self-containment rules). The reader should be able to email it, open it offline, and have it still work in six months. Web fonts are enhancement only; Field Review must remain intentional with its serif/sans/mono fallback stacks.
 
 3. **Spatial structure is the point.** Use the layout itself to communicate: parallel columns convey parity; hierarchy of font sizes conveys importance; a timeline SVG conveys sequence. Do not default to a single linear column unless the content is genuinely linear.
 
@@ -75,7 +81,7 @@ Every HTML file produced by this skill must satisfy:
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>[Descriptive title — visible in browser tab and when shared]</title>
   <style>
-    /* All styles inline here — light theme only */
+    /* All styles inline here — Field Review light theme */
   </style>
 </head>
 <body>
@@ -87,7 +93,7 @@ Every HTML file produced by this skill must satisfy:
 
 - `<title>` is mandatory — it is the first thing a recipient sees when the file is shared
 - Inline `<style>` and `<script>` — no external `.css` or `.js` files
-- **Light theme only** — do not add `@media (prefers-color-scheme: dark)` overrides; assume a white/light background at all times
+- **Field Review light theme only** — use the shared paper/ink/green tokens; do not add `@media (prefers-color-scheme: dark)` overrides
 - Target file size under 30 KB; if larger, split into multiple files or cut scope
 - If any 2nd-tier external resource is used, add a comment at the very top: `<!-- requires: CDN: tailwind, chart.js — will not render offline -->`
 
@@ -166,7 +172,7 @@ Drag-and-drop card sorters, form editors for config — powerful but treat as a 
 **Asset rules:**
 - SVG: inline only, never `<img src="external.svg">`
 - Images: `data:image/...;base64,...` or omit entirely
-- Fonts: system stack first (`-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`)
+- Fonts: complete local/system fallback stacks are mandatory; named web fonts may precede them only as an optional enhancement
 
 Full checklist: `references/self-containment-checklist.md`
 
@@ -210,7 +216,7 @@ This is the mechanism behind Core Principle 7 — apply it as the default, not a
   <ol>...</ol>
 </details>
 ```
-No JS required. Renders well in print. Use for long reference sections, raw data, supporting evidence, rejected alternatives, derivations, and any block that adds depth but would clutter the overview. The `<summary>` should name the content and hint at its size so the reader can decide whether to expand. Nest `<details>` when detail has its own sub-detail.
+No JS is required for screen use. For reliable print output, use `beforeprint` to remember and open closed `<details>`, then restore them in `afterprint`; CSS display rules alone are insufficient across browsers. Use `<details>` for long reference sections, raw data, supporting evidence, rejected alternatives, derivations, and any block that adds depth but would clutter the overview. The `<summary>` should name the content and hint at its size so the reader can decide whether to expand. Nest `<details>` when detail has its own sub-detail.
 
 ## production frontendとの関係
 
@@ -230,7 +236,8 @@ No JS required. Renders well in print. Use for long reference sections, raw data
 | What you might write | Why it fails | Better |
 |---|---|---|
 | Adding `prefers-color-scheme: dark` | Dark theme is out of scope for this skill; adds CSS complexity with no benefit here | Light theme only — white/light background at all times |
-| Purple gradient on white, Inter font | AI-slop aesthetic — reader notices before reading | Use system fonts, neutral backgrounds, purposeful color |
+| Purple gradient, blue-gray dashboard, Inter everywhere | Generic AI/dashboard aesthetic — reader notices the template before the argument | Use Field Review tokens and three typography roles |
+| A card for every paragraph or metric | Flattens hierarchy and makes all evidence look equally important | Use one thesis band and a few bounded evidence surfaces |
 | Import D3 + Chart.js + Three.js all at once | Tier-2 CDNs only when truly needed; piling on signals "I just added everything" | Pick one; if it is a diagram, write SVG by hand |
 | Slider for every parameter | Sliders = prototype territory, outside this skill's intent | Use toggle filters or static side-by-side |
 | 100-line Markdown... in an HTML `<pre>` | Defeats the purpose; this is just Markdown inside HTML | Structure it: tabs, collapsible sections, tables |

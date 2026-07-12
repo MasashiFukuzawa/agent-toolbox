@@ -9,15 +9,15 @@ All diagrams use inline SVG — never `<img src="external.svg">`. Set a `viewBox
      role="img" aria-label="[Description of the diagram]">
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#64748b"/>
+      <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
     </marker>
     <style>
       text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .label { font-size: 12px; fill: #1e293b; }
-      .node { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 1.5; }
-      .node-highlight { fill: #bfdbfe; stroke: #3b82f6; stroke-width: 2; }
-      .edge { stroke: #64748b; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-      .edge-label { font-size: 10px; fill: #64748b; }
+      .label { font-size: 12px; fill: #171410; }
+      .node { fill: #eee7da; stroke: #6d655b; stroke-width: 1.5; }
+      .node-highlight { fill: #dcece6; stroke: #16715e; stroke-width: 2; }
+      .edge { stroke: #52616b; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+      .edge-label { font-size: 10px; fill: #52616b; }
     </style>
   </defs>
   <!-- diagram elements here -->
@@ -80,13 +80,13 @@ Use horizontal swim lanes (one per actor), vertical time axis.
 <svg viewBox="0 0 500 300" style="width:100%;max-width:600px">
   <!-- Actor columns: Client x=80, Server x=260, DB x=440 -->
   <!-- Lifeline -->
-  <line x1="80" y1="40" x2="80" y2="280" stroke="#cbd5e1" stroke-dasharray="4"/>
-  <line x1="260" y1="40" x2="260" y2="280" stroke="#cbd5e1" stroke-dasharray="4"/>
+  <line x1="80" y1="40" x2="80" y2="280" stroke="#d2c8b4" stroke-dasharray="4"/>
+  <line x1="260" y1="40" x2="260" y2="280" stroke="#d2c8b4" stroke-dasharray="4"/>
   <!-- Message arrow -->
   <line x1="80" y1="80" x2="260" y2="80" class="edge"/>
   <text x="170" y="74" text-anchor="middle" class="edge-label">POST /login</text>
   <!-- Return arrow (dashed) -->
-  <line x1="260" y1="120" x2="80" y2="120" stroke="#64748b" stroke-width="1.5" stroke-dasharray="5" marker-end="url(#arrow)"/>
+  <line x1="260" y1="120" x2="80" y2="120" stroke="#52616b" stroke-width="1.5" stroke-dasharray="5" marker-end="url(#arrow)"/>
   <text x="170" y="114" text-anchor="middle" class="edge-label">200 OK + token</text>
 </svg>
 ```
@@ -100,11 +100,11 @@ Use a `<rect>` per task on a shared time axis. Annotate milestones with `<circle
 ```html
 <!-- Time axis: Jan=0 ... Dec=550, each month=~46px wide -->
 <!-- Task bar: y-position separates tasks, height=24 -->
-<rect x="0"   y="20" width="140" height="24" rx="4" fill="#93c5fd" opacity=".8"/>
+<rect x="0"   y="20" width="140" height="24" rx="4" fill="#85b8aa" opacity=".8"/>
 <text x="70"  y="37" text-anchor="middle" class="label" font-size="11">Phase 1</text>
-<rect x="130" y="20" width="180" height="24" rx="4" fill="#6ee7b7" opacity=".8"/>
+<rect x="130" y="20" width="180" height="24" rx="4" fill="#d7b36a" opacity=".8"/>
 <!-- Milestone -->
-<circle cx="310" cy="32" r="7" fill="#f59e0b"/>
+<circle cx="310" cy="32" r="7" fill="#a33d32"/>
 <text x="310" y="58" text-anchor="middle" class="edge-label">v1.0 launch</text>
 ```
 

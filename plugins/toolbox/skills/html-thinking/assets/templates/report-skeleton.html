@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Set lang to the primary document language before use (for example, lang="ja"). -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -7,15 +8,12 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
-      --text: #1e293b; --muted: #64748b;
-      --green-bg: #f0fdf4; --green-border: #86efac; --green-text: #166534;
-      --yellow-bg: #fefce8; --yellow-border: #fde047; --yellow-text: #854d0e;
-      --red-bg: #fff1f2; --red-border: #fda4af; --red-text: #991b1b;
-      --blue: #3b82f6; --blue-bg: #eff6ff; --blue-border: #93c5fd;
+      --paper:#f6f2e9; --paper-deep:#eee7da; --surface:#fffdf8; --line:#d2c8b4; --radius:14px; --ink:#171410; --text:#302b25; --muted:#6d655b;
+      --green:#16715e; --green-dark:#0f4f41; --green-bg:#edf6f2; --green-border:#85b8aa; --green-text:var(--green-dark);
+      --amber:#a96716; --amber-bg:#fbf2df; --amber-text:#79500f; --yellow-bg:var(--amber-bg); --yellow-border:#d7b36a; --yellow-text:var(--amber-text);
+      --red:#a33d32; --red-bg:#fbefec; --red-border:#d9a39d; --red-text:#8d3028;
+      --bg:var(--paper); --border:var(--line); --blue:var(--green); --blue-bg:var(--green-bg); --blue-border:var(--green-border);
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-           background: var(--bg); color: var(--text); padding: 2rem 1rem; line-height: 1.6; }
     .container { max-width: 860px; margin: 0 auto; }
 
     /* Header */
@@ -52,19 +50,19 @@
     th { text-align: left; padding: .5rem .75rem; background: var(--bg);
          border-bottom: 2px solid var(--border); font-size: .75rem; text-transform: uppercase; color: var(--muted); }
     td { padding: .5rem .75rem; border-bottom: 1px solid var(--border); }
-    .td-open   { color: #dc2626; font-weight: 600; }
-    .td-done   { color: #16a34a; }
-    .td-in-prog{ color: #d97706; }
+    .td-open   { color: var(--red); font-weight: 600; }
+    .td-done   { color: var(--green); }
+    .td-in-prog{ color: var(--amber); }
 
     /* Timeline */
     .timeline { list-style: none; padding: 0; border-left: 2px solid var(--border); margin-left: 1rem; }
     .timeline li { padding: .4rem 0 .4rem 1rem; position: relative; font-size: .875rem; }
-    .timeline li::before { content: '●'; position: absolute; left: -1.1rem; color: #94a3b8; }
+    .timeline li::before { content: '●'; position: absolute; left: -1.1rem; color: var(--muted); }
     .timeline time { font-weight: 700; margin-right: .5rem; }
     .ev { font-size: .7rem; font-weight: 700; border-radius: 3px; padding: .1em .4em; text-transform: uppercase; margin-right: .4rem; }
-    .ev-alert    { background: #fee2e2; color: #991b1b; }
-    .ev-action   { background: #eff6ff; color: #1d4ed8; }
-    .ev-resolved { background: #f0fdf4; color: #166534; }
+    .ev-alert    { background: var(--red-bg); color: var(--red-text); }
+    .ev-action   { background: var(--yellow-bg); color: var(--yellow-text); }
+    .ev-resolved { background: var(--green-bg); color: var(--green-text); }
 
     /* Blockquote / citation */
     blockquote { border-left: 4px solid var(--blue); margin: 1rem 0; padding: .75rem 1rem;
@@ -75,6 +73,29 @@
     details { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; }
     summary { padding: .7rem 1rem; cursor: pointer; font-weight: 600; font-size: .95rem; user-select: none; }
     details > *:not(summary) { padding: .75rem 1rem; }
+
+    /* Field Review typography and composition */
+    body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic Medium','Yu Gothic','Segoe UI',sans-serif;
+      background:var(--paper); color:var(--text); padding:2rem 1rem; line-height:1.6; font-size:16px; }
+    html:lang(ja) body { line-height:1.75; }
+    .container { max-width:1120px; }
+    .report-header h1, .kpi-value { font-family:Fraunces,'Hiragino Mincho ProN','Yu Mincho',Georgia,serif; }
+    .report-header h1 { font-size:clamp(2rem,5vw,3.25rem); line-height:1.05; }
+    html:lang(en) .report-header h1 { letter-spacing:-.035em; }
+    .meta-row, .tldr h2, th, .status-badge { font-family:'IBM Plex Mono','SFMono-Regular',Consolas,'Hiragino Kaku Gothic ProN',monospace; }
+    .tldr, details { background:var(--surface); border-radius:14px; box-shadow:0 1px 2px rgba(40,30,12,.05),0 8px 24px rgba(40,30,12,.06); }
+    .tldr { border-left:4px solid var(--blue); }
+    .kpi-row { background:var(--ink); color:#f6f2e9; padding:1.5rem; }
+    .kpi { background:transparent; border:0; border-right:1px solid rgba(255,255,255,.16); border-radius:0; }
+    .kpi:last-child { border-right:0!important; }
+    .kpi-green { border-top:4px solid #55b89e; }
+    .kpi-yellow { border-top:4px solid #e2ad4f; }
+    .kpi-red { border-top:4px solid #df766c; }
+    .kpi-state { display:block; margin-top:.45rem; font:600 .7rem 'IBM Plex Mono','SFMono-Regular',Consolas,monospace; text-transform:uppercase; }
+    .kpi-label { color:#d8d0c2; }
+    summary:focus-visible { outline:3px solid var(--green); outline-offset:3px; }
+    @media (max-width:760px) { body{padding:1.25rem .75rem}.kpi-row{display:grid;grid-template-columns:1fr 1fr}.kpi:nth-child(even){border-right:0}table{min-width:620px}section{overflow-x:auto} }
+    @media print { body{background:#fff;padding:0}.tldr,details{box-shadow:none}.kpi-row{background:#fff;color:#000;border:1px solid var(--border)}.kpi-label{color:#444}section,details,.kpi{break-inside:avoid} }
   </style>
 </head>
 <body>
@@ -107,18 +128,22 @@
     <div class="kpi kpi-green">
       <div class="kpi-value">99.8%</div>
       <div class="kpi-label">Uptime</div>
+      <span class="kpi-state">Within target</span>
     </div>
     <div class="kpi kpi-green">
       <div class="kpi-value">187ms</div>
       <div class="kpi-label">P95 Latency</div>
+      <span class="kpi-state">Within target</span>
     </div>
     <div class="kpi kpi-yellow">
       <div class="kpi-value">3.2%</div>
       <div class="kpi-label">Error Rate</div>
+      <span class="kpi-state">Watch</span>
     </div>
     <div class="kpi kpi-red">
       <div class="kpi-value">2</div>
       <div class="kpi-label">Open P1 Bugs</div>
+      <span class="kpi-state">Action required</span>
     </div>
   </div>
 
@@ -223,5 +248,16 @@
   </section>
 
 </div>
+<script>
+  let printClosedDetails = [];
+  addEventListener('beforeprint', () => {
+    printClosedDetails = [...document.querySelectorAll('details:not([open])')];
+    printClosedDetails.forEach(detail => detail.open = true);
+  });
+  addEventListener('afterprint', () => {
+    printClosedDetails.forEach(detail => detail.open = false);
+    printClosedDetails = [];
+  });
+</script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Set lang to the primary document language before use (for example, lang="ja"). -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -7,11 +8,12 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
-      --text: #1e293b; --muted: #64748b; --code-bg: #f1f5f9;
+      --paper:#f6f2e9; --paper-deep:#eee7da; --surface:#fffdf8; --line:#d2c8b4; --radius:14px; --ink:#171410; --text:#302b25; --muted:#6d655b;
+      --green:#16715e; --green-dark:#0f4f41; --green-bg:#edf6f2; --green-text:var(--green-dark);
+      --amber:#a96716; --amber-bg:#fbf2df; --amber-text:#79500f;
+      --red:#a33d32; --red-bg:#fbefec; --red-text:#8d3028; --slate:#52616b; --slate-bg:#edf0f1;
+      --bg:var(--paper); --border:var(--line); --code-bg:#eee7da;
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-           background: var(--bg); color: var(--text); padding: 2rem 1rem; line-height: 1.6; }
 
     /* Layout: sidebar + main */
     .pr-layout { display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem;
@@ -22,9 +24,9 @@
     .file-tree { position: sticky; top: 1rem; background: var(--surface);
                  border: 1px solid var(--border); border-radius: 8px; padding: .75rem; }
     .file-tree h3 { font-size: .75rem; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
-    .file-tree a { display: block; padding: .2rem .4rem; color: #3b82f6; text-decoration: none;
+    .file-tree a { display: block; padding: .2rem .4rem; color: var(--green-text); text-decoration: none;
                    border-radius: 4px; font-size: .8rem; word-break: break-all; }
-    .file-tree a:hover { background: #eff6ff; }
+    .file-tree a:hover { background: var(--green-bg); }
     .file-tree .has-critical::before { content: '🔴 '; }
     .file-tree .has-warning::before  { content: '🟡 '; }
     .file-tree .clean::before        { content: '✅ '; }
@@ -36,10 +38,10 @@
     .meta-row { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .8rem; color: var(--muted); margin: .5rem 0 1rem; }
     .stats { display: flex; gap: .75rem; flex-wrap: wrap; }
     .stat-chip { font-size: .75rem; font-weight: 700; border-radius: 20px; padding: .2em .7em; }
-    .stat-red    { background: #fee2e2; color: #991b1b; }
-    .stat-yellow { background: #fef9c3; color: #854d0e; }
-    .stat-blue   { background: #eff6ff; color: #1d4ed8; }
-    .stat-green  { background: #f0fdf4; color: #166534; }
+    .stat-red    { background: var(--red-bg); color: var(--red-text); }
+    .stat-yellow { background: var(--amber-bg); color: var(--amber-text); }
+    .stat-blue   { background: var(--slate-bg); color: var(--slate); }
+    .stat-green  { background: var(--green-bg); color: var(--green-text); }
 
     /* Severity legend */
     .legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .8rem; margin-bottom: 1.5rem; }
@@ -59,16 +61,16 @@
                   font-family: 'Menlo', 'Monaco', monospace; font-size: 12px; }
     .annotation-panel { padding: .75rem; border-left: 1px solid var(--border); }
     .ctx { display: block; color: var(--muted); white-space: pre; }
-    .del { display: block; background: #fee2e2; color: #991b1b; white-space: pre; }
-    .add { display: block; background: #dcfce7; color: #166534; white-space: pre; }
-    .line-num { display: inline-block; width: 3ch; color: #94a3b8; user-select: none; margin-right: .5rem; }
+    .del { display: block; background: var(--red-bg); color: var(--red-text); white-space: pre; }
+    .add { display: block; background: var(--green-bg); color: var(--green-text); white-space: pre; }
+    .line-num { display: inline-block; width: 3ch; color: var(--muted); user-select: none; margin-right: .5rem; }
 
     /* Annotation cards */
     .annotation { border-radius: 6px; padding: .6rem .8rem; margin-bottom: .5rem; font-size: .85rem; }
-    .annotation.critical { background: #fee2e2; border-left: 4px solid #ef4444; }
-    .annotation.warning  { background: #fef9c3; border-left: 4px solid #eab308; }
-    .annotation.info     { background: #eff6ff; border-left: 4px solid #3b82f6; }
-    .annotation.praise   { background: #f0fdf4; border-left: 4px solid #22c55e; }
+    .annotation.critical { background: var(--red-bg); border-left: 4px solid var(--red); }
+    .annotation.warning  { background: var(--amber-bg); border-left: 4px solid var(--amber); }
+    .annotation.info     { background: var(--slate-bg); border-left: 4px solid var(--slate); }
+    .annotation.praise   { background: var(--green-bg); border-left: 4px solid var(--green); }
     .annotation strong { display: block; margin-bottom: .2rem; text-transform: capitalize; }
 
     /* Conclusion */
@@ -76,9 +78,23 @@
     .conclusion h2 { font-size: 1rem; margin-bottom: .75rem; }
     textarea { width: 100%; min-height: 80px; border: 1px solid var(--border); border-radius: 6px;
                padding: .5rem; font-family: inherit; resize: vertical; background: var(--surface); color: var(--text); }
-    .btn { background: #3b82f6; color: #fff; border: none; border-radius: 6px;
+    .btn { background: var(--green); color: #fff; border: none; border-radius: 6px;
            padding: .45rem .9rem; cursor: pointer; font-size: .875rem; margin-top: .5rem; }
     .btn:hover { opacity: .9; }
+
+    /* Field Review typography and composition */
+    body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic Medium','Yu Gothic','Segoe UI',sans-serif;
+      background:var(--paper); color:var(--text); padding:2rem 1rem; line-height:1.6; font-size:16px; }
+    html:lang(ja) body { line-height:1.75; }
+    .summary-card h1 { font-family:Fraunces,'Hiragino Mincho ProN','Yu Mincho',Georgia,serif; font-size:clamp(1.75rem,4vw,2.75rem); line-height:1.05; }
+    html:lang(en) .summary-card h1 { letter-spacing:-.035em; }
+    .file-tree h3, .meta-row, .file-header, .stat-chip { font-family:'IBM Plex Mono','SFMono-Regular',Consolas,'Hiragino Kaku Gothic ProN',monospace; }
+    .file-tree, .summary-card, .file-section, .conclusion { border-radius:14px; box-shadow:0 1px 2px rgba(40,30,12,.05),0 8px 24px rgba(40,30,12,.06); }
+    .file-tree a { color:#0f4f41; min-height:44px; display:flex; align-items:center; }
+    .btn { min-height:44px; }
+    a:focus-visible, button:focus-visible, summary:focus-visible, textarea:focus-visible { outline:3px solid var(--green); outline-offset:3px; }
+    @media (max-width:760px) { body{padding:1.25rem .75rem}.pr-layout{grid-template-columns:1fr}.file-tree{position:static}.diff-layout{grid-template-columns:1fr}.annotation-panel{border-left:0;border-top:1px solid var(--border)} }
+    @media print { body{background:#fff;padding:0}.file-tree{display:none}.pr-layout{display:block}.summary-card,.file-section,.conclusion{box-shadow:none;break-inside:avoid}.btn,textarea{display:none!important} }
   </style>
 </head>
 <body>
@@ -111,10 +127,10 @@
 
     <!-- Legend -->
     <div class="legend">
-      <span><span class="swatch" style="background:#ef4444"></span><strong>Critical</strong> — must fix before merge</span>
-      <span><span class="swatch" style="background:#eab308"></span><strong>Warning</strong> — should fix</span>
-      <span><span class="swatch" style="background:#3b82f6"></span><strong>Info</strong> — suggestion</span>
-      <span><span class="swatch" style="background:#22c55e"></span><strong>Praise</strong> — good pattern</span>
+      <span><span class="swatch" style="background:#a33d32"></span><strong>Critical</strong> — must fix before merge</span>
+      <span><span class="swatch" style="background:#a96716"></span><strong>Warning</strong> — should fix</span>
+      <span><span class="swatch" style="background:#52616b"></span><strong>Info</strong> — suggestion</span>
+      <span><span class="swatch" style="background:#16715e"></span><strong>Praise</strong> — good pattern</span>
     </div>
 
     <!-- File 1 -->
@@ -197,5 +213,16 @@
     </div>
   </main>
 </div>
+<script>
+  let printClosedDetails = [];
+  addEventListener('beforeprint', () => {
+    printClosedDetails = [...document.querySelectorAll('details:not([open])')];
+    printClosedDetails.forEach(detail => detail.open = true);
+  });
+  addEventListener('afterprint', () => {
+    printClosedDetails.forEach(detail => detail.open = false);
+    printClosedDetails = [];
+  });
+</script>
 </body>
 </html>

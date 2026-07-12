@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Set lang to the primary document language before use (for example, lang="ja"). -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -6,9 +7,9 @@
   <title>Diagram — [System/Concept Name]</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --bg: #f8fafc; --surface: #fff; --border: #e2e8f0; --text: #1e293b; --muted: #64748b; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-           background: var(--bg); color: var(--text); padding: 2rem 1rem; line-height: 1.6; }
+    :root { --paper:#f6f2e9; --paper-deep:#eee7da; --surface:#fffdf8; --line:#d2c8b4; --radius:14px; --ink:#171410; --text:#302b25; --muted:#6d655b;
+      --green:#16715e; --green-dark:#0f4f41; --green-bg:#edf6f2; --amber:#a96716; --amber-bg:#fbf2df; --red:#a33d32; --red-bg:#fbefec; --slate:#52616b;
+      --bg:var(--paper); --border:var(--line); }
     .container { max-width: 800px; margin: 0 auto; }
     h1 { font-size: 1.5rem; margin-bottom: .25rem; }
     .meta { color: var(--muted); font-size: .875rem; margin-bottom: 1.5rem; }
@@ -23,14 +24,27 @@
     section p { font-size: .9rem; color: var(--muted); }
 
     /* SVG defaults */
-    svg .node          { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 1.5; }
-    svg .node-highlight{ fill: #bfdbfe; stroke: #3b82f6; stroke-width: 2; }
-    svg .node-warn     { fill: #fef9c3; stroke: #eab308; stroke-width: 1.5; }
-    svg .edge          { stroke: #64748b; stroke-width: 1.5; fill: none; }
+    svg .node          { fill: #eee7da; stroke: var(--muted); stroke-width: 1.5; }
+    svg .node-highlight{ fill: var(--green-bg); stroke: var(--green); stroke-width: 2; }
+    svg .node-warn     { fill: var(--amber-bg); stroke: var(--amber); stroke-width: 1.5; }
+    svg .edge          { stroke: var(--slate); stroke-width: 1.5; fill: none; }
     svg .edge-dashed   { stroke-dasharray: 5; }
-    svg text           { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                         font-size: 12px; fill: #1e293b; }
-    svg .edge-label    { font-size: 10px; fill: #64748b; }
+    svg text           { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic Medium','Yu Gothic','Segoe UI',sans-serif;
+                         font-size: 12px; fill: var(--ink); }
+    svg .edge-label    { font-size: 10px; fill: var(--slate); }
+
+    /* Field Review typography and composition */
+    body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic Medium','Yu Gothic','Segoe UI',sans-serif;
+      background:var(--paper); color:var(--text); padding:2rem 1rem; line-height:1.6; font-size:16px; }
+    html:lang(ja) body { line-height:1.75; }
+    .container { max-width:1120px; }
+    h1 { font-family:Fraunces,'Hiragino Mincho ProN','Yu Mincho',Georgia,serif; font-size:clamp(2rem,5vw,3.25rem); line-height:1.05; }
+    html:lang(en) h1 { letter-spacing:-.035em; }
+    .meta, .legend, section h2 { font-family:'IBM Plex Mono','SFMono-Regular',Consolas,'Hiragino Kaku Gothic ProN',monospace; }
+    .diagram-box, section, details { border-radius:14px!important; box-shadow:0 1px 2px rgba(40,30,12,.05),0 8px 24px rgba(40,30,12,.06); }
+    summary:focus-visible { outline:3px solid var(--green); outline-offset:3px; }
+    @media (max-width:760px) { body{padding:1.25rem .75rem}.diagram-box{padding:1rem} }
+    @media print { body{background:#fff;padding:0}.diagram-box,section,details{box-shadow:none;break-inside:avoid} }
   </style>
 </head>
 <body>
@@ -41,15 +55,15 @@
   <!-- Legend -->
   <div class="legend">
     <div class="legend-item">
-      <div class="legend-swatch" style="background:#e2e8f0;border-color:#94a3b8"></div>
+      <div class="legend-swatch" style="background:#eee7da;border-color:#6d655b"></div>
       <span>Service / Component</span>
     </div>
     <div class="legend-item">
-      <div class="legend-swatch" style="background:#bfdbfe;border-color:#3b82f6"></div>
+      <div class="legend-swatch" style="background:#edf6f2;border-color:#16715e"></div>
       <span>Entry point</span>
     </div>
     <div class="legend-item">
-      <div class="legend-swatch" style="background:#fef9c3;border-color:#eab308"></div>
+      <div class="legend-swatch" style="background:#fbf2df;border-color:#a96716"></div>
       <span>External / 3rd party</span>
     </div>
   </div>
@@ -60,10 +74,10 @@
          role="img" aria-label="System architecture diagram showing [A], [B], and [C]">
       <defs>
         <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#64748b"/>
+          <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
         </marker>
         <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#3b82f6"/>
+          <path d="M0,0 L0,6 L8,3 z" fill="#16715e"/>
         </marker>
       </defs>
 
@@ -119,5 +133,16 @@
   </details>
 
 </div>
+<script>
+  let printClosedDetails = [];
+  addEventListener('beforeprint', () => {
+    printClosedDetails = [...document.querySelectorAll('details:not([open])')];
+    printClosedDetails.forEach(detail => detail.open = true);
+  });
+  addEventListener('afterprint', () => {
+    printClosedDetails.forEach(detail => detail.open = false);
+    printClosedDetails = [];
+  });
+</script>
 </body>
 </html>

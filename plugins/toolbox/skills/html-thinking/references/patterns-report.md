@@ -22,10 +22,10 @@ Show 3–6 metrics at a glance. Use color to signal status (green/yellow/red).
 .kpi-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
 .kpi { flex: 1; min-width: 140px; padding: 1rem; border-radius: 8px; text-align: center; }
 .kpi-value { font-size: 2rem; font-weight: 700; line-height: 1; }
-.kpi-label { font-size: .8rem; color: #64748b; margin-top: .25rem; }
-.kpi-green  { background: #f0fdf4; border: 1px solid #86efac; }
-.kpi-yellow { background: #fefce8; border: 1px solid #fde047; }
-.kpi-red    { background: #fff1f2; border: 1px solid #fda4af; }
+.kpi-label { font-size: .8rem; color: var(--muted); margin-top: .25rem; }
+.kpi-green  { background: var(--green-bg); border: 1px solid var(--green); }
+.kpi-yellow { background: var(--amber-bg); border: 1px solid var(--amber); }
+.kpi-red    { background: var(--red-bg); border: 1px solid var(--red); }
 ```
 
 ```html
@@ -75,14 +75,14 @@ Use `<details>` so the timeline is collapsed by default (executive readers skip 
 ```
 
 ```css
-.timeline { list-style: none; padding: 0; border-left: 2px solid #e2e8f0; margin-left: 1rem; }
+.timeline { list-style: none; padding: 0; border-left: 2px solid var(--line); margin-left: 1rem; }
 .timeline li { padding: .5rem 0 .5rem 1rem; position: relative; }
-.timeline li::before { content: '●'; position: absolute; left: -1.1rem; color: #94a3b8; }
+.timeline li::before { content: '●'; position: absolute; left: -1.1rem; color: var(--muted); }
 time { font-weight: 700; font-size: .875rem; margin-right: .5rem; }
 .event-type { font-size: .7rem; font-weight: 700; border-radius: 3px; padding: .1em .4em; margin-right: .5rem; text-transform: uppercase; }
-.event-type.alert    { background: #fee2e2; color: #991b1b; }
-.event-type.action   { background: #eff6ff; color: #1d4ed8; }
-.event-type.resolved { background: #f0fdf4; color: #166534; }
+.event-type.alert    { background: var(--red-bg); color: var(--red); }
+.event-type.action   { background: var(--amber-bg); color: #79500f; }
+.event-type.resolved { background: var(--green-bg); color: var(--green-dark); }
 ```
 
 ---
@@ -92,9 +92,9 @@ time { font-weight: 700; font-size: .875rem; margin-right: .5rem; }
 Use a `<table>` with: Item / Owner / Due / Status / Priority columns. Color-code the Status cell.
 
 ```css
-.risk-table td.status-open   { color: #dc2626; font-weight: 600; }
-.risk-table td.status-done   { color: #16a34a; }
-.risk-table td.status-in-prog{ color: #d97706; }
+.risk-table td.status-open   { color: var(--red); font-weight: 600; }
+.risk-table td.status-done   { color: var(--green); }
+.risk-table td.status-in-prog{ color: var(--amber); }
 .risk-table td.prio-p1 { font-weight: 700; }
 ```
 
@@ -109,7 +109,7 @@ Use the CSS radio-button trick for zero-JS tabs (JS version is fine if SKILL.md 
   .tab-radio { display: none; }
   .tab-label { cursor: pointer; padding: .4rem 1rem; border-bottom: 2px solid transparent; }
   #t1:checked ~ .tabs label[for="t1"],
-  #t2:checked ~ .tabs label[for="t2"] { border-color: #3b82f6; font-weight: 600; }
+  #t2:checked ~ .tabs label[for="t2"] { border-color: var(--green); font-weight: 600; }
   #t1:checked ~ .content #panel1 { display: block; }
   #t2:checked ~ .content #panel2 { display: block; }
   .tab-panel { display: none; padding: 1rem 0; }
@@ -139,13 +139,13 @@ Use the CSS radio-button trick for zero-JS tabs (JS version is fine if SKILL.md 
 
 ```css
 blockquote.citation {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--green);
   margin: 1rem 0;
   padding: .75rem 1rem;
-  background: #eff6ff;
+  background: var(--green-bg);
   border-radius: 0 6px 6px 0;
 }
-blockquote.citation footer { font-size: .8rem; color: #64748b; margin-top: .5rem; }
+blockquote.citation footer { font-size: .8rem; color: var(--muted); margin-top: .5rem; }
 ```
 
 ---

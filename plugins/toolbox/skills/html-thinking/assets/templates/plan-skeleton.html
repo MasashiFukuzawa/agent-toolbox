@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Set lang to the primary document language before use (for example, lang="ja"). -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -7,15 +8,14 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
-      --text: #1e293b; --muted: #64748b;
-      --green: #22c55e; --green-bg: #f0fdf4; --green-border: #86efac;
-      --blue: #3b82f6;  --blue-bg: #eff6ff;  --blue-border: #93c5fd;
-      --red: #ef4444;   --red-bg: #fff1f2;   --red-border: #fda4af;
-      --yellow-bg: #fefce8; --yellow-border: #fde047;
+      --paper:#f6f2e9; --paper-deep:#eee7da; --surface:#fffdf8; --line:#d2c8b4; --radius:14px;
+      --ink:#171410; --text:#302b25; --muted:#6d655b;
+      --green:#16715e; --green-dark:#0f4f41; --green-bg:#edf6f2; --green-border:#85b8aa;
+      --amber:#a96716; --amber-bg:#fbf2df; --amber-border:#d7b36a; --amber-text:#79500f;
+      --red:#a33d32; --red-bg:#fbefec; --red-border:#d9a39d;
+      --bg:var(--paper); --border:var(--line); --blue:var(--green); --blue-bg:var(--green-bg); --blue-border:var(--green-border);
+      --yellow-bg:var(--amber-bg); --yellow-border:var(--amber-border);
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-           background: var(--bg); color: var(--text); padding: 2rem 1rem; line-height: 1.6; }
     .container { max-width: 960px; margin: 0 auto; }
     h1 { font-size: 1.75rem; margin-bottom: .25rem; }
     .meta { color: var(--muted); font-size: .875rem; margin-bottom: 2rem; }
@@ -38,9 +38,9 @@
     .option h2 { font-size: 1.1rem; margin-bottom: .25rem; }
     .badge { display: inline-block; font-size: .7rem; font-weight: 700; border-radius: 4px;
              padding: .15em .5em; text-transform: uppercase; margin-bottom: .75rem; }
-    .badge-green  { background: var(--green-bg); color: #166534; border: 1px solid var(--green-border); }
-    .badge-yellow { background: var(--yellow-bg); color: #854d0e; border: 1px solid var(--yellow-border); }
-    .badge-red    { background: var(--red-bg);    color: #991b1b; border: 1px solid var(--red-border); }
+    .badge-green  { background: var(--green-bg); color: #0f4f41; border: 1px solid var(--green-border); }
+    .badge-yellow { background: var(--yellow-bg); color: #79500f; border: 1px solid var(--yellow-border); }
+    .badge-red    { background: var(--red-bg); color: #8d3028; border: 1px solid var(--red-border); }
     .option h3 { font-size: .8rem; text-transform: uppercase; color: var(--muted); margin: .75rem 0 .25rem; }
     .option ul { padding-left: 1.1rem; font-size: .9rem; }
     .option ul li { margin-bottom: .2rem; }
@@ -57,6 +57,23 @@
     details > *:not(summary) { padding: .75rem 1rem; }
     textarea { width: 100%; min-height: 80px; border: 1px solid var(--border); border-radius: 6px;
                padding: .5rem; font-family: inherit; resize: vertical; background: var(--surface); color: var(--text); }
+
+    /* Field Review typography and composition */
+    body { font-family:'Public Sans',-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic Medium','Yu Gothic','Segoe UI',sans-serif;
+      background:var(--paper); color:var(--text); padding:2rem 1rem; line-height:1.6; font-size:16px; }
+    html:lang(ja) body { line-height:1.75; }
+    .container { max-width:1120px; }
+    h1, .option h2 { font-family:Fraunces,'Hiragino Mincho ProN','Yu Mincho',Georgia,serif; }
+    h1 { font-size:clamp(2rem,5vw,3.25rem); line-height:1.05; }
+    html:lang(en) h1 { letter-spacing:-.035em; }
+    .meta, .tl-dr h2, .option h3, .badge { font-family:'IBM Plex Mono','SFMono-Regular',Consolas,'Hiragino Kaku Gothic ProN',monospace; }
+    .tl-dr, .option, details { border-radius:14px; box-shadow:0 1px 2px rgba(40,30,12,.05),0 8px 24px rgba(40,30,12,.06); }
+    .tl-dr { background:var(--surface); border-left:4px solid var(--green); }
+    .phases { border-radius:14px; }
+    .phase.active, .prompt-btn { background:var(--green); }
+    button:focus-visible, summary:focus-visible, textarea:focus-visible { outline:3px solid var(--green); outline-offset:3px; }
+    @media (max-width:760px) { body{padding:1.25rem .75rem}.phases{display:grid;grid-template-columns:1fr 1fr}.phase{border-bottom:1px solid var(--border)} }
+    @media print { body{background:#fff;padding:0}.tl-dr,.option,details{box-shadow:none;break-inside:avoid}.prompt-row,textarea,.prompt-btn{display:none!important} }
   </style>
 </head>
 <body>
@@ -155,5 +172,16 @@
   </details>
 
 </div>
+<script>
+  let printClosedDetails = [];
+  addEventListener('beforeprint', () => {
+    printClosedDetails = [...document.querySelectorAll('details:not([open])')];
+    printClosedDetails.forEach(detail => detail.open = true);
+  });
+  addEventListener('afterprint', () => {
+    printClosedDetails.forEach(detail => detail.open = false);
+    printClosedDetails = [];
+  });
+</script>
 </body>
 </html>
