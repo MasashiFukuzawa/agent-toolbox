@@ -12,10 +12,11 @@ def test_repository_contracts() -> None:
 
 def test_done_documentation_is_inside_plugin_distribution() -> None:
     skill = (ROOT / "plugins/done/skills/done/SKILL.md").read_text()
-    assert (ROOT / "plugins/done/examples/done.yml").is_file()
-    assert (ROOT / "plugins/done/schema/done.schema.json").is_file()
-    assert "../../examples/done.yml" in skill
-    assert "../../schema/done.schema.json" in skill
+    assert (ROOT / "plugins/done/skills/done/references/done.example.yml").is_file()
+    assert (ROOT / "plugins/done/skills/done/references/done.schema.json").is_file()
+    assert "references/done.example.yml" in skill
+    assert "references/done.schema.json" in skill
+    assert "../../" not in skill
 
 
 def test_trigger_baseline_covers_every_registered_case() -> None:

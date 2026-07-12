@@ -102,8 +102,8 @@ def _validate_manifests(errors: list[str]) -> None:
         except (OSError, KeyError, json.JSONDecodeError) as exc:
             errors.append(f"invalid {host} marketplace manifest: {exc}")
 
-    done_plugin = ROOT / "plugins/done"
-    for relative in ("examples/done.yml", "schema/done.schema.json"):
+    done_plugin = ROOT / "plugins/done/skills/done"
+    for relative in ("references/done.example.yml", "references/done.schema.json"):
         if not (done_plugin / relative).is_file():
             errors.append(f"done plugin distribution is missing: {relative}")
     if list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml")):
@@ -225,6 +225,7 @@ def _scan_public_content(errors: list[str]) -> None:
 def _validate_markdown_links(errors: list[str]) -> None:
     """Reject dangling local Markdown links without trying to validate external URLs."""
     link_pattern = re.compile(r"(?<!!)\[[^]]*]\(([^)]+)\)")
+    skill_roots = {path.parent for path in SKILL_PATHS}
     for path in ROOT.rglob("*.md"):
         if ".git" in path.parts:
             continue
@@ -233,8 +234,15 @@ def _validate_markdown_links(errors: list[str]) -> None:
             if not target or target.startswith(("#", "http://", "https://", "mailto:")):
                 continue
             relative = unquote(target.split("#", 1)[0])
-            if relative and not (path.parent / relative).resolve().exists():
+            if not relative:
+                continue
+            resolved = (path.parent / relative).resolve()
+            if not resolved.exists():
                 errors.append(f"dangling Markdown link in {path.relative_to(ROOT)}: {target}")
+                continue
+            skill_root = next((root for root in skill_roots if path == root / "SKILL.md" or root in path.parents), None)
+            if skill_root and resolved != skill_root and skill_root not in resolved.parents:
+                errors.append(f"skill-local Markdown link escapes skill root in {path.relative_to(ROOT)}: {target}")
 
 
 def main() -> int:

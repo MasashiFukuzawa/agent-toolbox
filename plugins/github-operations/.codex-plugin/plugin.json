@@ -1,0 +1,16 @@
+{
+  "name": "github-operations",
+  "version": "0.1.0",
+  "description": "Safe GitHub Project provisioning and Issue creation",
+  "author": {"name": "Agent Toolbox Contributors"},
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "GitHub Operations",
+    "shortDescription": "Plan and apply guarded GitHub Project and Issue operations.",
+    "longDescription": "Inspect, plan, apply, resume, and verify GitHub Project and Issue operations with tenant guards.",
+    "developerName": "Agent Toolbox Contributors",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Inspect the target GitHub tenant and produce a read-only plan before making changes."
+  }
+}

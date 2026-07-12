@@ -7,3 +7,6 @@
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+evals/results/latest.json
+evals/workspaces/
+*-workspace/

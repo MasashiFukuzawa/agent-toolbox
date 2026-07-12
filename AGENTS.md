@@ -1,6 +1,7 @@
 # Repository instructions
 
 - Keep all published content reusable. Never add organization-specific names, personal email addresses, credentials, internal repository names, customer data, incident details, or absolute home-directory paths.
+- Write for a general public audience. Keep workflows broadly reusable, and describe organization- or repository-specific behavior as optional configuration only when it materially affects the workflow.
 - Skill directory names use kebab-case and equal the frontmatter `name`.
 - Skill frontmatter contains exactly `name` and `description`.
 - Do not add skill-local `agents/openai.yaml`; this repository has not adopted that metadata format.

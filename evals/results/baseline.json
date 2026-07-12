@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-12T10:00:30.992982+00:00",
+  "generated_at": "2026-07-12T12:42:05.425977+00:00",
   "summary": {
-    "total": 792,
+    "total": 864,
     "passed": 0,
     "failed": 0,
-    "not_run": 792
+    "not_run": 864
   },
   "results": [
     {
@@ -1990,6 +1990,186 @@
     },
     {
       "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
       "environment": "superset",
       "skill": "technical-research",
       "type": "positive",
@@ -3969,6 +4149,186 @@
       "error": "no evaluator command supplied"
     },
     {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
       "host": "codex",
       "environment": "isolated",
       "skill": "technical-research",
@@ -5950,6 +6310,186 @@
     },
     {
       "host": "codex",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
       "environment": "superset",
       "skill": "technical-research",
       "type": "positive",
@@ -7922,6 +8462,186 @@
       "host": "codex",
       "environment": "superset",
       "skill": "gog-chat-readonly",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "github-issue-create",
       "type": "no_skill_negative",
       "case_id": 1,
       "status": "not_run",

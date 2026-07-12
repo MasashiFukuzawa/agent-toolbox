@@ -1,0 +1,25 @@
+{
+  "skill_name": "github-issue-create",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "このrepoにバグ修正Issueを作ってProjectのInboxへ入れて。まずdry-runを見せて。",
+      "expected_output": "github-issue-createを使い、target、本文、labels、Project、Statusを提示して承認を待つ。",
+      "assertions": [
+        {"id": "dry-run", "text": "Issueを作成する前にplanを提示する"},
+        {"id": "target", "text": "owner/repoとidentityを再表示する"},
+        {"id": "priority", "text": "Priorityを根拠なく自動設定しない"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Issue自体は作れたけどProject追加で止まった。重複させず続きから実行して。",
+      "expected_output": "保存済みIssue URLを使ってresumeし、新規Issueを作らない。"
+    },
+    {
+      "id": 3,
+      "prompt": "新しいOrganization ProjectをBoardとRoadmap付きで作って。",
+      "expected_output": "Issue作成ではなくgithub-project-provisioningへ誘導する。"
+    }
+  ]
+}

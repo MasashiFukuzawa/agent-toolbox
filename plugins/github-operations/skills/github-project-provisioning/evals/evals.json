@@ -1,0 +1,25 @@
+{
+  "skill_name": "github-project-provisioning",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "このOrganizationにProduct Development Projectを導入したい。まず変更せずに構成と権限を調べて計画を出して。",
+      "expected_output": "github-project-provisioningを使い、認証identity、owner、template、repositories、plan制約をread-onlyで提示する。",
+      "assertions": [
+        {"id": "read-only-first", "text": "applyせずinspectまたはplanから開始する"},
+        {"id": "tenant", "text": "identityとtarget ownerを表示する"},
+        {"id": "approval", "text": "apply前の明示承認を要求する"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "既存ProjectのStatus、Priority、views、workflowsが標準契約どおりか検証して。",
+      "expected_output": "構造を読み取り、APIで安全に修復できないdriftを自動変更せず報告する。"
+    },
+    {
+      "id": 3,
+      "prompt": "Projectをコピーして複数repoをlinkしたい。Freeプランならauto-addの制約も教えて。",
+      "expected_output": "copyとrepo linkをplanに含め、auto-addはブラウザ承認が必要な別操作として扱う。"
+    }
+  ]
+}

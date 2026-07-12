@@ -5,6 +5,7 @@
   "plugins": [
     {"name":"toolbox","source":"./plugins/toolbox","description":"Engineering workflows for research, review, testing, delivery, and visualization"},
     {"name":"done","source":"./plugins/done","description":"Repository-defined quality gate with a Claude Code Stop adapter"},
-    {"name":"gog","source":"./plugins/gog","description":"Read-only Google Calendar and Chat workflows using gog CLI"}
+    {"name":"gog","source":"./plugins/gog","description":"Read-only Google Calendar and Chat workflows using gog CLI"},
+    {"name":"github-operations","source":"./plugins/github-operations","description":"Guarded GitHub Project provisioning and Issue creation"}
   ]
 }
