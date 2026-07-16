@@ -1,19 +1,19 @@
 # Agent Toolbox
 
-Agent Toolbox is a public collection of reusable engineering skills for Claude Code and Codex. It ships three independently installable plugins and keeps host-neutral skill instructions in one source tree.
+Agent Toolbox is a public collection of reusable engineering skills for Claude Code and Codex. It ships four independently installable plugins and keeps host-neutral skill instructions in one source tree.
 
 ## Plugins
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 19 | Research, review, testing, delivery, browser operations, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 20 | Research, review, testing, delivery, browser operations, and engineering decisions | Per-skill; see each `SKILL.md` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
 
 ### Skill catalog
 
-`adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `progress-report`, `structured-text-parsing`, `technical-research`, `verification-loop`, `done`, `gog-calendar`, `gog-chat-readonly`, `github-project-provisioning`, and `github-issue-create`.
+`adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `progress-report`, `structured-text-parsing`, `technical-research`, `typescript-project-foundation`, `verification-loop`, `done`, `gog-calendar`, `gog-chat-readonly`, `github-project-provisioning`, and `github-issue-create`.
 
 ## Install
 

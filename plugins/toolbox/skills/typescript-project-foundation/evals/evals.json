@@ -1,0 +1,145 @@
+{
+  "skill_name": "typescript-project-foundation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "cloudflare-fullstack-production-median",
+      "prompt": "Create the foundation plan for a new production-intent TypeScript SaaS on Cloudflare. It needs a React SPA, Hono API, D1, login, organization membership, and CI/CD. Do not write files yet.",
+      "expected_output": "A read-only capability-first plan that resolves tenancy/cardinality, selects a compatible current stable stack, defines authorization-aware D1 access and UUID policy, includes supply-chain and delivery controls, and requests approval before local writes.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Treats the project as production-intent and does not minimize acceptance or security boundaries", "type": "qualitative"},
+        {"text": "[critical] Resolves organization membership cardinality and enforces tenant scope below HTTP middleware", "type": "qualitative"},
+        {"text": "[critical] Uses runtime-resolved stable compatible versions rather than remembered version pins", "type": "qualitative"},
+        {"text": "Includes Pinact/full-SHA Actions, pnpm cooling policy, Dependabot, secret scanning, and least-privilege CI", "type": "qualitative"},
+        {"text": "Includes D1 migrations, indexes, runtime-realistic tests, structured logs, and deploy dry-run", "type": "qualitative"},
+        {"text": "Does not mutate before explicit approval", "type": "structural"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "cloudflare-runtime-mismatch-edge",
+      "prompt": "Start a new TypeScript service on Cloudflare Workers. It must run long CPU-heavy media transforms, use a native Node addon, and hold unrestricted outbound TCP sessions. Give me the fastest viable foundation.",
+      "expected_output": "The skill rejects silent Workers lock-in, identifies runtime incompatibilities from current official evidence, and recommends a Node/container or split architecture rather than forcing the Cloudflare preset.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Does not select Workers merely because Cloudflare was requested", "type": "qualitative"},
+        {"text": "[critical] Identifies re-platform risk and verifies current runtime limitations from official sources", "type": "qualitative"},
+        {"text": "Proposes a viable runtime or split architecture while preserving TypeScript foundation controls", "type": "qualitative"},
+        {"text": "Does not invent remembered numeric limits", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "small-react-spa-no-stack-maximalism",
+      "prompt": "Plan a new production-intent TypeScript React app with two screens and a tiny same-origin API. There is no cache-heavy server state and no design-system requirement.",
+      "expected_output": "A complete but restrained SPA/API foundation. It keeps hard-to-retrofit contracts while declining unjustified Tailwind, TanStack Query, complex routing, OpenAPI, and Turborepo.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Preserves production identity, error, data, CI, security, and delivery boundaries", "type": "qualitative"},
+        {"text": "[critical] Does not install conditional feature mechanisms without requirements", "type": "qualitative"},
+        {"text": "Uses a single package unless a real deployable/runtime boundary exists", "type": "qualitative"},
+        {"text": "Explains reconsideration triggers for deferred mechanisms", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "typescript-latest-tooling-conflict",
+      "prompt": "Bootstrap a TypeScript library with the newest TypeScript release. A required API-extraction tool only supports the prior compiler API. Use latest versions everywhere.",
+      "expected_output": "A compatibility-first resolution: verify official/tool peer support, use a supported prior compiler or documented side-by-side setup, and refuse casts or disabled strictness as a fake upgrade.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Does not blindly install the latest TypeScript tag", "type": "qualitative"},
+        {"text": "[critical] Preserves strict type correctness and required tooling behavior", "type": "qualitative"},
+        {"text": "Records the compatibility evidence and chosen exception", "type": "qualitative"},
+        {"text": "Applies library exports/declaration/package-consumer validation", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "disposable-spike-boundary",
+      "prompt": "I need a disposable TypeScript spike for 48 hours to test whether one external API returns useful data. It will be deleted after the demo and must never receive production data.",
+      "expected_output": "A deliberately lightweight spike with explicit expiry/exit criteria and no production delivery theater, while retaining valid input/secret handling and preventing the result from being mistaken for production-ready work.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Accepts disposable-spike only because deadline and disposal conditions are explicit", "type": "qualitative"},
+        {"text": "[critical] Does not add full production CI/CD and observability without need", "type": "qualitative"},
+        {"text": "Still protects secrets, validates external input, and labels deferred production controls", "type": "qualitative"},
+        {"text": "Defines the promotion trigger that would require production-intent re-planning", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "id-and-sqlite-contract-edge",
+      "prompt": "Design IDs for a new D1 application. I want every table to use BIGINT AUTOINCREMENT and every API ID to be a JavaScript number for consistency.",
+      "expected_output": "The skill corrects the SQLite and JavaScript assumptions, classifies IDs by meaning, uses exact INTEGER PRIMARY KEY only for internal rows, UUIDv7 for suitable domain entities, and separates tokens/digests/external principals.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Correctly explains exact SQLite INTEGER PRIMARY KEY and AUTOINCREMENT semantics", "type": "qualitative"},
+        {"text": "[critical] Prevents unsafe int64-to-JavaScript-number API exposure", "type": "qualitative"},
+        {"text": "Classifies entity, composite, internal, external, digest, and capability identifiers", "type": "qualitative"},
+        {"text": "Does not use UUIDv7 as business time or a capability token", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "non-trigger-existing-repository",
+      "prompt": "In this established five-year-old TypeScript repository, add one validation field to an existing endpoint and update its unit test.",
+      "expected_output": "The foundation skill does not attempt to redesign or re-scaffold the repository and routes the request to ordinary implementation/testing guidance.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Does not apply a greenfield foundation workflow to routine feature work", "type": "qualitative"},
+        {"text": "Does not propose replacing the established stack", "type": "qualitative"},
+        {"text": "Directs the task toward normal implementation and meaningful test guidance", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "generic-public-output-holdout",
+      "holdout": true,
+      "prompt": "Create a reusable foundation recommendation for a generic new TypeScript CLI that could be published publicly. The surrounding workspace contains unrelated private projects.",
+      "expected_output": "A generic CLI/library foundation with no organization, repository, path, domain, ID, or private operational detail copied from the surrounding workspace.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Contains no private or workspace-specific identifiers", "type": "qualitative"},
+        {"text": "[critical] Selects CLI contracts rather than web/Cloudflare application defaults", "type": "qualitative"},
+        {"text": "Defines stdout/stderr, exit codes, non-interactive behavior, packaging, and clean-consumer tests", "type": "qualitative"},
+        {"text": "Avoids unrelated application dependencies", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 9,
+      "name": "non-trigger-established-migration",
+      "prompt": "Migrate this established TypeScript monorepo from its current ORM to another ORM while preserving behavior and production data.",
+      "expected_output": "The greenfield foundation skill does not re-run its scaffold workflow. It routes to migration planning, repository inspection, compatibility, and data-migration verification.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Does not treat an established migration as a new-project foundation", "type": "qualitative"},
+        {"text": "Preserves existing decisions unless migration evidence requires change", "type": "qualitative"},
+        {"text": "Routes toward migration-specific planning and verification", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 10,
+      "name": "non-trigger-production-ui-design",
+      "prompt": "Redesign the visual hierarchy, typography, spacing, and responsive behavior of an existing production React dashboard.",
+      "expected_output": "The foundation skill does not trigger and directs the work to production UI/frontend-design guidance without proposing a repository scaffold.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Does not apply foundation planning or stack replacement", "type": "qualitative"},
+        {"text": "Routes to production UI design and appropriate visual verification", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 11,
+      "name": "non-trigger-isolated-documentation-question",
+      "prompt": "What is the current Hono API for setting a response header? Check the official documentation and answer only that question.",
+      "expected_output": "The foundation skill does not trigger; the request is handled as an isolated authoritative documentation lookup.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Does not produce a greenfield architecture plan", "type": "qualitative"},
+        {"text": "Uses current official documentation for the isolated API question", "type": "qualitative"}
+      ]
+    }
+  ]
+}
