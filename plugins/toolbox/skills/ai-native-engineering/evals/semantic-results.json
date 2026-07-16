@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "skill_sha256": "0604a73c95ae03941ee04f66309d9d454d978492ec09750b1a857b9de9994eef",
-  "evals_sha256": "94d1a7e9a651405efe4be87619f06613ca0fd63404d011e300209f731dadfdd4",
-  "reuse_note": "Semantic results were retained after a frontmatter-description-only trigger expansion; the instruction body and semantic eval cases are unchanged.",
+  "skill_sha256": "ff82a152036c528ddab0569799ccecdd53895b096b11a982ff46883b5a880eeb",
+  "evals_sha256": "31acfdd948d25dc860deb308447dbf65d5db8b2145da2fe902031570451fd1fb",
+  "reuse_note": "All six cases were rerun after the core-UX, risk-proportionate-security, prototype, and provider-boundary revision. Additional hold-out cases covered public-service tradeoffs, offline prototypes, and low-frequency administrative UI.",
   "executors": [
     {
       "host": "codex",
@@ -11,15 +11,24 @@
         {"id": 1, "passed": true, "assertions": [true, true, true]},
         {"id": 2, "passed": true, "assertions": [true, true, true]},
         {"id": 3, "passed": true, "assertions": [true, true, true]},
-        {"id": 4, "passed": true, "assertions": [true, true]}
+        {"id": 4, "passed": true, "assertions": [true, true]},
+        {"id": 5, "passed": true, "assertions": [true, true, true]},
+        {"id": 6, "passed": true, "assertions": [true, true, true]}
       ],
       "unclear_instruction_points": []
     },
     {
       "host": "claude-code",
-      "status": "not_run",
-      "reason": "executor session limit; retry after the provider reset window",
-      "cases": []
+      "status": "passed",
+      "cases": [
+        {"id": 1, "passed": true, "assertions": [true, true, true]},
+        {"id": 2, "passed": true, "assertions": [true, true, true]},
+        {"id": 3, "passed": true, "assertions": [true, true, true]},
+        {"id": 4, "passed": true, "assertions": [true, true]},
+        {"id": 5, "passed": true, "assertions": [true, true, true]},
+        {"id": 6, "passed": true, "assertions": [true, true, true]}
+      ],
+      "unclear_instruction_points": []
     }
   ]
 }
