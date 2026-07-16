@@ -16,8 +16,8 @@
 # session-scoped transcript, which is never shared across worktrees, so the
 # linked-worktree evidence problem does not arise here.
 #
-# Wired from both the Claude (.claude/settings.json) and Codex (.codex/hooks.json)
-# Stop hooks; the python3 parser handles Claude JSONL and Codex transcripts.
+# Wired from the Claude plugin Stop hook. The parser also accepts unstructured
+# transcripts so the same evidence format can be tested independently of host.
 
 set -euo pipefail
 
