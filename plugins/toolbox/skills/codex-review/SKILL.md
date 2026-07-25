@@ -7,7 +7,7 @@ description: >-
 
 このスキルは Claude Code / Codex / Cursor のどのホスト（エージェント）からも呼ばれる前提で書かれている。ホスト固有の手順は「実行時間と中断の防止」のホスト分岐に従う。
 
-**用途境界:** 本スキルは第三者レビュー専用で、`read-only` + 既定 `xhigh`。実装ワーカーとして Codex を委譲する場合は別のオーケストレーター手順を使い、`workspace-write` + 通常 `medium` とする。同じCLIでも権限とeffortが逆なので混用しない。
+**用途境界:** 本スキルは第三者レビュー専用で、`read-only` + 既定 `high`（`xhigh` 以上は使わない）。実装ワーカーとして Codex を委譲する場合は別のオーケストレーター手順を使い、`workspace-write` + 通常 `medium` とする。同じCLIでも権限とeffortが逆なので混用しない。
 
 ## ガードレール（必須・逸脱禁止）
 
@@ -35,17 +35,20 @@ Codex CLI を read-only サンドボックスで実行し、コードベース�
 
 ### Effort レベル
 
-**effort が明示されない場合は、依頼内容の複雑度から自動判定する。既定は `xhigh`。** 通常のコードレビューもアーキテクチャ分析もこの既定 `xhigh` で行う。クイックチェックなど明らかに軽微な依頼に限り `medium` / `high` に下げてよい。effort が明示された場合は必ずそれに従う。
+**effort が明示されない場合は、依頼内容の複雑度から自動判定する。既定は `high`。** 通常のコードレビューもアーキテクチャ分析もこの既定 `high` で行う。クイックチェックなど明らかに軽微な依頼に限り `medium` / `low` に下げてよい。effort が明示された場合は必ずそれに従う。
 
-下表は各レベルの「深さの目安」であって、タスク種別から機械的にレベルを引くための対応表ではない。**未指定時は上のルール（既定 `xhigh`）が優先**し、下表は「既定からどこまで降格してよいか」の判断材料として使う。
+**`xhigh` 以上（`xhigh` / `max` / `ultra`）は使わない。** effort を上げるほど精度が上がるわけではなく、過剰な探索と推論でレビュー結論の質が落ちる場合がある。自動判定でも既定でも選ばない。深さが足りないと感じたときは effort を上げるのではなく、**対象スコープを絞る・観点を具体化する・複数回に分ける**方向で対処する。
 
-| レベル | オプション | 目安（既定 `xhigh` からの降格目安） |
+下表は各レベルの「深さの目安」であって、タスク種別から機械的にレベルを引くための対応表ではない。**未指定時は上のルール（既定 `high`）が優先**し、下表は「既定からどこまで降格してよいか」の判断材料として使う。
+
+| レベル | オプション | 目安（既定 `high` 基準） |
 |--------|-----------|------|
 | `low`    | `-c model_reasoning_effort="low"`    | ごく軽微・クイックな確認のみ（最速） |
 | `medium` | `-c model_reasoning_effort="medium"` | 小さな差分・限定スコープの軽いレビュー |
-| `high`   | `-c model_reasoning_effort="high"`   | 既定より軽くしたいが一定の深さは要るとき |
-| `xhigh`  | `-c model_reasoning_effort="xhigh"`  | 通常のコードレビュー〜複雑な設計判断・アーキテクチャ分析・難解なバグ（**既定・自動判定の上限**） |
-| `max` / `ultra` | 同上の形式で指定 | **ユーザー明示時のみ**。Codex CLI 0.143+ でモデル依存に追加された。`ultra` はサブエージェント並列で使用量が急増する警告あり。モデル別の対応状況は公式未確認のため、指定してエラーになったら `xhigh` へフォールバックしてその旨を報告する |
+| `high`   | `-c model_reasoning_effort="high"`   | 通常のコードレビュー〜複雑な設計判断・アーキテクチャ分析・難解なバグ（**既定・自動判定の上限**） |
+| `xhigh` / `max` / `ultra` | （使わない） | **選択しない。** 精度向上に結び付かず、時間とコストだけが増える。`ultra` はサブエージェント並列で使用量が急増する警告もある |
+
+**自動判定の上限は `high`。** ユーザーが `xhigh` 以上を明示的に要求した場合のみ、ガードレール4に従って尊重する（その際は精度が上がらない可能性を一度添える）。指定してエラーになったら `high` へフォールバックしてその旨を報告する。
 
 ## 実行前の確認
 
@@ -56,7 +59,7 @@ Codex CLI を read-only サンドボックスで実行し、コードベース�
 | 依頼内容 | 必須。何をレビュー・調査してほしいか。 |
 | 対象ディレクトリ | カレントディレクトリ (`pwd`) |
 | モデル | `gpt-5.6-sol` |
-| Effort レベル | 自動判定（既定 `xhigh`、軽微な依頼のみ `medium`/`high`） |
+| Effort レベル | 自動判定（既定 `high`、軽微な依頼のみ `medium`/`low`。`xhigh` 以上は使わない） |
 
 `<依頼内容>` には、ユーザーの依頼をその意図を保ったまま、レビュー対象スコープ（全体／特定ファイル・ディレクトリ／差分の範囲）と観点を含む簡潔な指示へ整形して埋める。差分レビューでは対象（未コミット／ブランチ差分／コミット）を明示し、未指定なら作業ツリーの差分（`--uncommitted` 相当）を既定とする。docsレビューでは`git diff --name-only`でREADME等を含む実対象を列挙してpromptへ入れる。
 
@@ -95,11 +98,11 @@ CODEX_REVIEW_PROMPT
 - `-s read-only`: ファイル変更・危険なコマンドをサンドボックスで禁止
 - `-m gpt-5.6-sol`: 品質優先の既定modelを明示固定（config既定に依存しない）
 - `-C <project_dir>`: 分析対象の作業ルートを指定
-- `-c model_reasoning_effort`: 推論深度の指定（既定 `xhigh`、自動判定）
+- `-c model_reasoning_effort`: 推論深度の指定（既定 `high`、自動判定。`xhigh` 以上は使わない）
 - `< /dev/null`: **必須**。明示promptに加えて端末stdinを待つハングを防ぐ。`Reading additional input from stdin...` が表示されても、redirect済みなら正常に先へ進む
 
 **重要**: heredoc delimiter は必ず引用する（例: `<<'CODEX_REVIEW_PROMPT'`）。引用しない `<<EOF` は shell 展開を許すため使わない。プロンプト内に delimiter と同じ行が含まれる場合だけ、別の一意な delimiter 名に変える。
-**重要**: Claude Code 上ではこのコマンドを **`run_in_background: true` で起動する**（理由と手順は後述の「実行時間と中断の防止」を参照）。xhigh が既定のため処理は数分〜数十分かかりうるが、背景実行なら Bash の10分上限で kill されず、呼び出し元もブロックしない。
+**重要**: Claude Code 上ではこのコマンドを **`run_in_background: true` で起動する**（理由と手順は後述の「実行時間と中断の防止」を参照）。既定 `high` でも対象が大きければ処理は数分〜数十分かかりうるが、背景実行なら Bash の10分上限で kill されず、呼び出し元もブロックしない。
 
 ### diff / commit / ブランチの差分レビュー
 
@@ -107,30 +110,30 @@ CODEX_REVIEW_PROMPT
 
 ```bash
 # 未コミットの変更をレビュー
-codex exec review -m gpt-5.6-sol -c model_reasoning_effort="xhigh" --uncommitted < /dev/null
+codex exec review -m gpt-5.6-sol -c model_reasoning_effort="high" --uncommitted < /dev/null
 
 # 特定のブランチとの差分をレビュー
-codex exec review -m gpt-5.6-sol -c model_reasoning_effort="xhigh" --base main < /dev/null
+codex exec review -m gpt-5.6-sol -c model_reasoning_effort="high" --base main < /dev/null
 
 # 特定コミットをレビュー
-codex exec review -m gpt-5.6-sol -c model_reasoning_effort="xhigh" --commit COMMIT_SHA < /dev/null
+codex exec review -m gpt-5.6-sol -c model_reasoning_effort="high" --commit COMMIT_SHA < /dev/null
 ```
 
 上の各コマンドにも末尾へ `< /dev/null` を付ける。汎用 `exec` と `exec review` のどちらもmodelとeffortを必ず明示し、config既定へ委ねない。
 
-**重要**: `codex exec review` は `-c model_reasoning_effort` を省くと `~/.codex/config.toml` の既定（通常 `medium`）で動き、**既定 `xhigh` が効かない**。自動判定した effort（未指定なら既定 `xhigh`）を確実に反映するため、`-c model_reasoning_effort="<level>"` を必ず明示すること。diff レビューも長時間化しうるため、Claude Code 上では同様に `run_in_background: true` で起動する。
+**重要**: `codex exec review` は `-c model_reasoning_effort` を省くと `~/.codex/config.toml` の既定（通常 `medium`）で動き、**既定 `high` が効かない**。自動判定した effort（未指定なら既定 `high`）を確実に反映するため、`-c model_reasoning_effort="<level>"` を必ず明示すること。diff レビューも長時間化しうるため、Claude Code 上では同様に `run_in_background: true` で起動する。
 
 **重要**: `[PROMPT]` と `--uncommitted`/`--base`/`--commit` は相互排他。`--help` では同時指定可能に見えるが、実際に実行すると `error: the argument '[PROMPT]' cannot be used with '--uncommitted'` で失敗する（v0.144.1 でも継続）。diff レビューにカスタム指示を組み合わせることはできない。カスタム指示が必要な場合は汎用の `codex exec` コマンドを使うこと。
 
 ### 実行例
 
 ```bash
-# カレントプロジェクトのセキュリティレビュー（既定 xhigh）
+# カレントプロジェクトのセキュリティレビュー（既定 high）
 codex exec \
   -s read-only \
   -m gpt-5.6-sol \
   -C $HOME/my-project \
-  -c model_reasoning_effort="xhigh" \
+  -c model_reasoning_effort="high" \
   "$(cat <<'CODEX_REVIEW_PROMPT'
 You are the reviewer. Inspect the repository directly.
 Do not invoke codex-review, claude-review, codex exec, claude -p, or any nested reviewer.
@@ -140,8 +143,8 @@ Use only read-only repository inspection commands and return findings directly.
 CODEX_REVIEW_PROMPT
 )" < /dev/null
 
-# 未コミット変更のレビュー（カスタム指示なし、既定 xhigh）
-codex exec review -m gpt-5.6-sol -c model_reasoning_effort="xhigh" --uncommitted < /dev/null
+# 未コミット変更のレビュー（カスタム指示なし、既定 high）
+codex exec review -m gpt-5.6-sol -c model_reasoning_effort="high" --uncommitted < /dev/null
 ```
 
 ### 複数repo横断レビュー
@@ -150,7 +153,7 @@ codex exec review -m gpt-5.6-sol -c model_reasoning_effort="xhigh" --uncommitted
 
 ```bash
 codex exec -s read-only -m gpt-5.6-sol \
-  -c model_reasoning_effort="xhigh" \
+  -c model_reasoning_effort="high" \
   -C /path/to/common-parent --skip-git-repo-check \
   "$(cat <<'CODEX_REVIEW_PROMPT'
 You are the reviewer. Inspect only these targets:
@@ -168,7 +171,7 @@ CODEX_REVIEW_PROMPT
 ```bash
 codex exec resume SESSION_ID \
   -m gpt-5.6-sol \
-  -c model_reasoning_effort="xhigh" \
+  -c model_reasoning_effort="high" \
   "$(cat <<'CODEX_REVIEW_FOLLOWUP'
 Finding 2を、根拠となるpath:lineと成立条件を示して詳しく説明してください。
 CODEX_REVIEW_FOLLOWUP
@@ -180,7 +183,7 @@ resumeは元sessionのsandboxと作業文脈を引き継ぐ。現行CLIではres
 
 ## 実行時間と中断の防止
 
-ハイエンドモデル + 高 effort（既定の `gpt-5.6-sol` + `xhigh`）では、対象が大規模なほどレビューに**数分〜数十分**かかることがある。これは正常で、出力が無い間も停止やハングではなく推論を継続している。**長時間化を理由に kill・キャンセル・再実行をしてはならない。** 呼び出し元（人間・上位エージェントを問わず）に中断不要だと伝え、気長に完了を待つ。
+ハイエンドモデル + 高 effort（既定の `gpt-5.6-sol` + `high`）では、対象が大規模なほどレビューに**数分〜数十分**かかることがある。これは正常で、出力が無い間も停止やハングではなく推論を継続している。**長時間化を理由に kill・キャンセル・再実行をしてはならない。** 呼び出し元（人間・上位エージェントを問わず）に中断不要だと伝え、気長に完了を待つ。
 
 **まず実行ホストで分岐する**: Claude Code 上なら背景実行（手順1〜4）。`run_in_background` を持たないホスト（Codex/Cursor 等。自分が Codex として動作している場合を含む）は手順1〜4ではなく**手順5の foreground フォールバック**を使う。
 
@@ -190,13 +193,13 @@ resumeは元sessionのsandboxと作業文脈を引き継ぐ。現行CLIではres
    > 「codex-review をバックグラウンドで開始しました。レビューには数十分かかる場合があります。応答が無くても処理は継続中（ハングではありません）なので、中断せず気長にお待ちください。完了時に結果を報告します。」
 3. **完了通知で再呼び出しされたら報告する**
    背景出力は数百KBになることがあるため、ファイル全体を`Read`せず`tail`で末尾から確認する。論点位置は`rg -n "VERDICT|must-fix" <output>`で特定する。最終回答は最後の`codex`行の後にあり、`tokens used`後に同じ本文が再掲される場合があるため、重複を二重報告しない。
-4. **待機中は背景タスクを kill・キャンセル・再起動しない。** `xhigh`で10分超・10万token級、または数十分無出力でも正常になり得る。`Reading additional input from stdin...` はredirect済みなら待機を意味しない。`ERROR rmcp::transport::worker: ... Auth(AuthorizationRequired)` はheadlessで対話認証MCPを起動できないノイズであり、レビュー本文が出ていれば失敗扱いしない。
+4. **待機中は背景タスクを kill・キャンセル・再起動しない。** `high`で10分超・10万token級、または数十分無出力でも正常になり得る。`Reading additional input from stdin...` はredirect済みなら待機を意味しない。`ERROR rmcp::transport::worker: ... Auth(AuthorizationRequired)` はheadlessで対話認証MCPを起動できないノイズであり、レビュー本文が出ていれば失敗扱いしない。
 5. **背景実行を持たないホスト（Codex/Cursor 等）でのフォールバック**
    foreground で実行し、ホストの実行タイムアウトを可能な限り長く確保する（Claude Code の Bash 相当なら上限 `600000`ms=10分）。foreground はブロックするため発話窓は「実行直前」のみ。**起動直前に**次の foreground 用の予告を出す（手順2の文言は「バックグラウンドで開始」を含み foreground では不正確になるため、そのまま流用しない）。
    > 「これからレビューを実行します。完了まで数十分かかる場合があります。応答が無くても処理は継続中（ハングではありません）なので、中断せず気長にお待ちください。」
 
-   結果は標準出力（戻り値）として直接返るため、背景用の出力ファイル `Read` / `BashOutput` は使わず、その stdout を下記「結果の整理と報告」に従って報告する。ホストのタイムアウト上限が数十分の実行に足りず kill された場合も盲目的に再実行せず、effort を一段下げる（xhigh→high）か対象を絞る（特定ファイル/ディレクトリ）。
-6. **補足（実行モードに依らない）**: 背景実行は10分の foreground 上限に縛られないが「無制限」ではない。巨大リポジトリの xhigh が背景でも長すぎる場合は、同様に effort 降格（xhigh→high）や対象の絞り込みで対処する。
+   結果は標準出力（戻り値）として直接返るため、背景用の出力ファイル `Read` / `BashOutput` は使わず、その stdout を下記「結果の整理と報告」に従って報告する。ホストのタイムアウト上限が数十分の実行に足りず kill された場合も盲目的に再実行せず、effort を一段下げる（high→medium）か対象を絞る（特定ファイル/ディレクトリ）。
+6. **補足（実行モードに依らない）**: 背景実行は10分の foreground 上限に縛られないが「無制限」ではない。巨大リポジトリのレビューが背景でも長すぎる場合は、同様に effort 降格（high→medium）や対象の絞り込みで対処する。
 
 ## 結果の整理と報告
 
@@ -236,5 +239,6 @@ Codex の出力には先頭にメタ情報ヘッダー（バージョン・モ�
 - 汎用 `codex exec` のプロンプトを二重引用符で直書きしない。Markdown やコード片を含む場合は必ず single-quoted heredoc で渡す
 - `codex exec review` は既定でサンドボックス（read-only 相当）で動作する。`-s`/`--sandbox` フラグは持たないため付けない（汎用 `codex exec` のみ `-s read-only` を明示）
 - モデル・effort の既定と選択肢は「モデルと effort」セクションの定義に従う（config 既定に依存せず必ず明示する）
+- `xhigh` / `max` / `ultra` は使わない。精度が上がらないため、深さ不足はスコープの絞り込みや観点の具体化で解決する
 - 対象ディレクトリが Git リポジトリでない場合は `--skip-git-repo-check` を追加する
 - `codex exec review` は CWD が Git リポジトリである必要がある
