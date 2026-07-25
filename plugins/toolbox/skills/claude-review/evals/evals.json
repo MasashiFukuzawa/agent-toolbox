@@ -4,25 +4,25 @@
     {
       "id": 1,
       "prompt": "claude-reviewを使って $HOME/project のコードをレビューしてください。Effort は medium で。",
-      "expected_output": "effort が明示されているので medium を尊重し、claude -p コマンドを --model claude-opus-4-8 --effort medium で実行して、対象プロジェクトのコードレビュー結果を要約・詳細・推奨対応の形式で報告する",
+      "expected_output": "effort が明示されているので medium を尊重し、claude -p コマンドを --model claude-opus-5 --effort medium で実行して、対象プロジェクトのコードレビュー結果を要約・詳細・推奨対応の形式で報告する",
       "files": []
     },
     {
       "id": 2,
       "prompt": "認証周りのセキュリティについてセカンドオピニオンが欲しい。カレントディレクトリで claude-review を xhigh effort で動かして。",
-      "expected_output": "claude -p コマンドを --model claude-opus-4-8 --effort xhigh で実行し、セキュリティ観点の分析結果を構造化して報告する",
+      "expected_output": "claude -p コマンドを --model claude-opus-5 --effort xhigh で実行し、セキュリティ観点の分析結果を構造化して報告する",
       "files": []
     },
     {
       "id": 3,
       "prompt": "Claudeの別インスタンスに $HOME/project を軽くチェックしてもらいたい（low effort）",
-      "expected_output": "effort が明示されているので low を尊重し、claude -p コマンドを --model claude-opus-4-8 --effort low で実行して、対象プロジェクトの概要レビューを報告する",
+      "expected_output": "effort が明示されているので low を尊重し、claude -p コマンドを --model claude-opus-5 --effort low で実行して、対象プロジェクトの概要レビューを報告する",
       "files": []
     },
     {
       "id": 4,
       "prompt": "claude-review で全体を見て",
-      "expected_output": "effort の指定が無いので自動判定で既定の xhigh を選ぶ。claude -p \"...\" --model claude-opus-4-8 --effort xhigh --add-dir <dir> --disallowedTools 'Edit,Write,NotebookEdit' を Bash の run_in_background: true で起動し、起動直後に『バックグラウンドで開始した・数分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する。完了通知で出力ファイルを Read/BashOutput して結果を要約・詳細・推奨対応の形式で報告する",
+      "expected_output": "effort の指定が無いので自動判定で既定の xhigh を選ぶ。claude -p \"...\" --model claude-opus-5 --effort xhigh --add-dir <dir> --permission-mode plan --disallowedTools 'Edit,Write,NotebookEdit' を Bash の run_in_background: true で起動し（ガードレール1により --permission-mode plan と --disallowedTools は両方必須）、起動直後に『バックグラウンドで開始した・数分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する。完了通知で出力ファイルを Read/BashOutput して結果を要約・詳細・推奨対応の形式で報告する",
       "files": []
     },
     {
