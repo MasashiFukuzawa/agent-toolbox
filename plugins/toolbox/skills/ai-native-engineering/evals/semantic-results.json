@@ -1,22 +1,9 @@
 {
   "schema_version": 1,
-  "skill_sha256": "ff82a152036c528ddab0569799ccecdd53895b096b11a982ff46883b5a880eeb",
-  "evals_sha256": "31acfdd948d25dc860deb308447dbf65d5db8b2145da2fe902031570451fd1fb",
-  "reuse_note": "All six cases were rerun after the core-UX, risk-proportionate-security, prototype, and provider-boundary revision. Additional hold-out cases covered public-service tradeoffs, offline prototypes, and low-frequency administrative UI.",
+  "skill_sha256": "ab674885d8456cbc7b7f46d19807263d923b070c8b649ff2824c6c0723baea87",
+  "evals_sha256": "38438663057292e3e6399d037793f4924f6c6214462a2f3eb5078f4d20bfc999",
+  "reuse_note": "All seven cases were rerun after the YAGNI/KISS revision (simplicity promoted to a top-level principle, the front-load section reframed from build-these-domains to decide-these-contracts, an explicit Phase 0/1/2 walking-skeleton model, and a core-UX carve-out inside the new simplification material). Case 7 is new and guards the over-construction failure mode the revision targets; the prior six cases skewed toward guarding under-construction only. Executors ran blind: they received the skill and the case prompt but not the assertions, and grading was done separately against the assertion list.",
   "executors": [
-    {
-      "host": "codex",
-      "status": "passed",
-      "cases": [
-        {"id": 1, "passed": true, "assertions": [true, true, true]},
-        {"id": 2, "passed": true, "assertions": [true, true, true]},
-        {"id": 3, "passed": true, "assertions": [true, true, true]},
-        {"id": 4, "passed": true, "assertions": [true, true]},
-        {"id": 5, "passed": true, "assertions": [true, true, true]},
-        {"id": 6, "passed": true, "assertions": [true, true, true]}
-      ],
-      "unclear_instruction_points": []
-    },
     {
       "host": "claude-code",
       "status": "passed",
@@ -26,9 +13,15 @@
         {"id": 3, "passed": true, "assertions": [true, true, true]},
         {"id": 4, "passed": true, "assertions": [true, true]},
         {"id": 5, "passed": true, "assertions": [true, true, true]},
-        {"id": 6, "passed": true, "assertions": [true, true, true]}
+        {"id": 6, "passed": true, "assertions": [true, true, true]},
+        {"id": 7, "passed": true, "assertions": [true, true, true]}
       ],
       "unclear_instruction_points": []
+    },
+    {
+      "host": "codex",
+      "status": "not_run",
+      "reason": "The codex CLI was not resolvable in the revision session, so this host could not be exercised. Checked: command -v, type, mise which, mise ls, npm -g, and the usual bin directories - all report not found (a ~/.codex config directory exists, but no binary). The prior pass predates the YAGNI/KISS revision and was retired rather than carried forward. Rerun where codex resolves before relying on cross-host evidence."
     }
   ]
 }

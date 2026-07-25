@@ -65,6 +65,17 @@
         {"type": "qualitative", "text": "[critical] 後戻りコストの高いownershipと認可境界は先に正し、需要のない防御機構とは分ける"},
         {"type": "qualitative", "text": "対策が新たに生むsecret、権限、障害点、運用負荷を評価する"}
       ]
+    },
+    {
+      "id": 7,
+      "prompt": "AIが並列で数日稼働できるので、本番前の今のうちにデータ・API契約・認可・インフラ・信頼性・開発基盤の6領域すべてを理想形で作り込む計画にしました。分散DB、schema registry、汎用ABAC、service mesh、分散trace基盤、全網羅E2Eまで含みます。利用者はまだ0で負荷も脅威も未観測です。この計画をレビューして。",
+      "expected_output": "契約・境界の決定と機構の実装を分離する。identity・所有権・API契約・認可境界・deploy/rollbackなど後から変えると高い判断は今決めるが、需要も負荷も脅威も未観測な分散DB・schema registry・汎用ABAC・service mesh・trace基盤・全網羅E2Eは実需が出るまで待つ。フェーズを切り、コアジャーニーをend-to-endで通す段を先に置く。同時に、この簡素化をコア体験の質やテスト・復旧可能性の切り下げには転用しない。",
+      "files": [],
+      "assertions": [
+        {"type": "qualitative", "text": "[critical] 契約・境界を今決めることと、機構を今作ることを分離し、需要・負荷・脅威が未観測な機構を現在scopeから外す"},
+        {"type": "qualitative", "text": "[critical] フェーズを切り、コア導線をend-to-endで通す段を機構の作り込みより前に置く"},
+        {"type": "qualitative", "text": "簡素化をコア体験の質やテスト・データ整合性・復旧可能性の切り下げには使わないと明示する"}
+      ]
     }
   ]
 }
