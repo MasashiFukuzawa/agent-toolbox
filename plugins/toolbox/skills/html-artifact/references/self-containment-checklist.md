@@ -60,20 +60,14 @@ If the artifact will be served with a Content Security Policy (e.g., embedded in
 - Avoid `onclick="..."` inline event handlers — use `addEventListener` in the `<script>` block
 - Avoid `javascript:` URIs
 
-## File size guide
+## Write-cost, not file size
 
-| Size | Assessment | Action |
-|---|---|---|
-| < 15 KB | Excellent | Deliver as-is |
-| 15–30 KB | Good | Acceptable, check for unnecessary repetition |
-| 30–60 KB | Large | Review: are templates being duplicated? Can data be represented as a table? |
-| > 60 KB | Too large | Split into 2–3 linked files, or cut scope |
+There is no file-size target — a long file that is clear is fine, and size is never reported to the user. What is worth avoiding is output that costs tokens to write without adding understanding (see SKILL.md「コスト規律」):
 
-**Common bloat causes:**
-- Base64 images (prefer omitting images if not essential)
-- Duplicated CSS across many sections (extract to one `<style>` block at the top)
+- Repeated `style="..."` attribute lists — define a class once the same decoration appears 3+ times
 - Verbose inline SVG that could use `<use>` with `<symbol>` definitions
-- Pasting entire file contents instead of relevant diff snippets
+- Pasting entire file contents instead of the relevant diff snippets
+- Base64 images that carry no information the page needs
 
 ## Quick checklist before delivery
 
@@ -85,6 +79,12 @@ If the artifact will be served with a Content Security Policy (e.g., embedded in
 - [ ] All scripts in `<script>` block (no external `.js` file references)
 - [ ] Light theme only — no `@media (prefers-color-scheme: dark)` overrides; assumes a white/light background
 - [ ] Overview is scannable on its own; supporting detail is pushed into collapsed `<details>` rather than cut
+- [ ] Every major section has a `<details>` drill-down; nothing was cut for length
+- [ ] Sections about structure / flow / comparison each carry a visual
+- [ ] No insider abbreviations or project-local coinages left unrephrased (rewrite beats glossing)
+- [ ] Terms beyond a general software engineer's vocabulary are defined at first use; API/HTTP/cache-level terms are left plain
+- [ ] 用語集 `<details>` present; first occurrences chipped with `.term` (no bare `<abbr title>`); chips and `<dt>` entries are 1:1
+- [ ] No `.term-gloss` tooltip inside an `overflow` container or inside `<svg>`
 - [ ] SVG has `role="img"` and `aria-label` if it conveys information
 - [ ] No API keys, tokens, or credentials in source
 - [ ] If Tier 2 CDN used: `<!-- requires: CDN: ... -->` comment added

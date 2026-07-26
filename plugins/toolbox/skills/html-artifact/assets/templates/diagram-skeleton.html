@@ -1,10 +1,11 @@
 <!doctype html>
-<!-- Set lang to the primary document language before use (for example, lang="ja"). -->
-<html lang="en">
+<!-- lang must match the body language. These skeletons carry Japanese copy, so ja.
+     Switch to en (and drop html:lang(ja) overrides) only if you rewrite the copy. -->
+<html lang="ja">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Diagram — [System/Concept Name]</title>
+  <title>図解 — [対象のsystem・概念名]</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --paper:#f6f2e9; --paper-deep:#eee7da; --surface:#fffdf8; --line:#d2c8b4; --radius:14px; --ink:#171410; --text:#302b25; --muted:#6d655b;
@@ -13,8 +14,10 @@
     .container { max-width: 800px; margin: 0 auto; }
     h1 { font-size: 1.5rem; margin-bottom: .25rem; }
     .meta { color: var(--muted); font-size: .875rem; margin-bottom: 1.5rem; }
+    /* No overflow here on purpose: the SVG scales to width:100%, so a scroll container would
+       never fire at desktop widths and would only clip .term-gloss tooltips. */
     .diagram-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-                   padding: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; }
+                   padding: 1.5rem; margin-bottom: 1.5rem; }
     .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; font-size: .875rem; }
     .legend-item { display: flex; align-items: center; gap: .4rem; }
     .legend-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--border); }
@@ -44,38 +47,59 @@
     .diagram-box, section, details { border-radius:14px!important; box-shadow:0 1px 2px rgba(40,30,12,.05),0 8px 24px rgba(40,30,12,.06); }
     summary:focus-visible { outline:3px solid var(--green); outline-offset:3px; }
     @media print { body{background:#fff;padding:0}.diagram-box,section,details{box-shadow:none;break-inside:avoid} }
+
+    /* Term chip + glossary (required by default — see SKILL.md 基本原則8) */
+    .term { position:relative; color:var(--green-dark); text-decoration:none;
+      border-bottom:1px dashed var(--green); cursor:help; font-weight:600; }
+    .term:hover, .term:focus-visible { background:var(--green-bg); }
+    .term:focus-visible { outline:3px solid var(--green); outline-offset:2px; }
+    .term-gloss { position:absolute; left:0; top:calc(100% + 6px); z-index:20; width:max-content;
+      max-width:20rem; padding:.4rem .6rem; background:var(--ink); color:#f6f2e9;
+      font-size:.8rem; font-weight:400; line-height:1.5; border-radius:8px;
+      box-shadow:0 6px 18px rgba(40,30,12,.18); opacity:0; visibility:hidden; transition:opacity .12s; }
+    .term:hover .term-gloss, .term:focus-visible .term-gloss { opacity:1; visibility:visible; }
+    .glossary { margin:0; }
+    .glossary dt { font-family:'IBM Plex Mono','SFMono-Regular',Consolas,monospace; font-size:.9rem;
+      font-weight:700; color:var(--ink); margin-top:.9rem; scroll-margin-top:1rem; }
+    .glossary dt:first-child { margin-top:0; }
+    .glossary dt:target { background:var(--green-bg); box-shadow:-.5rem 0 0 var(--green-bg), .5rem 0 0 var(--green-bg); }
+    .glossary dd { margin:.25rem 0 0; font-size:.9rem; color:var(--text); }
+    @media print { .term-gloss { display:none; } .term { border-bottom-style:solid; } }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>Diagram — [System/Concept Name]</h1>
-  <p class="meta">Context: [one sentence describing what this diagram shows]</p>
+  <h1>図解 — [対象のsystem・概念名]</h1>
+  <p class="meta">この図が示すもの: [1文で]</p>
 
   <!-- Legend -->
   <div class="legend">
     <div class="legend-item">
       <div class="legend-swatch" style="background:#eee7da;border-color:#6d655b"></div>
-      <span>Service / Component</span>
+      <span>service・component</span>
     </div>
     <div class="legend-item">
       <div class="legend-swatch" style="background:#edf6f2;border-color:#16715e"></div>
-      <span>Entry point</span>
+      <span>入口</span>
     </div>
     <div class="legend-item">
       <div class="legend-swatch" style="background:#fbf2df;border-color:#a96716"></div>
-      <span>External / 3rd party</span>
+      <span>外部・3rd party</span>
     </div>
   </div>
 
-  <!-- Main diagram -->
+  <!-- Main diagram. An <svg> cannot host HTML, so a .term-gloss tooltip can never go inside
+       it. Terms that appear only in a figure are explained in the caption/legend right below
+       it, and that in-figure occurrence does not consume the term's 初出 slot.
+       Give each <svg> its own <defs> with unique marker ids when a page has several figures. -->
   <div class="diagram-box">
     <svg viewBox="0 0 600 220" style="width:100%;display:block"
-         role="img" aria-label="System architecture diagram showing [A], [B], and [C]">
+         role="img" aria-label="[A]・[B]・[C]の構成を示すarchitecture図">
       <defs>
-        <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <marker id="arrow-main" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
           <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
         </marker>
-        <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <marker id="arrow-main-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
           <path d="M0,0 L0,6 L8,3 z" fill="#16715e"/>
         </marker>
       </defs>
@@ -85,7 +109,7 @@
       <text x="75" y="117" text-anchor="middle" font-weight="600">Client</text>
 
       <!-- Edge A → B -->
-      <line x1="130" y1="112" x2="200" y2="112" class="edge" marker-end="url(#arrow)"/>
+      <line x1="130" y1="112" x2="200" y2="112" class="edge" marker-end="url(#arrow-main)"/>
       <text x="165" y="105" text-anchor="middle" class="edge-label">HTTP</text>
 
       <!-- Node B -->
@@ -93,7 +117,7 @@
       <text x="255" y="117" text-anchor="middle">API Gateway</text>
 
       <!-- Edge B → C (sync) -->
-      <line x1="310" y1="112" x2="380" y2="112" class="edge" marker-end="url(#arrow)"/>
+      <line x1="310" y1="112" x2="380" y2="112" class="edge" marker-end="url(#arrow-main)"/>
       <text x="345" y="105" text-anchor="middle" class="edge-label">gRPC</text>
 
       <!-- Node C -->
@@ -101,7 +125,7 @@
       <text x="435" y="117" text-anchor="middle">Auth Service</text>
 
       <!-- Edge B → D (async, dashed) -->
-      <path d="M255,134 C255,175 355,175 415,160" class="edge edge-dashed" marker-end="url(#arrow)"/>
+      <path d="M255,134 C255,175 355,175 415,160" class="edge edge-dashed" marker-end="url(#arrow-main)"/>
       <text x="320" y="183" text-anchor="middle" class="edge-label">event (async)</text>
 
       <!-- Node D: External -->
@@ -112,27 +136,64 @@
 
   <!-- Annotation sections -->
   <section>
-    <h2>A → B: [What this connection does]</h2>
-    <p>[Explanation of the interaction — protocol, payload, why this path exists, any notable constraints or error handling.]</p>
+    <h2>A → B: [この接続が何をしているか]</h2>
+    <!-- First occurrence of a term → .term chip with a short gloss + link to 用語集 -->
+    <p>Client は <a class="term" href="#g-idp">IdP<span class="term-gloss">認証を担う外部サービス</span></a> 経由で認証する。[protocol・payload・この経路が存在する理由・制約・error時の扱い]</p>
+    <details>
+      <summary>この経路の詳解（背景・As-Is/To-Be・根拠）</summary>
+      <p>[なぜこの接続が存在するか → 現状と目標 → 根拠。図や表を優先]</p>
+    </details>
   </section>
 
   <section>
-    <h2>B → C: [What this connection does]</h2>
-    <p>[Explanation.]</p>
+    <h2>B → C: [この接続が何をしているか]</h2>
+    <p>[説明。関係を示すなら図を足す]</p>
   </section>
 
+  <!-- Keep a drill-down only where the surface actually raises a question. Delete this block
+       rather than shipping it empty. -->
   <details style="border:1px solid var(--border);border-radius:8px">
-    <summary style="padding:.75rem 1rem;cursor:pointer;font-weight:600">Open questions</summary>
-    <div style="padding:.75rem 1rem">
-      <ul style="padding-left:1.25rem;font-size:.9rem">
-        <li>Should [X] be synchronous or async?</li>
-        <li>Who owns the retry logic for [Y]?</li>
-      </ul>
+    <summary style="padding:.75rem 1rem;cursor:pointer;font-weight:600">
+      この構成を選んだ理由（背景・As-Is/To-Be・根拠）
+    </summary>
+    <div style="padding:.75rem 1rem;font-size:.9rem">
+      <p><strong>背景・課題・目的</strong> — [なぜこの構成が必要になったか。1〜3行]</p>
+      <p><strong>As-Is → To-Be</strong> — [現状の経路 → 目標の経路。before/after図か2列で]</p>
+      <p><strong>詳細・根拠</strong> — [計測値・失敗モード・制約。表や図を優先]</p>
     </div>
+  </details>
+
+
+  <!-- 用語集 — canonical definitions live here once; inline .term chips link in.
+       Keep it inside <details> so the beforeprint handler expands it for print. -->
+  <details>
+    <summary>用語集（1件）</summary>
+    <dl class="glossary">
+      <!-- Only terms actually chipped in the page belong here — no dead entries. -->
+      <dt id="g-idp">IdP — Identity Provider</dt>
+      <dd>認証を担う外部サービス。アプリはIdPが発行したtokenを検証するだけで済み、資格情報を自前で保持しない。</dd>
+    </dl>
   </details>
 
 </div>
 <script>
+
+  // Glossary anchors: open ancestor <details> before jumping.
+  // Chromium/Safari do this natively; this keeps older Firefox working too.
+  function openAncestorDetails(hash) {
+    const target = hash && document.getElementById(hash.slice(1));
+    if (!target) return;
+    for (let el = target.parentElement; el; el = el.parentElement) {
+      if (el.tagName === 'DETAILS') el.open = true;
+    }
+    target.scrollIntoView({ block: 'center' });
+  }
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a[href^="#"]');
+    if (link) openAncestorDetails(link.hash);
+  });
+  if (location.hash) openAncestorDetails(location.hash);
+
   let printClosedDetails = [];
   addEventListener('beforeprint', () => {
     printClosedDetails = [...document.querySelectorAll('details:not([open])')];

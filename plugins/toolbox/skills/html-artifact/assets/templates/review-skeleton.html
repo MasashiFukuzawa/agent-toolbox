@@ -1,10 +1,11 @@
 <!doctype html>
-<!-- Set lang to the primary document language before use (for example, lang="ja"). -->
-<html lang="en">
+<!-- lang must match the body language. These skeletons carry Japanese copy, so ja.
+     Switch to en (and drop html:lang(ja) overrides) only if you rewrite the copy. -->
+<html lang="ja">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Code Review — [PR Title / Branch]</title>
+  <title>Code Review — [PRタイトル / branch]</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -22,7 +23,7 @@
     /* Sidebar */
     .file-tree { position: sticky; top: 1rem; background: var(--surface);
                  border: 1px solid var(--border); border-radius: 8px; padding: .75rem; }
-    .file-tree h3 { font-size: .75rem; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+    .file-tree h3 { font-size: .75rem; color: var(--muted); margin-bottom: .5rem; }
     .file-tree a { display: block; padding: .2rem .4rem; color: var(--green-text); text-decoration: none;
                    border-radius: 4px; font-size: .8rem; word-break: break-all; }
     .file-tree a:hover { background: var(--green-bg); }
@@ -69,7 +70,7 @@
     .annotation.warning  { background: var(--amber-bg); border-left: 4px solid var(--amber); }
     .annotation.info     { background: var(--slate-bg); border-left: 4px solid var(--slate); }
     .annotation.praise   { background: var(--green-bg); border-left: 4px solid var(--green); }
-    .annotation strong { display: block; margin-bottom: .2rem; text-transform: capitalize; }
+    .annotation strong { display: block; margin-bottom: .2rem; }
 
     /* Conclusion */
     .conclusion { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
@@ -92,6 +93,29 @@
     .btn { min-height:44px; }
     a:focus-visible, button:focus-visible, summary:focus-visible, textarea:focus-visible { outline:3px solid var(--green); outline-offset:3px; }
     @media print { body{background:#fff;padding:0}.file-tree{display:none}.pr-layout{display:block}.summary-card,.file-section,.conclusion{box-shadow:none;break-inside:avoid}.btn,textarea{display:none!important} }
+
+    /* Term chip + glossary (required by default — see SKILL.md 基本原則8) */
+    .term { position:relative; color:var(--green-dark); text-decoration:none;
+      border-bottom:1px dashed var(--green); cursor:help; font-weight:600; }
+    .term:hover, .term:focus-visible { background:var(--green-bg); }
+    .term:focus-visible { outline:3px solid var(--green); outline-offset:2px; }
+    .term-gloss { position:absolute; left:0; top:calc(100% + 6px); z-index:20; width:max-content;
+      max-width:20rem; padding:.4rem .6rem; background:var(--ink); color:#f6f2e9;
+      font-size:.8rem; font-weight:400; line-height:1.5; border-radius:8px;
+      box-shadow:0 6px 18px rgba(40,30,12,.18); opacity:0; visibility:hidden; transition:opacity .12s; }
+    .term:hover .term-gloss, .term:focus-visible .term-gloss { opacity:1; visibility:visible; }
+    .glossary { margin:0; }
+    .glossary dt { font-family:'IBM Plex Mono','SFMono-Regular',Consolas,monospace; font-size:.9rem;
+      font-weight:700; color:var(--ink); margin-top:.9rem; scroll-margin-top:1rem; }
+    .glossary dt:first-child { margin-top:0; }
+    .glossary dt:target { background:var(--green-bg); box-shadow:-.5rem 0 0 var(--green-bg), .5rem 0 0 var(--green-bg); }
+    .glossary dd { margin:.25rem 0 0; font-size:.9rem; color:var(--text); }
+    @media print { .term-gloss { display:none; } .term { border-bottom-style:solid; } }
+
+    /* Caps only for English copy: text-transform shouts Latin fragments while leaving
+       Japanese glyphs alone, so a mixed label renders as 「認証SESSION」. */
+    html:lang(en) .file-tree h3 { text-transform: uppercase; }
+    html:lang(en) .annotation strong { text-transform: capitalize; }
   </style>
 </head>
 <body>
@@ -99,7 +123,7 @@
 
   <!-- File tree sidebar -->
   <aside class="file-tree">
-    <h3>Files changed</h3>
+    <h3>変更file</h3>
     <a href="#file-auth" class="has-critical">src/auth/middleware.ts</a>
     <a href="#file-api"  class="has-warning">src/api/routes.ts</a>
     <a href="#file-test" class="clean">src/auth/__tests__/middleware.test.ts</a>
@@ -108,11 +132,11 @@
   <main>
     <!-- Summary card -->
     <div class="summary-card">
-      <h1>PR Review: [PR Title]</h1>
+      <h1>PR Review: [PRタイトル]</h1>
       <div class="meta-row">
-        <span>Author: [name]</span>
+        <span>作成: [氏名]</span>
         <span>Branch: [branch-name] → main</span>
-        <span>Reviewed: [date]</span>
+        <span>review日: [日付]</span>
       </div>
       <div class="stats">
         <span class="stat-chip stat-red">2 Critical</span>
@@ -124,10 +148,10 @@
 
     <!-- Legend -->
     <div class="legend">
-      <span><span class="swatch" style="background:#a33d32"></span><strong>Critical</strong> — must fix before merge</span>
-      <span><span class="swatch" style="background:#a96716"></span><strong>Warning</strong> — should fix</span>
-      <span><span class="swatch" style="background:#52616b"></span><strong>Info</strong> — suggestion</span>
-      <span><span class="swatch" style="background:#16715e"></span><strong>Praise</strong> — good pattern</span>
+      <span><span class="swatch" style="background:#a33d32"></span><strong>Critical</strong> — merge前に必須</span>
+      <span><span class="swatch" style="background:#a96716"></span><strong>Warning</strong> — 直すべき</span>
+      <span><span class="swatch" style="background:#52616b"></span><strong>Info</strong> — 提案</span>
+      <span><span class="swatch" style="background:#16715e"></span><strong>Praise</strong> — 良い書き方</span>
     </div>
 
     <!-- File 1 -->
@@ -146,11 +170,13 @@
         <div class="annotation-panel">
           <div class="annotation critical">
             <strong>Critical (line 41)</strong>
-            Old code passes the full "Bearer &lt;token&gt;" string to jwt.verify. Verification always fails or parses incorrectly. New code correctly strips the prefix.
+            旧codeは "Bearer &lt;token&gt;" 全体をJWTの検証に渡しており、検証が必ず失敗するか誤って解釈される。新codeはprefixを正しく除去している。
           </div>
           <div class="annotation critical">
             <strong>Critical (line 43)</strong>
-            Pinning algorithms to HS256 prevents the "alg:none" attack. Using config over raw env improves testability. Good fix.
+            <!-- .file-section sets overflow:hidden, so a .term-gloss tooltip would be CLIPPED here.
+                 Inside any overflow container use the anchor-link-only form of the chip. -->
+            Pinning algorithms to <a class="term" href="#g-hs256">HS256</a> に固定することで "alg:none" 攻撃を防いでいる。環境変数の直読みではなくconfig経由にしたのでtestもしやすい。良い修正。
           </div>
         </div>
       </div>
@@ -169,11 +195,11 @@
         <div class="annotation-panel">
           <div class="annotation warning">
             <strong>Warning (line 19)</strong>
-            Lowercase normalization is good but should happen at registration time too, otherwise users who register with mixed case won't match.
+            小文字への正規化は妥当だが、登録時にも同じ処理が必要。大文字混在で登録されたaccountは一致しなくなる。
           </div>
           <div class="annotation praise">
             <strong>Praise (line 19)</strong>
-            Using optional chaining here prevents crashes on malformed requests. Good defensive pattern.
+            optional chainingにより不正なrequestでも落ちない。防御的で良い。
           </div>
         </div>
       </div>
@@ -185,7 +211,7 @@
       <div class="file-header">src/auth/__tests__/middleware.test.ts ✅</div>
       <details>
         <summary style="cursor:pointer;padding:.5rem 1rem;font-size:.85rem;color:var(--muted)">
-          Full diff — clean, no findings (8 lines added)
+          全diff — 所見なし（8行追加）
         </summary>
         <div class="diff-panel">
           <span class="add"><span class="line-num">12</span>  it('strips Bearer prefix before verify', async () => {</span>
@@ -200,7 +226,7 @@
     <div class="conclusion">
       <h2>Conclusion</h2>
       <p style="font-size:.875rem;color:var(--muted);margin-bottom:.75rem">
-        Write your verdict, then copy it back to Claude to continue.
+        判定を書き、copyしてClaudeに戻すと続きを進められる。
       </p>
       <textarea id="verdict" placeholder="Overall verdict: request changes / approve because..."></textarea>
       <button class="btn" onclick="
@@ -209,8 +235,36 @@
       ">Copy as prompt</button>
     </div>
   </main>
+
+  <!-- 用語集 — canonical definitions live here once; inline .term chips link in.
+       Keep it inside <details> so the beforeprint handler expands it for print. -->
+  <details>
+    <summary>用語集（1件）</summary>
+    <dl class="glossary">
+      <dt id="g-hs256">HS256 — HMAC-SHA256</dt>
+      <dd>共有秘密鍵を使うJWTの署名algorithm。検証時にalgorithmを明示的に固定しないと、攻撃者が `alg:none` を指定して署名検証を回避できる。</dd>
+    </dl>
+  </details>
+
 </div>
 <script>
+
+  // Glossary anchors: open ancestor <details> before jumping.
+  // Chromium/Safari do this natively; this keeps older Firefox working too.
+  function openAncestorDetails(hash) {
+    const target = hash && document.getElementById(hash.slice(1));
+    if (!target) return;
+    for (let el = target.parentElement; el; el = el.parentElement) {
+      if (el.tagName === 'DETAILS') el.open = true;
+    }
+    target.scrollIntoView({ block: 'center' });
+  }
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a[href^="#"]');
+    if (link) openAncestorDetails(link.hash);
+  });
+  if (location.hash) openAncestorDetails(location.hash);
+
   let printClosedDetails = [];
   addEventListener('beforeprint', () => {
     printClosedDetails = [...document.querySelectorAll('details:not([open])')];
