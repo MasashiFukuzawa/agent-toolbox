@@ -2,6 +2,7 @@
 .claude/
 .codex/
 .playwright-cli/
+.playwright-mcp/
 *.log
 .venv/
 __pycache__/
