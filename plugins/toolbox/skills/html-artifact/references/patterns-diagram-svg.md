@@ -4,25 +4,35 @@ All diagrams use inline SVG — never `<img src="external.svg">`. Set a `viewBox
 
 ## SVG boilerplate
 
+Shared classes go in the page's `<style>`, **not** inside `<defs>`. A `<style>` inside an SVG is still document-scoped, so copying this block for a second figure would make the later `.edge { marker-end: url(...) }` win for *both* figures and point one of them at a marker id that no longer belongs to it. Each `<svg>` carries only its own `<marker>`, with a figure-specific id.
+
 ```html
+<!-- once, in the page <style> -->
+<style>
+  svg text        { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  svg .label      { font-size: 12px; fill: #171410; }
+  svg .node       { fill: #eee7da; stroke: #6d655b; stroke-width: 1.5; }
+  svg .node-highlight { fill: #dcece6; stroke: #16715e; stroke-width: 2; }
+  svg .edge       { stroke: #52616b; stroke-width: 1.5; fill: none; }  /* no marker-end here */
+  svg .edge-label { font-size: 10px; fill: #52616b; }
+</style>
+```
+
+```html
+<!-- per figure: own <defs>, own marker id, marker-end set on the element -->
 <svg viewBox="0 0 600 300" style="width:100%;max-width:700px;display:block;margin:0 auto"
      role="img" aria-label="[Description of the diagram]">
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
       <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
     </marker>
-    <style>
-      text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .label { font-size: 12px; fill: #171410; }
-      .node { fill: #eee7da; stroke: #6d655b; stroke-width: 1.5; }
-      .node-highlight { fill: #dcece6; stroke: #16715e; stroke-width: 2; }
-      .edge { stroke: #52616b; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-      .edge-label { font-size: 10px; fill: #52616b; }
-    </style>
   </defs>
-  <!-- diagram elements here -->
+  <line x1="130" y1="112" x2="200" y2="112" class="edge" marker-end="url(#arrow-flow)"/>
+  <!-- remaining diagram elements here -->
 </svg>
 ```
+
+For a second figure use `id="arrow-seq"` and `marker-end="url(#arrow-seq)"`. Single-figure pages may keep `id="arrow"`.
 
 ---
 
@@ -113,8 +123,10 @@ Use a `<rect>` per task on a shared time axis. Annotate milestones with `<circle
 ## Dos and don'ts for SVG diagrams
 
 - **Do** define `<marker id="arrow">` in `<defs>` and reuse with `marker-end="url(#arrow)"`
+- **Do** give each `<svg>` its own `<defs>` with document-unique marker ids when the page has several figures (`#arrow-flow`, `#arrow-seq`, …). IDs are document-scoped, so one figure referencing another figure's marker renders today but silently breaks the moment that figure is moved, reordered, or dropped — and duplicated ids are invalid HTML. After writing, check that every `url(#…)` resolves and no id appears twice
 - **Do** use `text-anchor="middle"` + explicit x/y for centered labels
 - **Do** set `role="img" aria-label="..."` for accessibility
+- **Do** explain terms that appear only inside a figure in the caption or legend immediately below it — a `.term-gloss` tooltip cannot live inside `<svg>`, and that in-figure occurrence does not consume the term's 初出 slot (SKILL.md「規則が衝突したときの優先順位」)
 - **Don't** overlap text with edges — offset edge labels with a small y adjustment
 - **Don't** go below font-size 10px — illegible at reduced display sizes
 - **Don't** use raster images (PNG/JPG) inside SVG — they break self-containment (unless base64)

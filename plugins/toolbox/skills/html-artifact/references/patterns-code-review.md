@@ -118,6 +118,8 @@ At the bottom, a button that copies the review conclusion back to Claude:
 - **Do** include a severity legend — readers forget what colors mean
 - **Do** group annotations by file, not by severity (makes navigation by file natural)
 - **Do** add a sticky file-tree sidebar for PRs with 5+ files
+- **Do** keep severity semantics identical across *every* surface that points at a finding — annotation card, highlighted diff line, file-tree marker, triage-table badge, and the first-view locator. A diff-line highlight class carrying "this is the problem" must not be applied to the praise line, and a `file:line` reference must be the same value in the first view, the table, and the annotation. These mismatches survive structural checking (chip 1:1, tag balance) because they are content agreement, not markup — verify them by reading the finding across all its surfaces
+- **Do** put `.term` chips only in non-clipping surfaces. `.file-section` (`overflow: hidden`) and `.diff-panel` (`overflow-x: auto`) both clip a `.term-gloss`, so inside them use the anchor-link-only form; plan the page so each term's first chippable position comes before its use in a diff panel
 - **Don't** generate wall-of-diff with no annotations — the reader can read the PR itself
 - **Don't** use red/green alone for severity — add the left border color for accessibility
 - **Don't** include file contents not changed in the PR — scope to the actual diff
