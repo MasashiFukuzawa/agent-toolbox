@@ -9,4 +9,4 @@
 - Keep `SKILL.md` under 500 lines and move optional detail into `references/`.
 - Write public repository documentation in English. Skill instructions and user-facing templates use Japanese, with English technical terms where clearer.
 - Preserve host-neutral behavior unless a skill explicitly documents a Claude Code- or Codex-only adapter.
-- Run `uv run ruff check .`, `uv run pytest`, `uv run python -m scripts.validate`, and `uv run python -m scripts.trigger_eval --check` before reporting completion.
+- Before reporting completion, run `uv run ruff check .`, `uv run pytest`, `uv run python -m scripts.validate`, and `uv run python -m scripts.trigger_eval --check`. This is required whenever `git status --porcelain` reports any change to tracked files. If it reports none — the task wrote its output outside the repository and touched nothing tracked — there is nothing to validate: state that the gate was skipped and why, instead of running it.
