@@ -1,7 +1,7 @@
 ---
 name: html-artifact
 description: >-
-  計画、比較、図解、レビューを自己完結 HTML の一枚物として可視化する。表や SVG、並列レイアウトが理解を助ける時に使う。会話内の小さな図には ascii-diagram を使う。「HTML一枚物で」「比較を視覚化して」を正のトリガーとし、production UIや対話内ですぐ読む小さな図には使わない。
+  計画、比較、図解、レビューを自己完結 HTML の一枚物として可視化する。表や SVG、並列レイアウトが理解を助ける時に使う。会話内の小さな図には ascii-diagram を使う。「HTML一枚物で」「HTMLで図解して」「比較を視覚化して」を正のトリガーとし、production UIや対話内ですぐ読む小さな図には使わない。
 ---
 # HTML Artifact
 

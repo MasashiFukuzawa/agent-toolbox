@@ -1,7 +1,7 @@
 ---
 name: github-project-provisioning
 description: >-
-  GitHub Organization Projectの期待構造を調査し、copy・repo link・auto-addを含む変更計画を作成して承認後に適用・検証する。Project新設、構造drift確認、複数repoの運用Project導入時に使う。Issueを1件起票するだけの場合にはgithub-issue-createを使い、特定Organizationの規約を汎用設定として固定する用途には使わない。
+  GitHub Organization Projectの期待構造を調査し、copy・repo link・auto-addを含む変更計画を作成して承認後に適用・検証する。「Organization Projectを作って」「Project構造を検証して」を正のトリガーとし、Project 新設・構造 drift 確認・複数 repo の運用 Project 導入に使う。Issueを1件起票するだけの場合にはgithub-issue-createを使い、特定Organizationの規約を汎用設定として固定する用途には使わない。
 ---
 # GitHub Project Provisioning
 

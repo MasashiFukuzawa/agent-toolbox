@@ -1,7 +1,7 @@
 ---
 name: cloudflare-worker-cd
 description: >-
-  Cloudflare Workers の deploy、smoke test、失敗時 rollback を設計・レビューする。本番 CD とリリース障害に使う。複数サービスのデータ整合性には cloudflare-data-pipeline を使う。
+  Cloudflare Workers の deploy、smoke test、失敗時 rollback を設計・レビューする。「WorkersのCDを設計して」「deploy手順をレビューして」「rollbackを整備して」を正のトリガーとし、本番 CD とリリース障害対応に使う。複数サービスのデータ整合性には cloudflare-data-pipeline を使う。
 ---
 # Cloudflare Workers CD
 

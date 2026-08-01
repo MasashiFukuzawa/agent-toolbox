@@ -1,7 +1,7 @@
 ---
 name: done
 description: >-
-  Definition of Done 品質ゲート（汎用エンジン）。repo の .agents/done.yml を読み、quick/standard/full の3層で検証して quality-gate: PASS 署名を出力する。リポジトリへの変更作業の完了を報告する直前に必ず使う。回答のみ・計画のみ・引き継ぎのみのターンでは使わない。実装中の継続的な型/lint/テスト実行には使わず、完了時の最終ゲートに限定する。
+  Definition of Done 品質ゲート（汎用エンジン）。repo の .agents/done.yml を読み、quick/standard/full の3層で検証して quality-gate: PASS 署名を出力する。リポジトリへの変更作業の完了を報告する直前に必ず使う。「品質ゲートを通して」「doneを通して」「完了チェックして」を正のトリガーとする。回答のみ・計画のみ・引き継ぎのみのターンでは使わない。実装中の継続的な型/lint/テスト実行には使わず、完了時の最終ゲートに限定する。
 ---
 # Quality Gate — Definition of Done（汎用エンジン）
 

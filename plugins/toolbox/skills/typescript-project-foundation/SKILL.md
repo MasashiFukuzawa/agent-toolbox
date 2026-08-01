@@ -1,7 +1,7 @@
 ---
 name: typescript-project-foundation
 description: >-
-  新規 TypeScript project の runtime・package 境界、stack、API/data contract、security、testing、CI/CD を設計・scaffold・検証する。greenfield repository の新設、初期 architecture 決定、foundation plan のレビュー時に使う。既存 project の機能実装・migration・production UI design・単独 API 調査には使わず、該当する実装・migration・frontend・technical-research skill を使う。
+  新規 TypeScript project の runtime・package 境界、stack、API/data contract、security、testing、CI/CD を設計・scaffold・検証する。「新規TypeScriptプロジェクトの基盤を作って」「greenfieldのscaffold計画をレビューして」を正のトリガーとし、repository 新設・初期 architecture 決定・foundation plan のレビューで使う。既存 project の機能実装・migration・production UI design・単独 API 調査には使わない。
 ---
 
 # TypeScript Project Foundation
