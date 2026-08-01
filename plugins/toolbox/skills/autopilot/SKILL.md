@@ -90,7 +90,14 @@ fi
 
 # 4. マージ先ブランチ（Step 1 の分岐元にも使う）
 BASE_BRANCH=$(echo "$CONFIG" | jq -r '.baseBranch // "main"')
+
+# 5. worker の起動可否をここで確定する（board を書き換える前に）
+#    engine が使えるか、必要な model/effort が config に揃っているか、CLI が存在するかを検証する。
+#    Step 4 まで遅らせると、item を In Progress にした後で停止し、宙吊りのタスクが残る。
 ```
+
+worker の解決規則は [worker-contract.md](references/worker-contract.md) に従う。**解決できなければ、board を含む
+一切の書き込みを行う前に停止して報告する**（`workers.engine` を `none` にすれば orchestrator 自身が実装して続行できる）。
 
 ## Per-task Loop
 
@@ -189,8 +196,14 @@ if echo "$TASK_TITLE" | LC_ALL=C grep -qv '^[[:print:][:space:]]*$'; then
 else
   BRANCH="autopilot/$(echo "$TASK_TITLE" | tr '[:upper:]' '[:lower:]' | tr ' /' '-' | tr -cd 'a-z0-9-' | cut -c1-50)"
 fi
+# 着手前に作業ツリーが clean であることを必須にする（fail-closed）。
+# dirty のまま次タスクへ進むと、前タスクの未コミット変更がブランチをまたいで持ち越され、
+# Step 5 の `git add -A` が別タスクの変更を巻き込んで commit する。
+[[ -z "$(git status --porcelain)" ]] || {
+  echo "ERROR: 作業ツリーが dirty です。前タスクの後始末が完了していません。"; exit 1
+}
+
 # 再開時（Step 0 で In Progress のタスクを拾った場合）: 既存ブランチがあれば作り直さず checkout のみ。
-# 別名で作り直すと、作業ツリーに残っている前回の未コミット変更と噛み合わなくなる。
 git fetch -q origin "$BASE_BRANCH"
 if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
   git checkout "$BRANCH"
@@ -261,18 +274,17 @@ worker が `halt` / `needs_orchestrator` を返した場合は orchestrator が�
 **出力末尾の `quality-gate: PASS` 署名のみを成功判定の根拠**とし、`done` の内部（tier 判定・検証ステップ）には一切踏み込まない。
 
 **PASS を得たら、orchestrator が作業ブランチへ commit する（このタスクで唯一の commit 地点）。**
+worker に commit させず `done` の後にまとめるのは、`done` が検証だけでなく**修正も行う**ため
+（検証失敗の修正・simplify・レビュー指摘の反映）。
 
-```bash
-git add -A && git commit -m "<タスクに対応するコミットメッセージ>"
-```
+**commit 前後に、署名の `verification-tree` と実際の tree が同一であることを照合する**（手順は
+[worker-contract.md](references/worker-contract.md) の「commit と後始末」）。「一致するはず」で進めない
+— PASS 後に別プロセスが触る場合も、pre-commit hook がファイルを書き換えて成功する場合も、黙ってずれる。
+不一致なら push せず `done` を再実行する。`--no-verify` で hook を迂回してはならない。
 
-worker に commit させず、`done` の後にまとめて 1 回 commit するのは、`done` が検証だけでなく**修正も行う**ため
-（検証失敗の修正・simplify・レビュー指摘の反映）。検証と修正がすべて終わってから commit することで、
-**署名の verification-tree が保証した内容と、実際に push される内容が完全に一致する**。
-
-`quality-gate: FAIL` の場合は、指摘を worker へ差し戻して修正 → 再実行（最大3回）。
-3回収束しなければ、[worker-contract.md](references/worker-contract.md) の事後昇格に従い昇格段で1回だけ再実行し、
-それでも収束しなければ該当タスクをエスカレーション・スキップして次へ。
+`quality-gate: FAIL` の場合は、指摘を worker へ差し戻して修正 → 再実行（既定段で最大3回）。
+3回収束しなければ、[worker-contract.md](references/worker-contract.md) の事後昇格に従い昇格段で1回だけ再実行する
+（**1タスクあたり合計最大4回 = 既定段3回 + 昇格段1回**）。それでも収束しなければエスカレーション・スキップして次へ。
 
 `.agents/done.yml` が無い repo では `done` を実行しない（done は設定作成の確認待ちで止まるため unattended では進まない）。
 代わりに config の `verify` コマンドを順に実行し、全て成功した場合のみ出荷判定を満たす。
@@ -400,6 +412,17 @@ plan-doc モードはチェックマーク（`- [x]`）に書き換える。次�
 
 ---
 
+## タスクを終える前の後始末（escalated-skip の場合も必須）
+
+**次タスクへ移る前に、作業ツリーを必ず clean にする。** 失敗・スキップしたタスクの未コミット変更を残したまま次へ進むと、
+Step 1 でブランチを切り替えても変更は持ち越され、次タスクの `git add -A` がそれを巻き込んで commit する
+（＝スキップしたはずのコードが別タスクの PR として出荷される）。
+
+**未コミット変更を破棄してはならない。** 当該タスクのブランチへ WIP として commit（push はしない）してブランチ名を
+レポートに残す。手順は [worker-contract.md](references/worker-contract.md) の「commit と後始末」。
+
+---
+
 ## 差し込みタスク
 
 途中でタスク追加が必要になった場合:
@@ -413,7 +436,7 @@ plan-doc モードはチェックマーク（`- [x]`）に書き換える。次�
 
 | レベル | 条件 | 動作 |
 |--------|------|------|
-| ゲート | 各ゲートで最大3回リトライ → 収束しない | エスカレーション記録 → タスクをスキップして次へ |
+| ゲート | 各ゲートで最大3回リトライ → 収束しない（Step 5 のみ、この後さらに昇格段で1回） | エスカレーション記録 → 後始末して次へ |
 | タスク | タスク単位のエラー | 内容をメモ → スキップ → 次タスク |
 | ループ | 残タスクゼロ / 連続2件失敗 / バジェット超過 | 統合レポートを出力して終了 |
 | 緊急 | repo 同一性ガード失敗 / config 未発見 | **即停止（書き込みなし）** |

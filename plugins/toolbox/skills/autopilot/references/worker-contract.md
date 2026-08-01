@@ -26,13 +26,15 @@ done の advisor レビュー（done Step 4）と外部レビュー（Step 5）�
 ## 不変条件（worker 側・逸脱禁止）
 
 1. **repo の作業ツリーの外を書かない。** repo 外・ホームディレクトリ・設定ディレクトリを変更しない
-2. **外部書き込みをしない。** push / PR 作成 / merge / deploy / board 更新 / Issue コメント / チャット通知はすべて orchestrator の責務
-3. **ブランチを切り替えない。** orchestrator が作成したブランチの上で作業する
-4. **commit しない。** 変更は作業ツリーに残したまま終える（commit は Step 5 の PASS 後に orchestrator が行う）
-5. **`done` を実行しない。** 品質ゲートは orchestrator の責務
-6. **ネスト起動をしない。** 別の worker、`codex exec`、`claude -p`、review 系スキルを起動しない
-7. **破壊的操作の確認・要件矛盾・権限不足は `halt` で返す。** 自分で判断して踏み込まない
-8. **プランから外れる設計判断が必要になったら `needs_orchestrator` で返す。** 自分で決めない
+2. **品質ゲートの設定を変更しない。** `.agents/done.yml` と `.agents/autopilot.json` は worker にとって読み取り専用である
+   （後述「ゲート設定の固定」。**これを許すと、実装した本体がゲートの合格条件そのものを緩められる**）
+3. **外部書き込みをしない。** push / PR 作成 / merge / deploy / board 更新 / Issue コメント / チャット通知はすべて orchestrator の責務
+4. **ブランチを切り替えない。** orchestrator が作成したブランチの上で作業する
+5. **commit しない。** 変更は作業ツリーに残したまま終える（commit は Step 5 の PASS 後に orchestrator が行う）
+6. **`done` を実行しない。** 品質ゲートは orchestrator の責務
+7. **ネスト起動をしない。** 別の worker、`codex exec`、`claude -p`、review 系スキルを起動しない
+8. **破壊的操作の確認・要件矛盾・権限不足は `halt` で返す。** 自分で判断して踏み込まない
+9. **プランから外れる設計判断が必要になったら `needs_orchestrator` で返す。** 自分で決めない
 
 **これらは指示であって、機構による保証ではない。** `codex-exec` の `workspace-write` sandbox が制約するのは主に
 モデルが生成する shell コマンドであり、ユーザー設定由来の MCP・connector・notify・hooks はその外側で動く。
@@ -87,38 +89,109 @@ worker は次の形の JSON を返す。**受け取り方は engine で異なる
 - parser は**最後の出現**を使う（本文中で区切り文字列に言及しても壊れない）
 - JSON ブロックが無い出力は失敗として扱い、再実行する（黙って生テキストを採用しない）
 
+## 作業ツリーの tree ID（共通ヘルパ）
+
+`git status --porcelain` は「どのパスが変わったか」しか表さないため、**worker が既存の未コミット変更を別内容で
+上書きしても同じ文字列になりうる**。内容の同一性を見るときは必ず tree ID を使う（実 index を汚さない）。
+
+```bash
+worktree_tree() {                      # 引数: repo root。未コミット分を含む tree ID を出す
+  local idx; idx=$(mktemp "${TMPDIR:-/tmp}/autopilot-index.XXXXXX"); rm -f "$idx"
+  GIT_INDEX_FILE="$idx" git -C "$1" read-tree HEAD
+  GIT_INDEX_FILE="$idx" git -C "$1" add -A
+  GIT_INDEX_FILE="$idx" git -C "$1" write-tree
+  rm -f "$idx"
+}
+```
+
 ## 起動前の baseline 取得（orchestrator 側・必須）
 
 baseline を取らないと、**worker 着手前から存在した変更を worker の成果と誤認**し、
 worker が既存の未コミット変更を上書き・削除しても検出できない。
 
 ```bash
-REPO_ROOT=$(git -C "$CANDIDATE" rev-parse --show-toplevel)          # 必ず絶対パスに解決する
-ACTUAL_BRANCH=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short HEAD) || exit 1
-[[ "$ACTUAL_BRANCH" == "$BRANCH" ]] || exit 1                        # detached HEAD / 別ブランチで起動しない
+REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1                 # 必ず絶対パスに解決する
+BEFORE_BRANCH=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short HEAD) || exit 1
+[[ "$BEFORE_BRANCH" == "$BRANCH" ]] || exit 1                        # detached HEAD / 別ブランチで起動しない
 BEFORE_HEAD=$(git -C "$REPO_ROOT" rev-parse HEAD)
-BEFORE_STATUS=$(git -C "$REPO_ROOT" status --porcelain)
+BEFORE_TREE=$(worktree_tree "$REPO_ROOT")
+# ゲート設定の固定（不変条件 2）: worker 起動前の内容を控える
+GATE_POLICY=$(git -C "$REPO_ROOT" hash-object .agents/done.yml 2>/dev/null || echo none)
 ```
 
 ## 受け取り時の確認（orchestrator 側）
 
-`status` を鵜呑みにせず、次を確認してから Step 5 へ進む。
+`status` を鵜呑みにせず、**表示ではなく判定として**次を実行する。1つでも満たさなければ Step 5 へ進まない。
 
 ```bash
-git -C "$REPO_ROOT" rev-parse HEAD                     # BEFORE_HEAD と一致（worker が commit していない）
-git -C "$REPO_ROOT" status --porcelain                 # BEFORE_STATUS から増えている（実装された変更がある）
-git ls-remote --heads origin "$BRANCH"                 # 空（worker が push していない）
-gh pr list --repo "$EXPECTED_REPO" --head "$BRANCH"    # 空（worker が PR を作っていない）
+AFTER_BRANCH=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short HEAD) || exit 1
+[[ "$AFTER_BRANCH" == "$BRANCH" ]]                              || FAIL "branch を切り替えられた"
+[[ -z "$(git ls-remote --heads origin "$BRANCH")" ]]            || FAIL "worker が push した"
+[[ -z "$(gh pr list --repo "$EXPECTED_REPO" --head "$BRANCH" \
+          --json number --jq '.[].number')" ]]                  || FAIL "worker が PR を作った"
+AFTER_GATE=$(git -C "$REPO_ROOT" hash-object .agents/done.yml 2>/dev/null || echo none)
+[[ "$AFTER_GATE" == "$GATE_POLICY" ]]                           || FAIL "ゲート設定が変更された"
+AFTER_TREE=$(worktree_tree "$REPO_ROOT")
+[[ "$AFTER_TREE" != "$BEFORE_TREE" ]]                           || FAIL "変更が無い"
 ```
 
 `git log origin/<branch>` は使わない。Step 6 まで push しないため remote-tracking ref が存在せず、正常系で失敗する。
 
-worker が commit してしまった場合（`claude-subagent` では起こりうる）は、それ自体を失敗扱いにせず
-**その commit を残したまま Step 5 へ進む**（done は HEAD からの差分と未コミット分の両方を検証する）。
-ただし契約違反として記録し、再実行時の指摘に含める。
+### ゲート設定が変更されていた場合（fail-closed）
 
-変更が増えていない場合は指摘を添えて再実行する（**最大3回**。収束しなければ escalated-skip）。
+**出荷してはならない。** 実装した本体がゲートの合格条件を緩められるなら、実行主体を orchestrator に移した意味が消える。
+当該タスクを escalated-skip にし、ブランチを残して人間へエスカレーションする。
+**ゲート設定の変更自体が目的のタスクでも同じ**で、autopilot では扱わず人間へ返す。
+
+### worker が commit していた場合
+
+`claude-subagent` では起こりうる（`codex-exec` は `.git/` が書けないため通常起きない）。
+**そのまま Step 5 へ進めてはいけない。** `done` は `git diff HEAD` と `git status` で変更ファイルを判定するため、
+commit 済みの変更は tier 判定にもレビュー対象にも入らず、PASS 後の `git add -A` も `nothing to commit` で失敗する。
+
+上の push / PR 判定を通過していることを確認したうえで、**未コミット状態へ戻してから** Step 5 へ進む。
+
+```bash
+git -C "$REPO_ROOT" reset --mixed "$BEFORE_HEAD"   # 変更内容は作業ツリーに保たれる
+```
+
+契約違反として記録し、再実行時の指摘に含める。
+
+判定に失敗した場合は指摘を添えて再実行する（**最大3回**。収束しなければ escalated-skip）。
 品質そのものの判定は Step 5 の done が行う。
+
+## commit と後始末（orchestrator 側）
+
+### PASS 後の commit（このタスクで唯一の commit 地点）
+
+署名の `verification-tree` と実際の tree を、**commit の前後で照合する**。
+
+```bash
+SIG_TREE=<署名の verification-tree>
+[[ "$(worktree_tree "$REPO_ROOT")" == "$SIG_TREE" ]] || FAIL "署名後にツリーが変化した"
+git -C "$REPO_ROOT" add -A
+git -C "$REPO_ROOT" commit -m "<タスクに対応するコミットメッセージ>"
+[[ "$(git -C "$REPO_ROOT" rev-parse 'HEAD^{tree}')" == "$SIG_TREE" ]] || FAIL "commit 内容が署名と不一致"
+```
+
+前段は「PASS 後に別プロセスが作業ツリーを触った」場合を、後段は「pre-commit hook がファイルや index を書き換えて
+exit 0 した」場合を捕まえる。どちらも不一致なら **push せず `done` を再実行する**（書き換え後の内容で検証し直す）。
+`--no-verify` で hook を迂回してはならない。
+
+### タスクを終える前の後始末（escalated-skip でも必須）
+
+未コミット変更を残したまま次タスクへ進むと、ブランチを切り替えても変更は持ち越され、次タスクの `git add -A` が
+それを巻き込む。**破棄はせず**、当該ブランチへ WIP として commit して隔離する。
+
+```bash
+if [[ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]]; then
+  git -C "$REPO_ROOT" add -A
+  git -C "$REPO_ROOT" commit -q -m "WIP: escalated-skip — $TASK_TITLE"   # push はしない
+fi
+```
+
+作業は該当ブランチに保全され、作業ツリーは clean になり、次タスクが Step 1 の clean 検査を通れる。
+ブランチ名を End-of-run レポートに残す。
 
 ## モデル選択と昇格
 
@@ -152,9 +225,9 @@ orchestrator が Step 4 の起動前にプランを見て判定する。次の�
 
 - **昇格したら理由を一言記録してから起動する**（Issue コメントまたは会話に、どの基準に当たったかを書く）。所要時間とコストが増えるため、無言で昇格しない
 - **降格は自動で行わない。** 昇格条件に当たったタスクを、時間やコストを理由に既定段へ落とさない
-- **ユーザーや config がモデルを明示した場合、自動判定で上書きしない**（上げるのも下げるのも禁止）
+- **`workers.model` / `workers.escalatedModel` は「段 → モデル」の対応表であって、昇格の禁止ではない。** 両方が設定されているのが正常な状態で、そこから昇格条件に従って段を選ぶ。自動判定を禁じるのは、**ユーザーがそのタスクに対して個別にモデルを指定した場合**だけ（上げるのも下げるのも禁止）
 - **昇格しても品質ゲートは変わらない。** 強いモデルを使ったことを Step 5 を軽くする理由にしない
-- **事後の昇格**: 既定段の worker が 3 回で収束しない場合、同じ段で 4 回目を回さず、**昇格段で 1 回だけ再実行**する。それでも収束しなければ escalated-skip（Stop Conditions の「最大3回」はこの 1 回を含めて数える）。理由を記録する
+- **事後の昇格**: 既定段の worker が 3 回で収束しない場合、同じ段で 4 回目を回さず、**昇格段で 1 回だけ再実行**する。それでも収束しなければ escalated-skip。**1タスクあたり合計最大 4 回（既定段 3 + 昇格段 1）**で、Stop Conditions の「最大3回」は既定段の回数を指す。理由を記録する
 - **effort もモデル段に合わせて上げる。** 既定段は `medium`、昇格段は `high`。effort は推論の深さそのものに効く（モデルカタログ自身が `medium` を「速度と深さのバランス」、`high` を「複雑な問題向けに深さを増す」と定義している）。やり直しコストが高いからモデルを上げておきながら effort だけ据え置くのは整合しない。対応 effort はモデルごとに異なるため、指定前に `codex debug models` で確認する
 
 ## engine adapter
@@ -175,6 +248,40 @@ Agent tool でサブエージェントを起動する。
 
 **出力契約は末尾 JSON ブロックではなく、`--output-schema` と `-o` で受け取る。** 自由文の末尾を区切りで探す方式は、
 進捗・メタ出力が stdout に混ざる可能性と、background runner が stdout/stderr を結合する可能性の両方に対して脆い。
+
+一時ファイルを用意し、schema を書き出す。
+
+```bash
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-worker.XXXXXX")
+trap 'rm -rf "$WORK"' EXIT
+SCHEMA_FILE="$WORK/schema.json"; RESULT_FILE="$WORK/result.json"
+cat > "$SCHEMA_FILE" <<'SCHEMA'
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "branch", "files_changed", "unresolved", "next_action_hint", "error_summary"],
+  "properties": {
+    "status": {"type": "string", "enum": ["succeeded", "halt", "needs_orchestrator"]},
+    "branch": {"type": "string"},
+    "files_changed": {"type": "array", "items": {"type": "string"}},
+    "unresolved": {"type": "array", "items": {"type": "string"}},
+    "next_action_hint": {"type": ["string", "null"]},
+    "error_summary": {"type": ["string", "null"]}
+  }
+}
+SCHEMA
+```
+
+プロンプトは single-quoted heredoc なので `<プラン・受入条件・品質要件>` は**展開されない**。
+プランをファイルへ書き出し、heredoc の外で連結して渡す（プランに `$` やバッククォートが含まれても壊れないため）。
+
+```bash
+printf '%s\n' "$PLAN_TEXT" > "$WORK/plan.md"
+PROMPT="$(cat <<'AUTOPILOT_WORKER_PROMPT'
+...固定部分（下記）...
+AUTOPILOT_WORKER_PROMPT
+)"$'\n\n'"$(cat "$WORK/plan.md")"
+```
 
 ```bash
 codex exec \
@@ -215,7 +322,7 @@ orchestrator はそれを直接 parse する（`<<<AUTOPILOT_WORKER_RESULT>>>` �
 | `< /dev/null` | stdin 待ちのハング防止。**必須** |
 
 - 権限と effort は**レビュー用途と逆**である（`codex-review` は `read-only`、実装 worker は `workspace-write`）。混用しない
-- `codex exec` は常に `approval: never` で動く（`-a` フラグは持たない）。承認プロンプトで止まる心配は無いが、**外側の wall-clock timeout は別途必要**
+- `codex exec` は常に `approval: never` で動く（`-a` フラグは持たない）。承認プロンプトで止まる心配は無いが、**外側の wall-clock deadline は別途必要**。hang した worker はリトライ規則に到達せず、unattended run 全体を止める。GNU `timeout` は macOS に標準搭載されないため依存しない。Claude Code orchestrator では `run_in_background` + 経過時間の監視で打ち切り、Codex orchestrator ではホストの実行タイムアウトを上限として扱い、超えたら当該タスクを escalated-skip にする
 - **network は既定で無効**なので、worker は依存を新規インストールできない。テスト実行に依存インストールが要る repo では、**起動前に orchestrator 側で provision しておく**。どうしても必要なら `-c sandbox_workspace_write.network_access=true` を足すが、その場合ネスト起動に対する副次的な防御も失われる
 - `-C` には `git rev-parse --show-toplevel` の絶対パスを渡す。subdirectory を渡すとその外は読めても書けないことがある
 - Claude Code orchestrator 上では `run_in_background: true` で起動する。Codex orchestrator 上は foreground で実行する
