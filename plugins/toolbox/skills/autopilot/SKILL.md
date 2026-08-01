@@ -74,6 +74,9 @@ fi
 # 3. エンジン・MCP 可否の判定（後続で使う変数をセット）
 # - run_in_background 可否: Claude Code 上なら可、codex exec 内なら不可（foreground のみ）
 # - MCP 可否: Chrome DevTools / Playwright / staging MCP が利用可能か確認
+
+# 4. マージ先ブランチ（Step 1 の分岐元と Step 6 のマージ先の両方に使う）
+BASE_BRANCH=$(echo "$CONFIG" | jq -r '.baseBranch // "main"')
 ```
 
 ## Per-task Loop
@@ -173,7 +176,21 @@ if echo "$TASK_TITLE" | LC_ALL=C grep -qv '^[[:print:][:space:]]*$'; then
 else
   BRANCH="autopilot/$(echo "$TASK_TITLE" | tr '[:upper:]' '[:lower:]' | tr ' /' '-' | tr -cd 'a-z0-9-' | cut -c1-50)"
 fi
-git checkout -b "$BRANCH"
+# 着手前に作業ツリーが clean であることを必須にする。
+# dirty のまま次タスクへ進むと、前タスクの未コミット変更はブランチをまたいで持ち越され、
+# そのタスクの commit に巻き込まれて別タスクの PR として出荷される。
+[[ -z "$(git status --porcelain)" ]] || {
+  echo "ERROR: 作業ツリーが dirty です。前タスクの後始末が完了していません。"; exit 1
+}
+
+git fetch -q origin "$BASE_BRANCH"
+if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+  git checkout "$BRANCH"          # 再開時は既存ブランチをそのまま使う
+else
+  # 新規は必ず最新の base から分岐する。現在の HEAD から切ると、前タスクのローカル commit が
+  # 次タスクの PR 差分へ混入する（squash merge 運用で顕在化する）。
+  git checkout -b "$BRANCH" "origin/$BASE_BRANCH"
+fi
 ```
 
 **main/master への直コミットは絶対にしない。**
@@ -227,10 +244,7 @@ MCP（Chrome DevTools / Playwright）が使えない環境では理由をメモ�
 # ブランチを push（未 push だと gh pr create が対話プロンプトで止まるため先に実行）
 git push --set-upstream origin "$BRANCH"
 
-# マージ先ブランチ（config.baseBranch が未設定なら "main"）
-BASE_BRANCH=$(echo "$CONFIG" | jq -r '.baseBranch // "main"')
-
-# PR 作成
+# PR 作成（BASE_BRANCH は Preflight で解決済み）
 PR_URL=$(gh pr create \
   --repo "$EXPECTED_REPO" \
   --title "$TASK_TITLE" \
@@ -268,6 +282,11 @@ CI が赤で終わった場合は 3 回リトライしてから escalated-skip �
 ---
 
 ### Step 8: Merge（明示許可時のみ）
+
+**`gates.merge` が `auto` でも、差分が品質ゲートの定義そのものを含む場合は自動 merge しない。**
+対象は `.agents/**`（`done.yml` / `autopilot.json`）と CI 設定（`.github/workflows/**` 等）。
+これらは以降のすべての実行を守っているルールなので、緩める変更が無人で通ると次回以降の全タスクに波及する。
+該当する場合は人間の確認へ回す（ゲートを緩めても実装が正しくなるわけではない）。
 
 `gates.merge` が文字列 `auto` と完全一致し、かつCIが緑の場合だけmergeする。未設定、未知値、`human` はすべて人間ゲートとしてPR作成後に停止する。`gates.deploy` も同じfail-closed規則を適用する。
 Step 7 で CI green を確認済みなので `--auto` は不要。merge戦略フラグは排他なので単一で指定する:
@@ -338,6 +357,35 @@ gh project item-edit \
 ```
 
 plan-doc モードはチェックマーク（`- [x]`）に書き換える。次タスクへ。
+
+---
+
+## タスクを終える前の後始末（escalated-skip でも必須）
+
+**次タスクへ移る前に、作業ツリーを必ず clean にする。** 失敗・スキップしたタスクの未コミット変更を
+残したまま次へ進むと、ブランチを切り替えても変更は持ち越され、次タスクの commit がそれを巻き込む
+（＝スキップしたはずのコードが別タスクの PR として出荷される）。
+
+**未コミット変更を破棄してはならない。** 現在のブランチが当該タスクのブランチであることを確認したうえで、
+WIP として commit して隔離する（push はしない）。
+
+```bash
+[[ "$(git symbolic-ref --quiet --short HEAD)" == "$BRANCH" ]] || {
+  echo "ERROR: 想定外のブランチにいます。作業ツリーを触らず人間へエスカレーションします。"; exit 1
+}
+if [[ -n "$(git status --porcelain)" ]]; then
+  git add -A
+  git commit -q -m "WIP: escalated-skip — $TASK_TITLE"
+fi
+```
+
+失敗途中のコードは pre-commit hook を通らないことがある。**この WIP commit は出荷物ではないので、
+hook で止まった場合は `--no-verify` を使ってよい。** それでも commit できなければ、作業ツリーを保持した
+まま run 全体を停止して人間へ返す（次タスクへは進まない）。
+
+作業は該当ブランチに保全され、作業ツリーは clean になり、次タスクが Step 1 の clean 検査を通れる。
+ブランチ名を End-of-run レポートに残す。この WIP commit は「main への直コミットをしない」原則の対象外
+ではなく、feature ブランチ上で完結し push も PR もされない。
 
 ---
 
