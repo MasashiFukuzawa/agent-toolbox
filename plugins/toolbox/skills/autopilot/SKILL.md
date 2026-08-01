@@ -223,6 +223,13 @@ fi
 - 設計・アプローチに迷ったら実装前に会話に提示し確認する
 - 品質に妥協しない
 
+**実装が終わったら、Step 5 の前に commit する。** 順序が逆だと検証したツリーと出荷されるツリーが食い違う。
+pre-commit hook にフォーマッタを置く構成（`biome check --write` や `stage_fixed` など）は珍しくなく、
+その場合 commit の瞬間にファイル内容が変わる。**done を先に走らせると、署名した `verification-tree` と
+実際に commit された内容がずれる。しかも作業ツリーが clean なら Stop hook は検査しないので、
+このずれは誰にも検出されない。** 先に commit すれば hook の書き換えは検証より前に済み、
+検証したツリー = push されるツリーが成立する。
+
 ---
 
 ### Step 5: 実装後ゲート（done Skill）
@@ -233,6 +240,11 @@ fi
 `quality-gate: PASS` が出なければ `done` の指示に従い修正 → 再実行（最大3回）。
 3回収束しなければ該当タスクをエスカレーション・スキップして次へ。
 
+**PASS 後、`done` 自身が加えた修正が未コミットで残っていれば commit し、
+`git rev-parse 'HEAD^{tree}'` が署名の `verification-tree` と一致することを確認してから Step 6 へ進む。**
+一致しなければ pre-commit hook が内容を書き換えているので、その状態で `done` を再実行する。
+未コミットのまま push すると `done` の修正はそもそも出荷されない。
+
 UI 変更がある場合は `e2e-capability-verification` スキルの方針に従い動作確認を行う。
 MCP（Chrome DevTools / Playwright）が使えない環境では理由をメモしてスキップ。
 
@@ -242,6 +254,8 @@ MCP（Chrome DevTools / Playwright）が使えない環境では理由をメモ�
 
 ```bash
 # ブランチを push（未 push だと gh pr create が対話プロンプトで止まるため先に実行）
+# pre-push hook がある repo では、ここで hook が走る。失敗は verify 失敗と同じ扱いで
+# 修正 → 再試行（最大3回）。3回収束しなければエスカレーション・スキップ。
 git push --set-upstream origin "$BRANCH"
 
 # PR 作成（BASE_BRANCH は Preflight で解決済み）
