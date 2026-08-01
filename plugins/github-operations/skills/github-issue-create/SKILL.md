@@ -1,7 +1,7 @@
 ---
 name: github-issue-create
 description: >-
-  任意のGitHub Organization／repoへIssueを起票し、Projectへ登録してStatusと明示Priorityを安全に設定するためのdry-run・apply・resumeを提供する。Issue作成、Project Inbox登録、途中失敗からの再開を正のトリガーとして使う。Project自体の新設・構造検証にはgithub-project-provisioningを使う。特定repoのroutingやlabelsを汎用規則として固定する用途には使わない。
+  任意のGitHub Organization／repoへIssueを起票し、Projectへ登録してStatusと明示Priorityを安全に設定するためのdry-run・apply・resumeを提供する。「GitHub Issueを作って」「IssueをProjectへ登録して」を正のトリガーとし、Issue 作成・Project Inbox 登録・途中失敗からの再開に使う。Project自体の新設・構造検証にはgithub-project-provisioningを使う。特定repoのroutingやlabelsを汎用規則として固定する用途には使わない。
 ---
 # GitHub Issue Create
 

@@ -70,9 +70,9 @@ def validate() -> tuple[list[str], list[str]]:
             errors.append(f"SKILL.md exceeds 500 lines: {name}")
         skills[name] = description
 
-    total = sum(map(len, skills.values()))
-    if total > 4500:
-        errors.append(f"toolbox descriptions exceed 4500 chars: {total}")
+    # No catalog-wide total cap: per-skill bounds above govern residency cost,
+    # and a total cap couples unrelated skills (adding one forces trimming
+    # another). See docs/skill-conventions.md "Description budget".
     _validate_manifests(errors)
     _validate_results(errors)
     _validate_skill_evals(errors)

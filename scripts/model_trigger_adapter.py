@@ -47,7 +47,13 @@ def main() -> int:
     match = re.search(r'\{\s*"selected_skill"\s*:\s*"([^"]+)"\s*\}', output, re.DOTALL)
     if not match:
         raise SystemExit("model did not return selected_skill JSON")
-    print(json.dumps({"selected_skill": match.group(1)}))
+    selected = match.group(1)
+    # Hosts prepend the plugin namespace ("toolbox:codex-review"); the registry
+    # and matrix use bare canonical names. Measured live: 11 of 14 failures in
+    # the first real run were this prefix, not wrong selection.
+    if ":" in selected and selected.split(":", 1)[1] in skills:
+        selected = selected.split(":", 1)[1]
+    print(json.dumps({"selected_skill": selected}))
     return 0
 
 

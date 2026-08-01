@@ -1,20 +1,75 @@
 {
   "schema_version": 1,
-  "skill_sha256": "a13dc9812d0c0a8860461f98169ef1b4aa6e4327864bd560315f39f243e59e83",
+  "skill_sha256": "4ce08bb6599490519c6560d08b9ff4359fa5a53d2ab282e32104f4a1fc05897d",
   "evals_sha256": "38438663057292e3e6399d037793f4924f6c6214462a2f3eb5078f4d20bfc999",
-  "reuse_note": "All seven cases were rerun on both hosts after adding the 'BASIS ラベル' subsection, which makes this skill the canonical definition of the four BASIS categories (OBSERVED / CURRENT-THREAT / REAL-DEMAND / SPECULATIVE) that done and codex-review reference. The change is additive - no existing section was renamed or reworded - but it touches the instruction body, so results were not carried forward. Executors ran blind: they received the skill and the case prompt but not the assertions, and grading was done separately against the assertion list. A visible effect of the new subsection is that executors on both hosts now label their recommendations with explicit BASIS tags, which did not conflict with any assertion. The codex host, unresolvable in the previous session, was available this time (codex-cli 0.146.0, exec mode, read-only sandbox) and passed all cases.",
+  "reuse_note": "All seven cases were rerun on both hosts after adding the 'BASIS ラベル' subsection, which makes this skill the canonical definition of the four BASIS categories (OBSERVED / CURRENT-THREAT / REAL-DEMAND / SPECULATIVE) that done and codex-review reference. The change is additive - no existing section was renamed or reworded - but it touches the instruction body, so results were not carried forward. Executors ran blind: they received the skill and the case prompt but not the assertions, and grading was done separately against the assertion list. A visible effect of the new subsection is that executors on both hosts now label their recommendations with explicit BASIS tags, which did not conflict with any assertion. The codex host, unresolvable in the previous session, was available this time (codex-cli 0.146.0, exec mode, read-only sandbox) and passed all cases. Frontmatter-only follow-up: the description was rewritten to surface registry trigger phrases (no instruction-body change), so both hosts' results are carried forward rather than rerun, matching the repository's frontmatter-only precedent.",
   "executors": [
     {
       "host": "claude-code",
       "status": "passed",
       "cases": [
-        {"id": 1, "passed": true, "assertions": [true, true, true]},
-        {"id": 2, "passed": true, "assertions": [true, true, true]},
-        {"id": 3, "passed": true, "assertions": [true, true, true]},
-        {"id": 4, "passed": true, "assertions": [true, true]},
-        {"id": 5, "passed": true, "assertions": [true, true, true]},
-        {"id": 6, "passed": true, "assertions": [true, true, true]},
-        {"id": 7, "passed": true, "assertions": [true, true, true]}
+        {
+          "id": 1,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 2,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 3,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 4,
+          "passed": true,
+          "assertions": [
+            true,
+            true
+          ]
+        },
+        {
+          "id": 5,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 6,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 7,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        }
       ],
       "unclear_instruction_points": []
     },
@@ -22,13 +77,68 @@
       "host": "codex",
       "status": "passed",
       "cases": [
-        {"id": 1, "passed": true, "assertions": [true, true, true]},
-        {"id": 2, "passed": true, "assertions": [true, true, true]},
-        {"id": 3, "passed": true, "assertions": [true, true, true]},
-        {"id": 4, "passed": true, "assertions": [true, true]},
-        {"id": 5, "passed": true, "assertions": [true, true, true]},
-        {"id": 6, "passed": true, "assertions": [true, true, true]},
-        {"id": 7, "passed": true, "assertions": [true, true, true]}
+        {
+          "id": 1,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 2,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 3,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 4,
+          "passed": true,
+          "assertions": [
+            true,
+            true
+          ]
+        },
+        {
+          "id": 5,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 6,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 7,
+          "passed": true,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        }
       ],
       "unclear_instruction_points": []
     }

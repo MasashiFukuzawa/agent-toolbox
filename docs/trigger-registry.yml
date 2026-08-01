@@ -57,7 +57,7 @@ skills:
     nearest_neighbors: [claude-review]
     negative_triggers: ["Claudeでレビューして", "第三者レビューして"]
     ambiguous_precedence: "provider未指定なら選択を確認"
-  adr: {<<: *defaults, canonical_name: adr, category: architecture, side_effect_level: workspace-write, positive_triggers: ["ADRにして"], nearest_neighbors: [codebase-audit], negative_triggers: ["単一PRレビュー"]}
+  adr: {<<: *defaults, canonical_name: adr, category: architecture, side_effect_level: workspace-write, positive_triggers: ["ADRにして"], nearest_neighbors: [codebase-audit], negative_triggers: ["コードベース全体の監査"]}
   ascii-diagram: {<<: *defaults, canonical_name: ascii-diagram, category: visualization, positive_triggers: ["ASCII図で"], nearest_neighbors: [html-artifact], negative_triggers: ["保存する一枚物"]}
   autopilot: {<<: *defaults, canonical_name: autopilot, category: orchestration, side_effect_level: external-write, positive_triggers: ["バックログを自律で処理して"], nearest_neighbors: [git-worktrees], negative_triggers: ["単発タスク"]}
   browser-operations: {<<: *defaults, canonical_name: browser-operations, category: browser, side_effect_level: external-write, positive_triggers: ["ブラウザを操作して"], nearest_neighbors: [e2e-capability-verification], negative_triggers: ["staging E2E検証"]}
