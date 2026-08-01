@@ -29,9 +29,9 @@ description: >-
 
 - **委譲は既定で有効。** `workers.engine` の既定は `auto`。タスクは従来どおり 1 件ずつ直列に処理する
 - **worker のホストは orchestrator のホストと独立に選べる。** Claude Code から Codex worker を、Codex から Codex worker を起動できる
-- **worker のモデルは 2 段。** 既定は低コスト側（`workers.model`）だが、**やり直しコストが高い実装は `workers.escalatedModel`（フロンティアモデル）へ昇格する**。昇格はプランを見た orchestrator の判定による
+- **worker のモデルは 2 段。** 既定は低コスト側（`workers.model` + 低めの effort）だが、**やり直しコストが高い実装は `workers.escalatedModel`（フロンティアモデル）+ 高い effort へ昇格する**。昇格はプランを見た orchestrator の判定による
 - **品質ゲート（Step 5 の done）は worker ではなく orchestrator が実行する。** 実装したモデルが自分の実装をレビューして自分で PASS 署名を出す構図を作らない。署名を後から検証しても「done が実際に走ったか」は確かめられないため、実行主体を信頼できる側に置くことが唯一の実効的な担保である
-- **worker への禁止事項は指示であって機構ではない。** orchestrator は worker 完了後に、指示外の外部書き込みの形跡が無いことを確認する
+- **worker への禁止事項は原則として指示であって機構ではない。** sandbox が実際に効くのは `codex-exec` の `.git/` 書き込み禁止（＝ commit / branch 切替を阻む）と network 既定無効の 2 点だけで、MCP・hooks・`/tmp` への書き込みはその外側にある。orchestrator は起動前に baseline（HEAD・status・ブランチ）を取り、完了後に差分と外部書き込みの形跡を確認する
 
 詳細（入出力契約・engine adapter・モデル昇格）は [worker-contract.md](references/worker-contract.md) に従う。
 
@@ -245,8 +245,9 @@ worker へ必ず伝える要件:
 - **done は実行しない**（品質ゲートは orchestrator が Step 5 で実行する）
 - 破壊的操作の確認・要件矛盾・権限不足は `halt`、プランから外れる設計判断が必要なら `needs_orchestrator` で戻す
 
-worker 完了後、Step 5 へ進む前に [worker-contract.md](references/worker-contract.md) の「受け取り時の確認」を実行する
-（変更が作業ツリーにあるか、push や PR 作成の形跡が無いか）。満たさなければ指摘を添えて再実行する（最大3回）。
+**起動前に baseline（ブランチ・HEAD・`git status`）を取る。** これが無いと、着手前から存在した変更を worker の成果と誤認し、
+worker が既存の未コミット変更を壊しても検出できない。worker 完了後は、baseline との比較を含む
+[worker-contract.md](references/worker-contract.md) の「受け取り時の確認」を実行する。満たさなければ指摘を添えて再実行する（最大3回）。
 
 worker が `halt` / `needs_orchestrator` を返した場合は orchestrator が判断する（破壊的操作は「破壊的操作の確認境界」に従う）。
 `workers.engine` が `none`、または worker engine を起動できないホストでは、orchestrator 自身が上記要件で実装する
