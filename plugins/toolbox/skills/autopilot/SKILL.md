@@ -19,7 +19,7 @@ description: >-
 |--------|------|-----------|
 | **ship-gate** | 実装後の検証・出荷ゲート。`quality-gate: PASS` 署名の確認だけ行い内部に踏み込まない | done スキル（done plugin）+ repo の `.agents/done.yml`。done.yml が無い repo では PASS 署名を要求せず、config の verify コマンド or 会話で代替ゲートを確認 |
 | **reviewer** | プランの第三者レビュー（逆エンジン） | claude 上→codex-review / codex 上→claude-review / cursor 上→codex-review。使えない場合は使える方 |
-| **e2e** | UI/E2E 検証の安全方針 | e2e-capability-verification + Chrome DevTools / Playwright MCP |
+| **e2e** | UI/E2E 検証の安全方針 | e2e-capability-verification（browser tool の選択は browser-operations の優先順位に従う） |
 | **reporter** | 進捗・引き継ぎレポート | progress-report |
 
 ### 破壊的操作の確認境界（拡張点と独立の不変ルール）
@@ -83,7 +83,7 @@ DEPLOY_GATE=$(echo "$PREFLIGHT" | jq -r '.deployGate')
 加えて、後続で使う実行環境を判定する。
 
 - `run_in_background` 可否: Claude Code 上なら可、`codex exec` 内なら不可（foreground のみ）
-- MCP 可否: Chrome DevTools / Playwright / staging MCP が利用可能か
+- browser tool 可否: browser-operations の優先順位（CLI → MCP）で利用可能な手段を確認。staging MCP の可否もここで確認する
 
 ## Per-task Loop
 
@@ -186,6 +186,10 @@ fi
 - claude 上 → codex-review スキル（`toolbox:codex-review`）を呼ぶ（Step 2 で作成したプランを会話コンテキストとして渡す）
 - codex 上 → claude-review スキル（`toolbox:claude-review`）を呼ぶ（同上）
 
+リポジトリ規約では provider 未指定の第三者レビューはユーザーへ確認するが、無人実行では確認プロンプトを
+出せないため、host の逆エンジンを既定とする明示的な例外である。ユーザーまたは config が provider を
+明示した場合はそれに従う。
+
 ---
 
 ### Step 4: 実装
@@ -219,8 +223,9 @@ pre-commit hook にフォーマッタを置く構成（`biome check --write` や
 一致しなければ pre-commit hook が内容を書き換えているので、その状態で `done` を再実行する。
 未コミットのまま push すると `done` の修正はそもそも出荷されない。
 
-UI 変更がある場合は `e2e-capability-verification` スキルの方針に従い動作確認を行う。
-MCP（Chrome DevTools / Playwright）が使えない環境では理由をメモしてスキップ。
+UI 変更がある場合は `e2e-capability-verification` スキルの方針に従い動作確認を行う
+（browser tool の選択も同スキルと `browser-operations` の優先順位に委譲する）。
+browser-operations の優先順位で利用可能な browser tool が無い環境では理由をメモしてスキップ。
 
 ---
 
@@ -383,6 +388,8 @@ hook で止まった場合は `--no-verify` を使ってよい。** それでも
 - ⏭️ skipped: タスク名・スキップ理由
 - ⚠️ escalated: タスク名・詰まった箇所・次に取るべき手順
 
+progress-report のテンプレート構造との対応: shipped/skipped/escalated の一覧は L2 全体マップの表として
+載せ、escalated の要対応事項は L1 の「要対応・要判断」へ、各タスクの詳細は L3 詳細へ載せる。
 複数のレポートを Issueコメントに散らさない。1本を朝に読める形で出力する。
 
 ### 蓄積した複雑度の点検（この run で2件以上 ship した場合のみ）
@@ -393,7 +400,7 @@ hook で止まった場合は `--no-verify` を使ってよい。** それでも
 ship した各ブランチの累積差分（`git diff "origin/$BASE_BRANCH"...<branch>`）を通しで読み、次を挙げる:
 
 - 同じ関心事に対して重複して増えた抽象・ユーティリティ
-- タスクをまたいで残った `SPECULATIVE` な機構（判定語彙は `done` のレビュー観点に従う）
+- タスクをまたいで残った `SPECULATIVE` な機構（ラベル定義は `ai-native-engineering` の「BASIS ラベル」節、処分の既定は `done` のレビュー観点に従う）
 - 統合できる設定項目・分岐
 
 **ここでは変更を加えない。** 広範囲のリファクタは受入条件を持たず、無人で走らせる対象ではない。

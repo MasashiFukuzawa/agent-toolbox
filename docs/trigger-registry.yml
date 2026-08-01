@@ -34,9 +34,9 @@ skills:
     runtime_dependencies: []
     side_effect_level: workspace-write
     positive_triggers: ["テストを追加して", "テスト設計をレビューして", "壊れやすいテストを直して"]
-    nearest_neighbors: [verification-loop]
+    nearest_neighbors: [done]
     negative_triggers: ["既存テストを実行するだけ"]
-    ambiguous_precedence: "実装途中の反復実行なら verification-loop を優先"
+    ambiguous_precedence: "テスト設計・実装は behavioral-testing、完了報告直前の品質ゲートは done を優先"
   claude-review:
     canonical_name: claude-review
     category: review
@@ -71,8 +71,7 @@ skills:
   ai-native-engineering: {<<: *defaults, canonical_name: ai-native-engineering, category: architecture, positive_triggers: ["この機能の実装計画を作って", "認証基盤をどう設計する", "コア機能のUXをどこまで作り込む", "セキュリティ対策がtoo muchか判断して", "MVPのスコープを決めたい", "まず簡易版で始めてよいか判断して", "将来の拡張をどこまで考慮する", "どれくらいで実装できる", "この構成はoverengineeringかレビューして"], nearest_neighbors: [adr, autopilot, technical-research], negative_triggers: ["仕様と手段が確定した単純修正", "技術調査だけ", "進捗報告だけ"], ambiguous_precedence: "判断を作る段階ではai-native-engineering、決定の記録はadr、複数タスクの自律実行はautopilot、根拠調査はtechnical-researchを優先"}
   structured-text-parsing: {<<: *defaults, canonical_name: structured-text-parsing, category: parsing, positive_triggers: ["ログから抽出して"], nearest_neighbors: [technical-research], negative_triggers: ["曖昧な自然言語理解"]}
   typescript-project-foundation: {<<: *defaults, canonical_name: typescript-project-foundation, category: architecture, runtime_dependencies: [python3], side_effect_level: workspace-write, positive_triggers: ["新規TypeScriptプロジェクトの基盤を作って", "TypeScriptの初期構成を設計して", "greenfieldのscaffold計画をレビューして"], nearest_neighbors: [ai-native-engineering, technical-research], negative_triggers: ["既存TypeScriptプロジェクトの通常機能実装", "単独のframework API調査"], ambiguous_precedence: "greenfieldの具体的なTypeScript foundationはtypescript-project-foundation、一般的なscope・設計判断はai-native-engineering、根拠調査だけならtechnical-researchを優先"}
-  verification-loop: {<<: *defaults, canonical_name: verification-loop, category: testing, side_effect_level: workspace-write, positive_triggers: ["実装中の検証を回して"], nearest_neighbors: [done], negative_triggers: ["最終品質ゲート"]}
-  done: {<<: *defaults, canonical_name: done, category: delivery, side_effect_level: workspace-write, positive_triggers: ["完了前の品質ゲートを通して"], nearest_neighbors: [verification-loop], negative_triggers: ["実装途中の反復検証"]}
+  done: {<<: *defaults, canonical_name: done, category: delivery, side_effect_level: workspace-write, positive_triggers: ["完了前の品質ゲートを通して"], nearest_neighbors: [behavioral-testing], negative_triggers: ["実装途中の反復検証"], ambiguous_precedence: "完了報告直前の品質ゲートは done、テストの設計・追加は behavioral-testing を優先"}
   gog-calendar: {<<: *defaults, canonical_name: gog-calendar, category: google-workspace, runtime_dependencies: [gog], positive_triggers: ["カレンダーを確認して"], nearest_neighbors: [gog-chat-readonly], negative_triggers: ["Chatを検索して"]}
   gog-chat-readonly: {<<: *defaults, canonical_name: gog-chat-readonly, category: google-workspace, runtime_dependencies: [gog], positive_triggers: ["Google Chatを検索して"], nearest_neighbors: [gog-calendar], negative_triggers: ["メッセージを送信して"]}
   github-project-provisioning: {<<: *defaults, canonical_name: github-project-provisioning, category: github, runtime_dependencies: [gh, python3], side_effect_level: external-write, positive_triggers: ["Organization Projectを作って", "Project構造を検証して"], nearest_neighbors: [github-issue-create], negative_triggers: ["Issueを1件起票して"], ambiguous_precedence: "Project自体の構築・構造検証ならgithub-project-provisioningを優先"}
