@@ -80,6 +80,7 @@ def validate() -> tuple[list[str], list[str]]:
     _scan_public_content(errors)
     _validate_markdown_links(errors)
     _validate_review_mirror(errors)
+    _validate_review_common_mirror(errors)
     return errors, warnings
 
 
@@ -260,7 +261,7 @@ def _extract_mirror_block(text: str) -> str | None:
     return text[start : end + len(REVIEW_MIRROR_END)]
 
 
-def _validate_review_mirror(errors: list[str]) -> None:
+def _validate_review_mirror(errors: list[str], root: Path = ROOT) -> None:
     """The two reviewer skills share host-neutral text; keep it byte-identical.
 
     Missing markers are an error, not a silent skip: a gate that always passes
@@ -268,13 +269,13 @@ def _validate_review_mirror(errors: list[str]) -> None:
     """
     blocks: dict[str, str] = {}
     for skill in REVIEW_MIRROR_SKILLS:
-        path = ROOT / "plugins/toolbox/skills" / skill / "SKILL.md"
+        path = root / "plugins/toolbox/skills" / skill / "SKILL.md"
         if not path.exists():
-            errors.append(f"review mirror: missing {path.relative_to(ROOT)}")
+            errors.append(f"review mirror: missing {path.relative_to(root)}")
             continue
         block = _extract_mirror_block(path.read_text(encoding="utf-8"))
         if block is None:
-            errors.append(f"review mirror: markers not found in {path.relative_to(ROOT)}")
+            errors.append(f"review mirror: markers not found in {path.relative_to(root)}")
             continue
         blocks[skill] = block
     if len(blocks) == len(REVIEW_MIRROR_SKILLS) and len(set(blocks.values())) != 1:
@@ -286,13 +287,97 @@ def _validate_review_mirror(errors: list[str]) -> None:
     for relative in REVIEW_MIRROR_FILES:
         contents: dict[str, str] = {}
         for skill in REVIEW_MIRROR_SKILLS:
-            path = ROOT / "plugins/toolbox/skills" / skill / relative
+            path = root / "plugins/toolbox/skills" / skill / relative
             if not path.exists():
-                errors.append(f"review mirror: missing {path.relative_to(ROOT)}")
+                errors.append(f"review mirror: missing {path.relative_to(root)}")
                 continue
             contents[skill] = path.read_text(encoding="utf-8")
         if len(contents) == len(REVIEW_MIRROR_SKILLS) and len(set(contents.values())) != 1:
             errors.append(f"review mirror: {relative} differs between {' and '.join(REVIEW_MIRROR_SKILLS)}")
+
+
+REVIEW_COMMON_BEGIN = "<!-- MIRROR:review-common BEGIN -->"
+REVIEW_COMMON_END = "<!-- MIRROR:review-common END -->"
+# Provider-specific tokens replaced by placeholders before comparing
+# MIRROR:review-common blocks. Longest-first application keeps overlapping
+# tokens (e.g. "claude-opus-5" vs "claude") from corrupting each other.
+REVIEW_COMMON_TOKENS: dict[str, tuple[tuple[str, str], ...]] = {
+    "codex-review": (
+        ("gpt-5.6-sol", "⟪STRONG⟫"),
+        ("gpt-5.6-terra", "⟪DEFAULT⟫"),
+        ("codex exec", "⟪CLI⟫"),
+        ("Codex", "⟪PROVIDER⟫"),
+        ("codex", "⟪provider⟫"),
+    ),
+    "claude-review": (
+        ("claude-opus-5", "⟪STRONG⟫"),
+        ("claude-sonnet-5", "⟪DEFAULT⟫"),
+        ("claude -p", "⟪CLI⟫"),
+        ("Claude", "⟪PROVIDER⟫"),
+        ("claude", "⟪provider⟫"),
+    ),
+}
+
+
+def _extract_common_blocks(text: str) -> list[str] | None:
+    """Return MIRROR:review-common block bodies, or None on malformed markers."""
+    blocks: list[str] = []
+    position = 0
+    while True:
+        begin = text.find(REVIEW_COMMON_BEGIN, position)
+        stray_end = text.find(REVIEW_COMMON_END, position)
+        if begin == -1:
+            return None if stray_end != -1 else blocks
+        if stray_end != -1 and stray_end < begin:
+            return None
+        end = text.find(REVIEW_COMMON_END, begin)
+        if end == -1:
+            return None
+        blocks.append(text[begin + len(REVIEW_COMMON_BEGIN) : end])
+        position = end + len(REVIEW_COMMON_END)
+
+
+def _normalize_review_common(skill: str, block: str) -> str:
+    for token, placeholder in sorted(REVIEW_COMMON_TOKENS[skill], key=lambda pair: -len(pair[0])):
+        block = block.replace(token, placeholder)
+    return block
+
+
+def _validate_review_common_mirror(errors: list[str], root: Path = ROOT) -> None:
+    """MIRROR:review-common blocks must match after provider-token normalization.
+
+    Like the async mirror, missing markers, unbalanced markers, and count
+    mismatches are errors, never silent skips.
+    """
+    normalized: dict[str, list[str]] = {}
+    for skill in REVIEW_MIRROR_SKILLS:
+        path = root / "plugins/toolbox/skills" / skill / "SKILL.md"
+        if not path.exists():
+            errors.append(f"review mirror: missing {path.relative_to(root)}")
+            continue
+        blocks = _extract_common_blocks(path.read_text(encoding="utf-8"))
+        if blocks is None:
+            errors.append(f"review mirror: unbalanced MIRROR:review-common markers in {path.relative_to(root)}")
+            continue
+        if not blocks:
+            errors.append(f"review mirror: MIRROR:review-common markers not found in {path.relative_to(root)}")
+            continue
+        normalized[skill] = [_normalize_review_common(skill, block) for block in blocks]
+    if len(normalized) != len(REVIEW_MIRROR_SKILLS):
+        return
+    counts = {skill: len(blocks) for skill, blocks in normalized.items()}
+    if len(set(counts.values())) != 1:
+        errors.append(
+            "review mirror: MIRROR:review-common block count differs: "
+            + ", ".join(f"{skill}={count}" for skill, count in counts.items())
+        )
+        return
+    for index, blocks in enumerate(zip(*(normalized[skill] for skill in REVIEW_MIRROR_SKILLS), strict=True)):
+        if len(set(blocks)) != 1:
+            errors.append(
+                f"review mirror: MIRROR:review-common block {index + 1} differs after "
+                "normalization between " + " and ".join(REVIEW_MIRROR_SKILLS)
+            )
 
 
 def main() -> int:
