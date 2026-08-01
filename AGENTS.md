@@ -1,6 +1,7 @@
 # Repository instructions
 
 - Keep all published content reusable. Never add organization-specific names, personal email addresses, credentials, internal repository names, customer data, incident details, or absolute home-directory paths.
+- Commit messages and pull-request titles and descriptions are published with this repository and follow the same rule. When work references other repositories (fleet migrations, deployed-config audits), describe them generically — "a deployed config", counts, dialect names — instead of naming the organization or repository.
 - Write for a general public audience. Keep workflows broadly reusable, and describe organization- or repository-specific behavior as optional configuration only when it materially affects the workflow.
 - Skill directory names use kebab-case and equal the frontmatter `name`.
 - Skill frontmatter contains exactly `name` and `description`.
