@@ -1,1 +1,8 @@
-{"name":"github-operations","version":"0.1.0","description":"Safe GitHub Project provisioning and Issue creation","author":{"name":"Agent Toolbox Contributors"}}
+{
+  "name": "github-operations",
+  "version": "0.1.1",
+  "description": "Safe GitHub Project provisioning and Issue creation",
+  "author": {
+    "name": "Agent Toolbox Contributors"
+  }
+}
