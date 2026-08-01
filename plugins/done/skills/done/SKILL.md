@@ -1,7 +1,7 @@
 ---
 name: done
 description: >-
-  Definition of Done 品質ゲート（汎用エンジン）。repo の .agents/done.yml を読み、quick/standard/full の3層で検証して quality-gate: PASS 署名を出力する。リポジトリへの変更作業の完了を報告する直前に必ず使う。回答のみ・計画のみ・引き継ぎのみのターンでは使わない。実装中の継続的な型/lint/テスト実行には verification-loop（導入後）を使い、本スキルは完了時の最終ゲートに限定する。
+  Definition of Done 品質ゲート（汎用エンジン）。repo の .agents/done.yml を読み、quick/standard/full の3層で検証して quality-gate: PASS 署名を出力する。リポジトリへの変更作業の完了を報告する直前に必ず使う。回答のみ・計画のみ・引き継ぎのみのターンでは使わない。実装中の継続的な型/lint/テスト実行には使わず、完了時の最終ゲートに限定する。
 ---
 # Quality Gate — Definition of Done（汎用エンジン）
 
@@ -93,29 +93,36 @@ CI が走らせられない completion-time の検証だけを書く。どちら
 CI は迂回できないので、保証は既に CI 側にある。**done の固有の価値は決定論的な検証ではなく、
 機械にできない判断（tier・docs・レビュー）と、それを特定の tree に束縛する署名にある。**
 
+**検証を通すために assertion、型安全性、lint rule を無効化しない。** テストを弱めれば verify は通るが、それは検証の意味を消すことであり修正ではない。
+
 **quick**: Step 2 完了後、Step 5 へスキップ。
 
 ## Step 2: ドキュメント整合（全 tier）
 
-done.yml の `docs_checks` の各項目を確認し、不足があれば作成・追記する。
+done.yml の `docs_checks` の各項目について、両方向を確認する。
+
+1. **腐敗の検出**: その項目が指す既存文書の現在形の記述が、変更後の実装と一致しているか。矛盾していれば文書を訂正する（追記ではなく修正）
+2. **不足の検出**: 要求される文書が存在しなければ作成する
+
+指摘が出た項目についてのみ、対象パスと判定を書く。指摘ゼロなら「全項目を確認、乖離なし」の1行でよい。
 
 ## Step 3: レビュー（standard / full のみ）
 
-done.yml の `review_criteria` の各観点を確認し、advisor()（利用可能なら）を呼ぶ。High/Medium の指摘 → 修正 → verify 再実行（advisor は最大2回）。advisor 不可なら観点リストで自己レビューにフォールバック。
+done.yml の `review_criteria` の各観点で自己レビューする。High/Medium の指摘 → 修正 → verify 再実行。
 
 **所見は指摘が出た観点についてのみ書く。** 全観点に「N/A — 対象変更なし」を並べる必要はない。指摘ゼロなら「全観点を確認、指摘なし」の1行で足りる。
 
-**簡素化（YAGNI / KISS）は built-in の観点で、省略できない。** 受入条件に無い fallback・再試行・防御的検証・設定項目・抽象を追加していないかを見る。追加された機構それぞれに `BASIS:` を付ける — `OBSERVED`（コードやテストで観測された事実）/ `CURRENT-THREAT`（現在の脅威モデル・受入条件・規制が要求）/ `REAL-DEMAND`（実在する利用者・ユースケース）/ `SPECULATIVE`（将来こうなるかもしれない）。**`SPECULATIVE` は削除を既定とする**（判定は `ai-native-engineering` の「投機的な抽象化を見分ける」「需要を待つ領域」に従う）。削除したら Step 1 の verify を再実行する。
+**簡素化（YAGNI / KISS）は built-in の観点で、省略できない。** 受入条件に無い fallback・再試行・防御的検証・設定項目・抽象を追加していないかを見る。追加された機構それぞれに `BASIS:` を付ける — `OBSERVED`（コードやテストで観測された事実）/ `CURRENT-THREAT`（現在の脅威モデル・受入条件・規制が要求）/ `REAL-DEMAND`（実在する利用者・ユースケース）/ `SPECULATIVE`（将来こうなるかもしれない）。**`SPECULATIVE` は削除を既定とする**（ラベルの定義は `ai-native-engineering` の「BASIS ラベル」節、投機的か否かの判定は同スキルの「投機的な抽象化を見分ける」「需要を待つ領域」に従う。`SPECULATIVE` を削除既定とするのは本スキル＝出荷ゲートの層での宣言である）。削除したら Step 1 の verify を再実行する。
 
-この観点を独立パスではなくレビューに畳み込んでいるのは、**過剰実装は「正しさ」の検証では捕まらない**ため（書いたモデルはその機構を必要だと判断して書いている）。同じ diff を別文脈で読むレビューに観点として載せるのが、追加コストなしで検出できる唯一の場所である。
+**過剰実装は「正しさ」の検証では捕まらない**（書いたモデルはその機構を必要だと判断して書いている）。だからこの観点は、正しさとは別の問い — 必要性の根拠 — を立てる。真に独立した文脈でのレビューは、full tier の Step 4（外部レビュー）が担う。
 
 ## Step 4: 外部レビュー（full のみ）
 
-done.yml の `external_review` に従い read-only の外部レビュー（codex-review / claude-review 相当）を依頼する。「advisor 通過済み。セキュリティ・隠れた前提・エッジケース・長期保守性に集中」と伝える。High/Medium → 修正 → verify 再実行。不可なら自己レビューでフォールバック。
+done.yml の `external_review` に従い read-only の外部レビュー（codex-review / claude-review 相当）を依頼する。「内部レビュー通過済み。セキュリティ・隠れた前提・エッジケース・長期保守性に集中」と伝える。High/Medium → 修正 → verify 再実行。不可なら自己レビューでフォールバック。
 
 ## Step 5: 署名出力
 
-PASS の前に Step 0 と同じ手順で `head` と `verification_tree` を再計算する（/done 自身が変更を加えた場合は変更ファイルと tier トリガーを再確認。tier は維持か上方のみ）。
+PASS の前に Step 0 と同じ手順で `head` と `verification_tree` を再計算する（本スキル自身が変更を加えた場合は変更ファイルと tier トリガーを再確認。tier は維持か上方のみ）。
 
 ```
 quality-gate: PASS

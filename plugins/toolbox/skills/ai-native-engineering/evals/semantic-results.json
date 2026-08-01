@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "skill_sha256": "ab674885d8456cbc7b7f46d19807263d923b070c8b649ff2824c6c0723baea87",
+  "skill_sha256": "a13dc9812d0c0a8860461f98169ef1b4aa6e4327864bd560315f39f243e59e83",
   "evals_sha256": "38438663057292e3e6399d037793f4924f6c6214462a2f3eb5078f4d20bfc999",
-  "reuse_note": "All seven cases were rerun after the YAGNI/KISS revision (simplicity promoted to a top-level principle, the front-load section reframed from build-these-domains to decide-these-contracts, an explicit Phase 0/1/2 walking-skeleton model, and a core-UX carve-out inside the new simplification material). Case 7 is new and guards the over-construction failure mode the revision targets; the prior six cases skewed toward guarding under-construction only. Executors ran blind: they received the skill and the case prompt but not the assertions, and grading was done separately against the assertion list.",
+  "reuse_note": "All seven cases were rerun on both hosts after adding the 'BASIS ラベル' subsection, which makes this skill the canonical definition of the four BASIS categories (OBSERVED / CURRENT-THREAT / REAL-DEMAND / SPECULATIVE) that done and codex-review reference. The change is additive - no existing section was renamed or reworded - but it touches the instruction body, so results were not carried forward. Executors ran blind: they received the skill and the case prompt but not the assertions, and grading was done separately against the assertion list. A visible effect of the new subsection is that executors on both hosts now label their recommendations with explicit BASIS tags, which did not conflict with any assertion. The codex host, unresolvable in the previous session, was available this time (codex-cli 0.146.0, exec mode, read-only sandbox) and passed all cases.",
   "executors": [
     {
       "host": "claude-code",
@@ -20,8 +20,17 @@
     },
     {
       "host": "codex",
-      "status": "not_run",
-      "reason": "The codex CLI was not resolvable in the revision session, so this host could not be exercised. Checked: command -v, type, mise which, mise ls, npm -g, and the usual bin directories - all report not found (a ~/.codex config directory exists, but no binary). The prior pass predates the YAGNI/KISS revision and was retired rather than carried forward. Rerun where codex resolves before relying on cross-host evidence."
+      "status": "passed",
+      "cases": [
+        {"id": 1, "passed": true, "assertions": [true, true, true]},
+        {"id": 2, "passed": true, "assertions": [true, true, true]},
+        {"id": 3, "passed": true, "assertions": [true, true, true]},
+        {"id": 4, "passed": true, "assertions": [true, true]},
+        {"id": 5, "passed": true, "assertions": [true, true, true]},
+        {"id": 6, "passed": true, "assertions": [true, true, true]},
+        {"id": 7, "passed": true, "assertions": [true, true, true]}
+      ],
+      "unclear_instruction_points": []
     }
   ]
 }
