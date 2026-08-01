@@ -1,38 +1,65 @@
-version: 1
+# .agents/done.yml — the presence of this file is the opt-in switch for the gate.
+# Logic lives in the skill; only commands and data belong here.
+
+# Required. The Stop hook uses it to tell whether a signature belongs to this
+# repository, and refuses to run without it. Worktree directory names differ from
+# the repository name, which is why it is not inferred.
 repo: example-repository
 
+# `verify` runs at completion time, before the change is pushed. Optional; may be empty.
+#
+# Write only what no enforcing layer already guarantees. Three shapes, by what the
+# repository already has:
+#
+#   1. Git hooks (lefthook, pre-commit) — delegate, so the command list has one home:
+#        verify:
+#          - run: lefthook run pre-push
+#      or:
+#          - run: pre-commit run --all-files
+#
+#   2. CI only — list what CI cannot run. Completion-time checks needing developer
+#      credentials or a local environment belong here; what CI already runs does not.
+#
+#   3. Neither — list the full suite, as below. Here `done` is the only gate.
+#
+# Repeating a suite that a git hook and CI both run means the same commands execute up
+# to three times per change. That costs time and tokens without adding a guarantee:
+# hooks can be bypassed with --no-verify, CI cannot, so the assurance already lives in CI.
 verify:
-  quick:
-    - ruff check .
-    - pytest -q
-  standard:
-    - ruff check .
-    - pytest
-  full:
-    - ruff check .
-    - pytest
-    - python -m build
+  - run: ruff check .
+  - run: pytest
+  - when_changed:
+      - migrations/
+    run: pytest tests/migrations
 
+# Minimum review depth. These never lower a tier the skill judged higher.
 tier_floors:
+  # Paths that force the full tier regardless of judgement.
   full:
     - "migrations/**"
     - ".github/workflows/**"
     - "**/auth/**"
+  # Promotion conditions a path glob cannot express, written for this repository's
+  # domain. The skill evaluates these against the change and treats a match as an
+  # unconditional promotion to full — its own counter-examples never override them.
+  full_conditions:
+    - "Authorization, authentication, or security-sensitive changes"
+    - "Changes that cross package or module boundaries"
+    - "Schema or storage layout changes"
+  # Eligible for quick only when every changed file matches.
   quick:
     - "docs/**"
     - "**/*.md"
 
-docs:
-  checks:
-    - README and public interfaces match the implementation
+docs_checks:
+  - README and public interfaces match the implementation
 
-review:
-  criteria:
-    - correctness and failure handling
-    - security and tenant boundaries
-    - backward compatibility
-  external:
-    default: none
-    allowed:
-      - claude
-      - codex
+# Review lenses for the standard and full tiers. The simplify lens (YAGNI / KISS) is
+# built into the skill and does not need listing here.
+review_criteria:
+  - correctness and failure handling
+  - security and tenant boundaries
+  - backward compatibility
+
+# Provider for the full tier's independent review: none (default), codex, or claude.
+external_review: none

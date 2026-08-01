@@ -1,27 +1,129 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "done quality-gate configuration",
+  "description": "Repository-side data for the done quality gate. Logic belongs in the skill; only commands and data belong here.",
   "type": "object",
-  "required": ["version", "repo", "verify"],
+  "required": ["repo"],
   "additionalProperties": false,
   "properties": {
-    "version": {"const": 1},
-    "repo": {"type": "string", "minLength": 1},
+    "version": {
+      "type": "integer",
+      "description": "Accepted for backward compatibility and otherwise ignored."
+    },
+    "repo": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Repository name. Required: the Stop hook uses it to tell whether a signature belongs to this repository and refuses to run without it. Worktree directory names differ from the repository name, which is why this is not inferred."
+    },
     "verify": {
+      "description": "Commands run at completion time, in order. Optional and may be empty. Write only what no enforcing layer already guarantees: delegate to the repository's own check command where git hooks exist (lefthook run pre-push, pre-commit run --all-files), list only what CI cannot run where CI exists, and list the full suite only where neither exists. A flat list is canonical; the per-tier object form is accepted for existing configs, and the skill uses the list matching the chosen tier.",
+      "oneOf": [
+        {"$ref": "#/$defs/commands"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "quick": {"$ref": "#/$defs/commands"},
+            "standard": {"$ref": "#/$defs/commands"},
+            "full": {"$ref": "#/$defs/commands"}
+          }
+        }
+      ]
+    },
+    "tier_floors": {
       "type": "object",
-      "required": ["quick", "standard", "full"],
       "additionalProperties": false,
+      "description": "Minimum review depth. Never lowers a tier the skill judged higher.",
       "properties": {
-        "quick": {"$ref": "#/$defs/commands"},
-        "standard": {"$ref": "#/$defs/commands"},
-        "full": {"$ref": "#/$defs/commands"}
+        "full": {
+          "$ref": "#/$defs/globs",
+          "description": "Paths that force the full tier regardless of judgement."
+        },
+        "full_conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "description": "Repository-specific promotion conditions a path glob cannot express, in prose the skill evaluates against the change (for example: authorization or security-sensitive changes, cross-package changes). Unconditional promotion triggers - the skill's own counter-examples never override them."
+        },
+        "quick": {
+          "$ref": "#/$defs/globs",
+          "description": "Paths eligible for the quick tier, applied only when every changed file matches."
+        }
       }
     },
-    "tier_floors": {"type": "object"},
-    "docs": {"type": "object"},
-    "review": {"type": "object"}
+    "docs_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Documentation consistency statements to confirm before signing."
+    },
+    "review_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Review lenses for the standard and full tiers. The simplify lens is built into the skill and does not need listing here."
+    },
+    "external_review": {
+      "type": "string",
+      "enum": ["none", "codex", "claude"],
+      "description": "Provider for the full tier's independent review. Defaults to none; started only when named."
+    },
+    "docs": {
+      "type": "object",
+      "description": "Deprecated alias for docs_checks, kept so existing configs keep working. Use docs_checks; if both are present, docs_checks wins.",
+      "additionalProperties": false,
+      "properties": {"checks": {"type": "array", "items": {"type": "string"}}}
+    },
+    "review": {
+      "type": "object",
+      "description": "Deprecated alias for review_criteria and external_review, kept so existing configs keep working. Use the top-level fields; if both are present, the top-level fields win.",
+      "additionalProperties": false,
+      "properties": {
+        "criteria": {"type": "array", "items": {"type": "string"}},
+        "external": {
+          "oneOf": [
+            {"type": "string"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "default": {"type": "string"},
+                "allowed": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          ]
+        }
+      }
+    }
   },
   "$defs": {
-    "commands": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+    "globs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {"type": "string", "minLength": 1},
+          {
+            "type": "object",
+            "required": ["run"],
+            "additionalProperties": false,
+            "properties": {
+              "run": {"type": "string", "minLength": 1},
+              "when_changed": {
+                "description": "Run only when a changed file matches. A single path may be written as a string.",
+                "oneOf": [
+                  {"type": "string", "minLength": 1},
+                  {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
   }
 }
