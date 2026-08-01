@@ -27,8 +27,8 @@
     },
     {
       "id": 5,
-      "prompt": "（run_in_background を持たないホストで）claude-review で全体を見て",
-      "expected_output": "ホストが run_in_background を持たないため foreground フォールバック（手順5）にルートする。foreground で timeout を 600000ms 確保し、起動直前に foreground 用の予告（「これからレビューを実行します…」。背景用の『バックグラウンドで開始しました』は流用しない）を出す。モデルは昇格条件に該当しないため既定の claude-sonnet-5、effort は自動判定で既定 high（xhigh 以上は選ばない）。結果は標準出力（戻り値）から取得し（背景用の出力ファイル Read/BashOutput は使わない）、要約・詳細・推奨対応の形式で報告する。タイムアウトで kill された場合は盲目的に再実行せず effort を一段下げる（high→medium）か対象を絞る",
+      "prompt": "（run_in_background もホスト独自の背景実行機構も持たないホストで）claude-review で全体を見て",
+      "expected_output": "起動と合流の型は「非同期実行と合流」で判定する。run_in_background もホストの背景実行機構も無いため同期型にルートし、foreground で実行する。発話窓は実行直前のみなので、そこで所要時間とハングではない旨を予告する。モデルは昇格条件に該当しないため既定の claude-sonnet-5、effort は自動判定で既定 high（xhigh 以上は選ばない）。結果は標準出力（戻り値）から取得し、要約・詳細・推奨対応の形式で報告する。同期型では待ち時間が存在しないため「レビュー中の並行作業」は適用外。シェルレベルの detach（nohup / setsid）で背景化しようとしない",
       "files": []
     },
     {
@@ -60,6 +60,11 @@
       "prompt": "effort は high で claude-review にかけて。（実行したがホストのタイムアウトで kill された）",
       "expected_output": "盲目的に同一条件で再実行しない。ユーザーが effort を明示指定しているためガードレール4が優先し、時間超過を理由に自動で降格してはならない。まず対象スコープの絞り込み（特定ファイル・ディレクトリ、複数回への分割）で対処し、それでも収まらなければ降格の可否をユーザーへ確認する。再実行は新規プロセスで行い、--resume / --continue / --fork-session でセッションを引き継がない。何が起きて次に何をするかをユーザーへ説明する",
       "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "claude-review を回している間に、別 worktree で次のタスクを実装しておきたい",
+      "expected_output": "待ち時間に対象リポジトリを触るため references/review-snapshot.md のスナップショット起動を選ぶ。実ツリーと index に触れずに untracked を含む状態を固定し、依頼文では対象を HEAD~1..HEAD の差分と伝える。汚染チェックはスナップショット worktree 側で行う（メインツリーは並行作業で変化するため偽陽性になる）。スナップショットを取らない場合は対象ツリーと index・参照 ref（fetch/pull しない）・共有 .git/config と hooks の3つを凍結する。待ち時間に作ったブランチの merge はレビュー結果の処理後にする。委譲先にも同じ制約と再帰起動の禁止を伝える"
     }
   ]
 }
