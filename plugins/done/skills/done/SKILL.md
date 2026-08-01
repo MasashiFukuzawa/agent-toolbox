@@ -76,11 +76,11 @@ done.yml の `verify` を順に実行する。`when_changed` 付きエントリ�
 
 ## Step 2: ドキュメント整合（全 tier）
 
-done.yml の `docs_checks` の各項目を確認し、不足があれば作成・追記する。
+done.yml の `docs.checks` の各項目を確認し、不足があれば作成・追記する。
 
 ## Step 3: レビュー（standard / full のみ）
 
-done.yml の `review_criteria` の各観点を確認し、advisor()（利用可能なら）を呼ぶ。High/Medium の指摘 → 修正 → verify 再実行（advisor は最大2回）。advisor 不可なら観点リストで自己レビューにフォールバック。
+done.yml の `review.criteria` の各観点を確認し、advisor()（利用可能なら）を呼ぶ。High/Medium の指摘 → 修正 → verify 再実行（advisor は最大2回）。advisor 不可なら観点リストで自己レビューにフォールバック。
 
 **所見は指摘が出た観点についてのみ書く。** 全観点に「N/A — 対象変更なし」を並べる必要はない。指摘ゼロなら「全観点を確認、指摘なし」の1行で足りる。
 
@@ -90,7 +90,7 @@ done.yml の `review_criteria` の各観点を確認し、advisor()（利用可�
 
 ## Step 4: 外部レビュー（full のみ）
 
-done.yml の `external_review` に従い read-only の外部レビュー（codex-review / claude-review 相当）を依頼する。「advisor 通過済み。セキュリティ・隠れた前提・エッジケース・長期保守性に集中」と伝える。High/Medium → 修正 → verify 再実行。不可なら自己レビューでフォールバック。
+done.yml の `review.external` に従い read-only の外部レビュー（codex-review / claude-review 相当）を依頼する。「advisor 通過済み。セキュリティ・隠れた前提・エッジケース・長期保守性に集中」と伝える。High/Medium → 修正 → verify 再実行。不可なら自己レビューでフォールバック。
 
 ## Step 5: 署名出力
 
