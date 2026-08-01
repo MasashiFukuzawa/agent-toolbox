@@ -4,31 +4,61 @@
     {
       "id": 1,
       "prompt": "claude-reviewを使って $HOME/project のコードをレビューしてください。Effort は medium で。",
-      "expected_output": "effort が明示されているので medium を尊重し、claude -p コマンドを --model claude-opus-5 --effort medium で実行して、対象プロジェクトのコードレビュー結果を要約・詳細・推奨対応の形式で報告する",
+      "expected_output": "effort が明示されているので medium を尊重し、claude -p コマンドを --model claude-sonnet-5 --effort medium で実行して、対象プロジェクトのコードレビュー結果を要約・詳細・推奨対応の形式で報告する",
       "files": []
     },
     {
       "id": 2,
       "prompt": "認証周りのセキュリティについてセカンドオピニオンが欲しい。カレントディレクトリで claude-review を xhigh effort で動かして。",
-      "expected_output": "effort が明示されているのでガードレール4に従い xhigh を尊重し、claude -p コマンドを --model claude-opus-5 --effort xhigh で実行する。ただし自動判定の上限は high であり xhigh 以上は精度向上に結び付かないため、その旨を一度添える。セキュリティ観点の分析結果を構造化して報告する",
+      "expected_output": "effort が明示されているのでガードレール4に従い xhigh を尊重し、claude -p コマンドを --effort xhigh で実行する。ただし自動判定の上限は high であり xhigh 以上は精度向上に結び付かないため、その旨を一度添える。モデルは、設計そのものが対象だと判断できる材料が依頼に無く、題材が認証であること自体は昇格理由にならないため、既定の --model claude-sonnet-5 を維持する。セキュリティ観点の分析結果を構造化して報告する",
       "files": []
     },
     {
       "id": 3,
       "prompt": "Claudeの別インスタンスに $HOME/project を軽くチェックしてもらいたい（low effort）",
-      "expected_output": "effort が明示されているので low を尊重し、claude -p コマンドを --model claude-opus-5 --effort low で実行して、対象プロジェクトの概要レビューを報告する",
+      "expected_output": "effort が明示されているので low を尊重し、claude -p コマンドを --model claude-sonnet-5 --effort low で実行して、対象プロジェクトの概要レビューを報告する",
       "files": []
     },
     {
       "id": 4,
-      "prompt": "claude-review で全体を見て",
-      "expected_output": "effort の指定が無いので自動判定で既定の high を選ぶ（xhigh 以上は選ばない）。claude -p \"...\" --model claude-opus-5 --effort high --add-dir <dir> --permission-mode plan --disallowedTools 'Edit,Write,NotebookEdit' を Bash の run_in_background: true で起動し（ガードレール1により --permission-mode plan と --disallowedTools は両方必須）、起動直後に『バックグラウンドで開始した・数分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する。完了通知で出力ファイルを Read/BashOutput して結果を要約・詳細・推奨対応の形式で報告する",
+      "prompt": "詳細設計どおりに実装した差分がある。claude-review で実装者が気づいていない観点を見てほしい",
+      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定のまま --model claude-sonnet-5 を選び、Opus へ昇格しない。effort の指定が無いので自動判定で既定の high を選ぶ（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（問題がある前提で反証を試みる）と、型・lint・テストで検出できるものより実装者の視野外の観点を優先する旨を含める。claude -p \"...\" --model claude-sonnet-5 --effort high --add-dir <dir> --permission-mode plan --disallowedTools 'Edit,Write,NotebookEdit' を Bash の run_in_background: true で起動し（ガードレール1により --permission-mode plan と --disallowedTools は両方必須）、起動直後に『バックグラウンドで開始した・数分〜数十分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する。完了通知で出力ファイルを Read/BashOutput して結果を要約・詳細・推奨対応の形式で報告する",
       "files": []
     },
     {
       "id": 5,
       "prompt": "（run_in_background を持たないホストで）claude-review で全体を見て",
-      "expected_output": "ホストが run_in_background を持たないため foreground フォールバック（手順5）にルートする。foreground で timeout を 600000ms 確保し、起動直前に foreground 用の予告（「これからレビューを実行します…」。背景用の『バックグラウンドで開始しました』は流用しない）を出す。effort は自動判定で既定 high（xhigh 以上は選ばない）。結果は標準出力（戻り値）から取得し（背景用の出力ファイル Read/BashOutput は使わない）、要約・詳細・推奨対応の形式で報告する。タイムアウトで kill された場合は盲目的に再実行せず effort を一段下げる（high→medium）か対象を絞る",
+      "expected_output": "ホストが run_in_background を持たないため foreground フォールバック（手順5）にルートする。foreground で timeout を 600000ms 確保し、起動直前に foreground 用の予告（「これからレビューを実行します…」。背景用の『バックグラウンドで開始しました』は流用しない）を出す。モデルは昇格条件に該当しないため既定の claude-sonnet-5、effort は自動判定で既定 high（xhigh 以上は選ばない）。結果は標準出力（戻り値）から取得し（背景用の出力ファイル Read/BashOutput は使わない）、要約・詳細・推奨対応の形式で報告する。タイムアウトで kill された場合は盲目的に再実行せず effort を一段下げる（high→medium）か対象を絞る",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "まだ実装していない新しい配信基盤のアーキテクチャ方針をまとめた。前例が無い方式なので claude-review で見てほしい",
+      "expected_output": "プランニング段階かつ不確実性が高い対象なので昇格条件に該当し、--model claude-opus-5 を選ぶ。所要時間が伸びるため昇格理由を一言添えてから起動する。effort は自動判定で既定 high（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（設計に穴がある前提で反証を試みる）と網羅性要求（self-filter させない・scope statement を返させる）を含め、--permission-mode plan と --disallowedTools 'Edit,Write,NotebookEdit' を両方付けて実行し、結果を構造化して報告する",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "実装差分を claude-review に掛けたが、返ってきたのは一般論ばかりで path:line の裏付けも薄い。どうする？",
+      "expected_output": "Sonnet の結果が薄いケースなので、その結果をそのまま採用しない。effort を xhigh へ上げるのではなく、対象スコープを絞り観点を具体化した上で --model claude-opus-5 で再実行する。再実行は新規プロセスで行い、--resume / --continue / --fork-session で1回目のセッションを引き継がない（独立性が失われるため）。再実行したことと、Sonnet の結果との差分を報告する",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "claude-review が終わったみたい。結果を教えて",
+      "expected_output": "既定モデル（claude-sonnet-5）での結果報告なので、要約・詳細・推奨対応に加えて判断材料と選択肢を必ず添える。具体的には、レビュー結果の scope statement のうち未検査のまま残った範囲に重要なものがあるかを示し、『このまま採用する』か『スコープを絞って claude-opus-5 で再実行する』かを呼び出し元に明示的に問う。指摘は結論ではなく仮説として扱い、path:line の実在を確認したうえで報告する",
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "READMEのtypo修正と変数名リネームだけの差分がある。念のため claude-review で見てもらえる？",
+      "expected_output": "やり直しコストが低い差分であり、型チェック・lint・テストで検出できる範囲でもあるため、本スキルの適用対象ではないという見立てを述べる。代替案（型チェック・lint・テストの実行、その場での目視確認）を示した上で、実行可否の判断をユーザーへ返す。黙って実行も黙って拒否もしない。『念のため』はモデルIDやeffortレベル名を伴わない強調表現なので明示指定として扱わず、モデル昇格の理由にもしない",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "effort は high で claude-review にかけて。（実行したがホストのタイムアウトで kill された）",
+      "expected_output": "盲目的に同一条件で再実行しない。ユーザーが effort を明示指定しているためガードレール4が優先し、時間超過を理由に自動で降格してはならない。まず対象スコープの絞り込み（特定ファイル・ディレクトリ、複数回への分割）で対処し、それでも収まらなければ降格の可否をユーザーへ確認する。再実行は新規プロセスで行い、--resume / --continue / --fork-session でセッションを引き継がない。何が起きて次に何をするかをユーザーへ説明する",
       "files": []
     }
   ]
