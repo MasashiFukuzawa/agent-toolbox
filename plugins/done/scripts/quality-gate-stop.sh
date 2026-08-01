@@ -125,7 +125,7 @@ except Exception:
 newline = r"(?:\\n|\r?\n)"
 signature_pattern = re.compile(
     rf"quality-gate:\s*PASS{newline}\s*"
-    rf"repo:\s*(?P<repo>[A-Za-z0-9._-]+){newline}\s*"
+    rf"repo:\s*(?P<repo>[A-Za-z0-9._/-]+){newline}\s*"
     rf"head:\s*(?P<head>[0-9a-f]{{40}}){newline}\s*"
     rf"verification-tree:\s*(?P<tree>[0-9a-f]{{40}}){newline}\s*"
     rf"tier:\s*(?P<tier>quick|standard|full)\b",
