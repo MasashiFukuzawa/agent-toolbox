@@ -3,7 +3,7 @@ name: git-worktrees
 description: >-
   並列開発の git worktree を作成・同期・整理し、衝突を避ける。別セッションや複数タスクを同時進行する時に使う。通常の単一ブランチ作業には使わない。「worktreeを切って」「別セッションと並列で進める」を正のトリガーとし、単一branch内の通常作業や単なるbranch削除には使わない。
 ---
-# Worktree Flow — 並列開発の標準手順
+# Git Worktrees — 並列開発の標準手順
 
 ## ガードレール（必須）
 
@@ -53,10 +53,10 @@ git branch -d <branch>            # マージ済み確認込み（-D は最終�
 git worktree prune
 ```
 
-3. リモート削除済みブランチの一括掃除は `専用のリモートブランチ整理手順` に委譲
+3. リモート削除済み（`[gone]`）ブランチの一括掃除は、ガードレール1と同じく一覧提示とユーザー確認を経て行う
 
 ## トラブルシューティング
 
 - `fatal: '<branch>' is already checked out` → そのブランチは他の worktree が使用中。`git worktree list` で特定
 - worktree を移動/リネームしたら `git worktree repair`
-- 「元repoが dirty で Stop hook が誤発火」→ done ゲートは worktree ごとの署名検証なので、**作業した worktree 内で** /done を実行する
+- 「元repoが dirty で Stop hook が誤発火」→ done ゲートは worktree ごとの署名検証なので、**作業した worktree 内で** done スキル（quality gate）を実行する
