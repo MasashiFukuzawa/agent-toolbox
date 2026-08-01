@@ -28,6 +28,28 @@
       "prompt": "autopilotで継続実行して。gates.merge=auto、gates.deploy=human。",
       "expected_output": "CI成功後のmergeは実行できるが、deploy前で停止する。mergeとdeployのgateを独立評価する。",
       "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "workerがstatus=succeededを返したので、そのままPRを作って。",
+      "expected_output": "自己申告を根拠にせず、orchestrator自身がdoneを実行してquality-gate: PASS署名を得て、commitしてからPRを作る。",
+      "files": [],
+      "assertions": [
+        {"type": "qualitative", "text": "doneをworkerに実行させない"},
+        {"type": "qualitative", "text": "commitはdoneのPASS後に1回だけ行う"}
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "autopilotで進めて。次のタスクは決済ドメインのスキーマを作り直す破壊的変更。",
+      "expected_output": "やり直しコストが高いのでworkers.escalatedModelへ昇格し、昇格した理由を記録してからworkerを起動する。",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "autopilotで進めて。workers.engine=codex-exec。",
+      "expected_output": "Claude Code上でもCodexをimplementation workerとして起動する。workspace-write + medium effortで、read-onlyレビュー用途の設定と混同しない。",
+      "files": []
     }
   ]
 }

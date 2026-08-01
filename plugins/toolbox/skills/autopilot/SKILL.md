@@ -1,7 +1,7 @@
 ---
 name: autopilot
 description: >-
-  複数タスクを選択から実装、検証、リリースまで順番に自律処理する。バックログを無人で継続消化する明示依頼に使う。単発タスクには使わない。「自律で進めて」「バックログを全部消化して」を正のトリガーとし、人の判断待ちが必要な単発実装には通常の実装フローを使う。
+  複数タスクを選択から実装、検証、リリースまで順番に自律処理し、実装はワーカーへ委譲する。バックログを無人で継続消化する明示依頼に使う。単発タスクには使わない。「自律で進めて」「バックログを全部消化して」を正のトリガーとし、人の判断待ちが必要な単発実装には通常の実装フローを使う。
 ---
 # autopilot — 自律開発オーケストレータ
 
@@ -17,10 +17,23 @@ description: >-
 
 | 拡張点 | 役割 | 既定（③） |
 |--------|------|-----------|
+| **worker** | Step 4 の実装実行体。承認済みプランを受け取り実装する（commit も品質ゲートも実行しない） | `workers.engine`（未設定は `auto`）。`auto` は Claude Code 上で `claude-subagent`、それ以外で `codex-exec`、どちらも不可なら `none`（orchestrator 自身が実装） |
 | **ship-gate** | 実装後の検証・出荷ゲート。`quality-gate: PASS` 署名の確認だけ行い内部に踏み込まない | done スキル（done plugin）+ repo の `.agents/done.yml`。done.yml が無い repo では PASS 署名を要求せず、config の verify コマンド or 会話で代替ゲートを確認 |
 | **reviewer** | プランの第三者レビュー（逆エンジン） | claude 上→codex-review / codex 上→claude-review / cursor 上→codex-review。使えない場合は使える方 |
 | **e2e** | UI/E2E 検証の安全方針 | e2e-capability-verification + Chrome DevTools / Playwright MCP |
 | **reporter** | 進捗・引き継ぎレポート | progress-report |
+
+### 実行モデル（orchestrator / worker）
+
+**worker はコードを書くところまでを担い、それ以外はすべて orchestrator が担う。**
+
+- **委譲は既定で有効。** `workers.engine` の既定は `auto`。タスクは従来どおり 1 件ずつ直列に処理する
+- **worker のホストは orchestrator のホストと独立に選べる。** Claude Code から Codex worker を、Codex から Codex worker を起動できる
+- **worker のモデルは 2 段。** 既定は低コスト側（`workers.model`）だが、**やり直しコストが高い実装は `workers.escalatedModel`（フロンティアモデル）へ昇格する**。昇格はプランを見た orchestrator の判定による
+- **品質ゲート（Step 5 の done）は worker ではなく orchestrator が実行する。** 実装したモデルが自分の実装をレビューして自分で PASS 署名を出す構図を作らない。署名を後から検証しても「done が実際に走ったか」は確かめられないため、実行主体を信頼できる側に置くことが唯一の実効的な担保である
+- **worker への禁止事項は指示であって機構ではない。** orchestrator は worker 完了後に、指示外の外部書き込みの形跡が無いことを確認する
+
+詳細（入出力契約・engine adapter・モデル昇格）は [worker-contract.md](references/worker-contract.md) に従う。
 
 ### 破壊的操作の確認境界（拡張点と独立の不変ルール）
 
@@ -74,6 +87,9 @@ fi
 # 3. エンジン・MCP 可否の判定（後続で使う変数をセット）
 # - run_in_background 可否: Claude Code 上なら可、codex exec 内なら不可（foreground のみ）
 # - MCP 可否: Chrome DevTools / Playwright / staging MCP が利用可能か確認
+
+# 4. マージ先ブランチ（Step 1 の分岐元にも使う）
+BASE_BRANCH=$(echo "$CONFIG" | jq -r '.baseBranch // "main"')
 ```
 
 ## Per-task Loop
@@ -173,8 +189,21 @@ if echo "$TASK_TITLE" | LC_ALL=C grep -qv '^[[:print:][:space:]]*$'; then
 else
   BRANCH="autopilot/$(echo "$TASK_TITLE" | tr '[:upper:]' '[:lower:]' | tr ' /' '-' | tr -cd 'a-z0-9-' | cut -c1-50)"
 fi
-git checkout -b "$BRANCH"
+# 再開時（Step 0 で In Progress のタスクを拾った場合）: 既存ブランチがあれば作り直さず checkout のみ。
+# 別名で作り直すと、作業ツリーに残っている前回の未コミット変更と噛み合わなくなる。
+git fetch -q origin "$BASE_BRANCH"
+if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+  git checkout "$BRANCH"
+else
+  # 新規は必ず最新の base から分岐する。現在の HEAD から切ると、前タスクのローカル commit が
+  # 次タスクの PR 差分へ混入する（squash merge 運用で顕在化する）
+  git checkout -b "$BRANCH" "origin/$BASE_BRANCH"
+fi
 ```
+
+**タスク間の依存に注意する。** `gates.merge` が `human`（既定）の場合、実行中は `origin/$BASE_BRANCH` が動かない。
+プランが未 merge の先行タスクの成果に依存していることが分かったら、その base 上では実装できないため
+**着手せず escalated-skip にして依存関係をレポートする**（依存を無視して実装すると、重複実装や矛盾する変更になる）。
 
 **main/master への直コミットは絶対にしない。**
 
@@ -199,22 +228,54 @@ git checkout -b "$BRANCH"
 
 ---
 
-### Step 4: 実装
+### Step 4: 実装（worker へ委譲）
 
-現在のhostが読み込んだrepository instructions（`AGENTS.md`、`CLAUDE.md`等）の開発原則を厳守して実装する。
+**Step 3 を通過したプランを worker へ渡して実装させる。** engine とモデルの選択・プロンプト・出力契約は
+[worker-contract.md](references/worker-contract.md) に従う。
+
+**起動前にモデル段を決める。** プランがやり直しコストの高い実装（0→1、コアドメイン、破壊的変更を伴う基盤実装、
+ロールバック困難）であれば `workers.escalatedModel` を使い、**昇格した理由を一言記録してから起動する**。
+
+worker へ必ず伝える要件:
+- 現在のhostが読み込んだrepository instructions（`AGENTS.md`、`CLAUDE.md`等）の開発原則を厳守する
 - 既存コード・ユーティリティを必ず調べて再利用する
-- 設計・アプローチに迷ったら実装前に会話に提示し確認する
 - 品質に妥協しない
+- **commit しない**（変更は作業ツリーに残す。commit は Step 5 の PASS 後に orchestrator が 1 回だけ行う）
+- repo の外を書かない。push / PR / merge / deploy / board 更新は行わない。ブランチを切り替えない
+- **done は実行しない**（品質ゲートは orchestrator が Step 5 で実行する）
+- 破壊的操作の確認・要件矛盾・権限不足は `halt`、プランから外れる設計判断が必要なら `needs_orchestrator` で戻す
+
+worker 完了後、Step 5 へ進む前に [worker-contract.md](references/worker-contract.md) の「受け取り時の確認」を実行する
+（変更が作業ツリーにあるか、push や PR 作成の形跡が無いか）。満たさなければ指摘を添えて再実行する（最大3回）。
+
+worker が `halt` / `needs_orchestrator` を返した場合は orchestrator が判断する（破壊的操作は「破壊的操作の確認境界」に従う）。
+`workers.engine` が `none`、または worker engine を起動できないホストでは、orchestrator 自身が上記要件で実装する
+（その場合、設計・アプローチに迷ったら実装前に会話へ提示し確認する）。
 
 ---
 
 ### Step 5: 実装後ゲート（done Skill）
 
-現在のhostで `done` Skillを明示的に実行し、**出力末尾の `quality-gate: PASS` 署名のみを成功判定の根拠**とする。
-`done` の内部（tier 判定・検証ステップ）には一切踏み込まない。
+**委譲した場合も、`done` Skill は orchestrator が実行する**（worker には実行させない。理由は「実行モデル」参照）。
+**出力末尾の `quality-gate: PASS` 署名のみを成功判定の根拠**とし、`done` の内部（tier 判定・検証ステップ）には一切踏み込まない。
 
-`quality-gate: PASS` が出なければ `done` の指示に従い修正 → 再実行（最大3回）。
-3回収束しなければ該当タスクをエスカレーション・スキップして次へ。
+**PASS を得たら、orchestrator が作業ブランチへ commit する（このタスクで唯一の commit 地点）。**
+
+```bash
+git add -A && git commit -m "<タスクに対応するコミットメッセージ>"
+```
+
+worker に commit させず、`done` の後にまとめて 1 回 commit するのは、`done` が検証だけでなく**修正も行う**ため
+（検証失敗の修正・simplify・レビュー指摘の反映）。検証と修正がすべて終わってから commit することで、
+**署名の verification-tree が保証した内容と、実際に push される内容が完全に一致する**。
+
+`quality-gate: FAIL` の場合は、指摘を worker へ差し戻して修正 → 再実行（最大3回）。
+3回収束しなければ、[worker-contract.md](references/worker-contract.md) の事後昇格に従い昇格段で1回だけ再実行し、
+それでも収束しなければ該当タスクをエスカレーション・スキップして次へ。
+
+`.agents/done.yml` が無い repo では `done` を実行しない（done は設定作成の確認待ちで止まるため unattended では進まない）。
+代わりに config の `verify` コマンドを順に実行し、全て成功した場合のみ出荷判定を満たす。
+**`verify` も未設定なら、ゲート無しで先へ進まず escalated-skip とする**（fail-closed）。
 
 UI 変更がある場合は `e2e-capability-verification` スキルの方針に従い動作確認を行う。
 MCP（Chrome DevTools / Playwright）が使えない環境では理由をメモしてスキップ。
@@ -227,10 +288,7 @@ MCP（Chrome DevTools / Playwright）が使えない環境では理由をメモ�
 # ブランチを push（未 push だと gh pr create が対話プロンプトで止まるため先に実行）
 git push --set-upstream origin "$BRANCH"
 
-# マージ先ブランチ（config.baseBranch が未設定なら "main"）
-BASE_BRANCH=$(echo "$CONFIG" | jq -r '.baseBranch // "main"')
-
-# PR 作成
+# PR 作成（BASE_BRANCH は Preflight で解決済み）
 PR_URL=$(gh pr create \
   --repo "$EXPECTED_REPO" \
   --title "$TASK_TITLE" \
@@ -374,6 +432,7 @@ plan-doc モードはチェックマーク（`- [x]`）に書き換える。次�
 - ✅ shipped: タスク名・PR URL・merge SHA
 - ⏭️ skipped: タスク名・スキップ理由
 - ⚠️ escalated: タスク名・詰まった箇所・次に取るべき手順
+- 🤖 worker: タスクごとに使った engine とモデル段（昇格した場合はその理由）
 
 複数のレポートを Issueコメントに散らさない。1本を朝に読める形で出力する。
 
@@ -399,3 +458,8 @@ repo の特徴を自動検出し、config の雛形を提案する（**実行は
 - **`done` Skill の内部実装（tier/step）に依存しない。`quality-gate: PASS` 署名のみ見る**
 - **main/master への直コミットをしない。必ず feature ブランチを切る**
 - **前セッションの値・他repoの設定を流用しない。常に起動時に読み直す**
+- **worker に push / PR / merge / deploy / board 更新をさせない。外部書き込みは orchestrator が行い、worker 完了後に形跡が無いか確認する**
+- **`done` を worker に実行させない。品質ゲートは orchestrator が実行する**
+- **commit は Step 5 の PASS 後に orchestrator が 1 回だけ行う。worker には commit させない**
+- **worker の自己申告 status で出荷しない。出荷判定は Step 5 の ship-gate のみ**（done.yml がある repo では `quality-gate: PASS` 署名、無い repo では config の `verify` 全成功。どちらも無ければ出荷しない）
+- **feature ブランチは常に最新の base から分岐する（前タスクのローカル commit を持ち越さない）**

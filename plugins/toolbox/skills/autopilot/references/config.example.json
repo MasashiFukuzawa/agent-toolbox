@@ -30,6 +30,23 @@
       "issueQuery": ""
     }
   },
+  "workers": {
+    "_note": "Step 4（実装）の委譲先。orchestrator のホストとは独立に選べる。品質ゲート（done）は worker ではなく orchestrator が実行する。",
+    "engine": "auto",
+    "_engineOptions": [
+      "auto",
+      "claude-subagent",
+      "codex-exec",
+      "none"
+    ],
+    "_autoNote": "auto = Claude Code 上なら claude-subagent、それ以外なら codex-exec、どちらも不可なら none（orchestrator 自身が実装）",
+    "model": "",
+    "_modelNote": "既定段のワーカーmodel。定型実装に使う。claude-subagent は空文字ならバランス型のaliasを使う。codex-exec は具体的なmodel IDが必要なので、空文字だと推測せず停止する。",
+    "escalatedModel": "",
+    "_escalatedModelNote": "昇格段（frontier model）。0→1・コアドメイン・破壊的な基盤実装・rollback困難なplanで使う。空文字時の扱いは model と同じ。"
+  },
+  "verify": [],
+  "_verifyNote": "`.agents/done.yml` が無い repo の代替ゲート。順に実行し全て成功した場合のみ出荷判定を満たす。done.yml がある repo では使われない。done.yml も verify も無い場合、タスクはゲート無しで進めずescalated-skipになる。",
   "review": {
     "engine": "auto",
     "_engineOptions": [
