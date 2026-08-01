@@ -214,6 +214,10 @@ else
 fi
 ```
 
+**checkout 後に config を読み直す。** Preflight で読んだ `$CONFIG` は切替前のブランチのものなので、
+base が進んでいると `gates` や `verify` が実際のブランチの内容と食い違う。読み直した結果が Preflight と異なる場合は、
+その値で続行せず停止して報告する（無人実行中に gates の解釈が変わるのを避けるため）。
+
 **タスク間の依存に注意する。** `gates.merge` が `human`（既定）の場合、実行中は `origin/$BASE_BRANCH` が動かない。
 プランが未 merge の先行タスクの成果に依存していることが分かったら、その base 上では実装できないため
 **着手せず escalated-skip にして依存関係をレポートする**（依存を無視して実装すると、重複実装や矛盾する変更になる）。
@@ -288,6 +292,7 @@ worker に commit させず `done` の後にまとめるのは、`done` が検�
 
 `.agents/done.yml` が無い repo では `done` を実行しない（done は設定作成の確認待ちで止まるため unattended では進まない）。
 代わりに config の `verify` コマンドを順に実行し、全て成功した場合のみ出荷判定を満たす。
+この経路には署名が無いので tree の照合は行わず、**`verify` が全て成功した直後に commit する**。
 **`verify` も未設定なら、ゲート無しで先へ進まず escalated-skip とする**（fail-closed）。
 
 UI 変更がある場合は `e2e-capability-verification` スキルの方針に従い動作確認を行う。
@@ -339,6 +344,9 @@ CI が赤で終わった場合は 3 回リトライしてから escalated-skip �
 ---
 
 ### Step 8: Merge（明示許可時のみ）
+
+**`gates.merge` が `auto` でも、差分が `.agents/**` か CI 設定（`.github/workflows/**` 等）を含む場合は自動 merge しない。**
+品質ゲート自身の定義を変える変更なので、人間の確認へ回す。ゲートを緩めても実装が正しくなるわけではない。
 
 `gates.merge` が文字列 `auto` と完全一致し、かつCIが緑の場合だけmergeする。未設定、未知値、`human` はすべて人間ゲートとしてPR作成後に停止する。`gates.deploy` も同じfail-closed規則を適用する。
 Step 7 で CI green を確認済みなので `--auto` は不要。merge戦略フラグは排他なので単一で指定する:

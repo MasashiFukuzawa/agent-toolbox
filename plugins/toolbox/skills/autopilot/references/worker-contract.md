@@ -28,7 +28,7 @@ done の advisor レビュー（done Step 4）と外部レビュー（Step 5）�
 
 1. **repo の作業ツリーの外を書かない。** repo 外・ホームディレクトリ・設定ディレクトリを変更しない
 2. **品質ゲートの設定を変更しない。** `.agents/done.yml` と `.agents/autopilot.json` は worker にとって読み取り専用である
-   （後述「ゲート設定の固定」。**これを許すと、実装した本体がゲートの合格条件そのものを緩められる**）
+   （テストが通らないから検証コマンドを外す、は LLM が取りがちな近道であり、**ゲートを緩めても実装が正しくなるわけではない**）
 3. **外部書き込みをしない。** push / PR 作成 / merge / deploy / board 更新 / Issue コメント / チャット通知はすべて orchestrator の責務
 4. **ブランチを切り替えない。** orchestrator が作成したブランチの上で作業する
 5. **commit しない。** 変更は作業ツリーに残したまま終える（commit は Step 5 の PASS 後に orchestrator が行う）
@@ -43,7 +43,7 @@ done の advisor レビュー（done Step 4）と外部レビュー（Step 5）�
 
 sandbox が実際に効くのは次の 2 点で、これは**設計と合致している**。
 
-- **`.git/` は `workspace-write` でも書けない。** そのため `git add` / `git commit` / `git switch` は概ね失敗し、不変条件 3・4 は機構としても支えられる
+- **`.git/` は `workspace-write` でも書けない。** そのため `git add` / `git commit` / `git switch` は概ね失敗し、不変条件 4（ブランチ切替禁止）と 5（commit 禁止）は機構としても支えられる
 - **network access は既定で無効。** worker は依存を新規インストールできない（後述）
 
 orchestrator は worker 完了後に、検出可能な範囲だけを確認する（下記「受け取り時の確認」）。
@@ -124,7 +124,7 @@ worker が既存の未コミット変更を上書き・削除しても検出で�
 | ブランチ | `git symbolic-ref --quiet --short HEAD` | `$BRANCH` と一致しなければ**起動しない**（detached HEAD も不可） |
 | HEAD | `git rev-parse HEAD` | worker が commit していないことの照合 |
 | tree ID | 上記ヘルパ | 変更の有無と内容の照合 |
-| ゲート設定 | `.agents/done.yml` と `.agents/autopilot.json` の `git hash-object`（無ければ「無し」と記録） | 不変条件 2 の照合 |
+| remote branch / PR の有無 | `git ls-remote --heads origin "$BRANCH"` / `gh pr list --head "$BRANCH"` | worker が push・PR したかの照合。**再開タスクでは前回 run の push / PR が既に存在するため、「空であること」ではなく「起動前から変わっていないこと」を見る** |
 
 ## worker 受け取り時の判定
 
@@ -133,24 +133,14 @@ worker が既存の未コミット変更を上書き・削除しても検出で�
 | 条件 | 満たさない場合 |
 |---|---|
 | 現在ブランチが `$BRANCH` と一致する | ブランチ切替は契約違反。**`$BRANCH` へ戻してから**後続の判定を行う |
-| `git ls-remote --heads origin "$BRANCH"` が空（push されていない） | 契約違反 → escalated-skip。**コマンドが失敗したら判定不能として同様に停止** |
-| `gh pr list --repo "$EXPECTED_REPO" --head "$BRANCH"` が空（PR が無い） | 同上 |
-| `.agents/done.yml` と `.agents/autopilot.json` の hash が baseline と一致 | **fail-closed**（後述） |
+| `git ls-remote --heads origin "$BRANCH"` の結果が baseline と同じ（worker が push していない） | 契約違反 → escalated-skip。**コマンドが失敗したら判定不能として同様に停止** |
+| `gh pr list --repo "$EXPECTED_REPO" --head "$BRANCH"` の結果が baseline と同じ（worker が PR を作っていない） | 同上 |
 | HEAD が baseline と一致（worker が commit していない） | 後述の巻き戻しを行う |
 | tree ID が baseline と異なる（実装された変更がある） | 指摘を添えて再実行 |
 
 `git log origin/<branch>` は使わない。Step 6 まで push しないため remote-tracking ref が存在せず、正常系で失敗する。
 
 判定に失敗した場合の再実行は**最大3回**。収束しなければ escalated-skip。品質そのものの判定は Step 5 の `done` が行う。
-
-### ゲート設定が変更されていた場合（fail-closed）
-
-**出荷してはならない。** 実装した本体がゲートの合格条件を緩められるなら、実行主体を orchestrator に移した意味が消える。
-当該タスクを escalated-skip にし、ブランチを残して人間へエスカレーションする。
-**ゲート設定の変更自体が目的のタスクでも同じ**で、autopilot では扱わず人間へ返す。
-
-照合は 1 回では足りない。**`done` を起動する直前と、署名を受け取った直後にも baseline と照合する**
-（worker が残した非同期処理などで、受け取り判定の後に書き換わる余地があるため）。
 
 ### worker が commit していた場合
 
@@ -173,7 +163,8 @@ push / PR が無いことを確認したうえで `git reset --mixed <baseline �
 | commit 後 | `git rev-parse 'HEAD^{tree}'` == 署名の `verification-tree` | pre-commit hook がファイルや index を書き換えて成功した |
 
 **どちらの不一致でも push しない。** commit 後に不一致だった場合は、`done` を再実行する前に
-`git reset --mixed` で未コミット状態へ戻す（戻さないと `done` が変更を見落とす。理由は上の「worker が commit していた場合」と同じ）。
+**commit 直前の HEAD を対象に指定して** `git reset --mixed <commit 直前の HEAD>` で未コミット状態へ戻す
+（対象を省くと HEAD が動かず巻き戻しにならない。戻さないと `done` が変更を見落とす。理由は上の「worker が commit していた場合」と同じ）。
 `--no-verify` で hook を迂回してはならない。
 
 ### タスクを終える前の後始末（escalated-skip でも必須）
@@ -274,18 +265,28 @@ SCHEMA
 Markdown のコード片が含まれても shell に解釈させないため）。ただし single-quoted heredoc の中では変数が展開されないので、
 **プラン本文をその中に変数として埋め込むことはできない**。
 
-固定部分とプラン本文をそれぞれファイルへ書き出し、**連結したものを 1 つの引数として渡す**。
+固定部分と task payload をそれぞれファイルへ書き出し、**連結したものを 1 つの引数として渡す**。
+task payload には「orchestrator が渡す入力」の全項目（タスク、承認済みプラン、受入条件、ブランチ、品質要件）を入れる。
 
 ```bash
 cat > "$WORK/preamble.txt" <<'AUTOPILOT_WORKER_PROMPT'
-（下の固定部分をそのまま書く）
+You are the implementation worker. Work only inside the directory given by -C.
+Do not push, open PRs, merge, deploy, update the board, or comment on issues.
+Do not modify .agents/done.yml or .agents/autopilot.json; they are read-only to you.
+Do not switch branches. Do not commit; leave your changes in the working tree.
+Do not run the done quality gate; the orchestrator runs it, then commits, after you finish.
+Do not invoke codex exec, claude -p, or any nested worker or reviewer.
+
+The task, the approved plan, the acceptance criteria, the branch, and the quality
+requirements follow.
 AUTOPILOT_WORKER_PROMPT
-# Step 2〜3 で確定したプラン本文を、shell を経由せずファイルへ書き出す
-cat "$WORK/preamble.txt" "$WORK/plan.md" > "$WORK/prompt.txt"
+# task payload を shell を経由せずファイルへ書き出してから連結する
+cat "$WORK/preamble.txt" "$WORK/task.md" > "$WORK/prompt.txt"
 ```
 
-そのうえで、プロンプト引数には `"$(cat "$WORK/prompt.txt")"` を渡す。
-**固定部分だけを渡してはならない**（プランが worker に届かず、受入条件の無い実装が始まる）。
+プロンプト引数には `"$(cat "$WORK/prompt.txt")"` を渡す。**固定部分だけを渡してはならない**
+（プランと受入条件が worker に届かず、何を作れば完了なのか分からないまま実装が始まる）。
+`$WORK/task.md` が空でないことを起動前に確認する。
 
 ```bash
 codex exec \
@@ -300,19 +301,6 @@ codex exec \
   --output-schema "$SCHEMA_FILE" \
   -o "$RESULT_FILE" \
   "$(cat "$WORK/prompt.txt")" < /dev/null
-```
-
-`$WORK/preamble.txt` に書く固定部分:
-
-```text
-You are the implementation worker. Work only inside the directory given by -C.
-Do not push, open PRs, merge, deploy, update the board, or comment on issues.
-Do not modify .agents/done.yml or .agents/autopilot.json; they are read-only to you.
-Do not switch branches. Do not commit; leave your changes in the working tree.
-Do not run the done quality gate; the orchestrator runs it, then commits, after you finish.
-Do not invoke codex exec, claude -p, or any nested worker or reviewer.
-
-The plan and acceptance criteria follow.
 ```
 
 `$SCHEMA_FILE` には「出力契約」の JSON Schema を書き出す。`$RESULT_FILE` に最終メッセージだけが入るので、
