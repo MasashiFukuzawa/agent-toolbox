@@ -4,32 +4,67 @@
     {
       "id": 1,
       "prompt": "codex-reviewで $HOME/project のコードを高精度でレビューして（effort: high）",
-      "expected_output": "effort が明示されているので high を尊重し、codex exec -s read-only -m gpt-5.6-sol -C <dir> -c model_reasoning_effort='high' を実行して、対象のレビュー結果を要約・詳細・推奨対応の形式で報告する",
+      "expected_output": "effort が明示されているので high を尊重し、codex exec -s read-only -m gpt-5.6-terra -C <dir> -c model_reasoning_effort='high' を実行して、対象のレビュー結果を要約・詳細・推奨対応の形式で報告する",
       "files": []
     },
     {
       "id": 2,
       "prompt": "OpenAIのモデルでセカンドオピニオンを。カレントディレクトリ、effort はデフォルトで。設計上の問題があれば指摘してほしい。",
-      "expected_output": "effort 未指定（デフォルト）なので自動判定で既定の high を選び（xhigh 以上は選ばない）、codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort='high' を実行して、設計面の分析を構造化して報告する",
+      "expected_output": "effort 未指定（デフォルト）なので自動判定で既定の high を選び（xhigh 以上は選ばない）、codex exec -s read-only -m gpt-5.6-terra -c model_reasoning_effort='high' を実行して、設計面の分析を構造化して報告する",
       "files": []
     },
     {
       "id": 3,
       "prompt": "codex-reviewを使って今のuncommittedの変更を確認してほしい",
-      "expected_output": "effort 未指定なので自動判定で既定の high を選び（xhigh 以上は選ばない）、codex exec review -m gpt-5.6-sol -c model_reasoning_effort='high' --uncommitted を run_in_background:true で起動し、起動直後に予告を出してから差分レビュー結果を報告する",
+      "expected_output": "差分レビューでも既定は汎用 codex exec を使う（codex exec review は prompt contract を注入できないため、ユーザー明示時のみ）。依頼文に『対象は作業ツリーの未コミット差分』と明記し、懐疑的スタンスと scope statement 要求を含める。effort 未指定なので自動判定で既定の high、モデルは既定の gpt-5.6-terra。run_in_background:true で起動し、起動直後に予告を出してから差分レビュー結果を報告する",
       "files": []
     },
     {
       "id": 4,
-      "prompt": "このプロジェクトを codex-review でレビューして",
-      "expected_output": "effort の指定が無いので自動判定で既定の high を選び（xhigh 以上は選ばない）、codex exec -s read-only -m gpt-5.6-sol -C <dir> -c model_reasoning_effort='high' を run_in_background:true で起動する。起動直後に『バックグラウンドで開始した・応答が無くても継続中・中断不要・完了時に報告する』と予告し、完了通知後にメタヘッダを除いたレビュー結果を報告する",
+      "prompt": "詳細設計どおりに実装した差分がある。codex-review で実装者が気づいていない観点を見てほしい",
+      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定のまま -m gpt-5.6-terra を選び、sol へ昇格しない。effort の指定が無いので自動判定で既定の high を選ぶ（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（問題がある前提で反証を試みる）、型・lint・テストで検出できるものより実装者の視野外の観点を優先する旨、scope statement 要求、BASIS ラベルと単純案の併記要求を含める。codex exec -s read-only -m gpt-5.6-terra -C <dir> -c model_reasoning_effort='high' を run_in_background:true で起動し、起動直後に『バックグラウンドで開始した・数分〜数十分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する",
       "files": []
     },
     {
       "id": 5,
-      "prompt": "（run_in_background を持たないホストで）codex-review でこのプロジェクトをレビューして",
-      "expected_output": "ホストが run_in_background を持たないため foreground フォールバック（手順5）にルートする。foreground で実行タイムアウトを十分に確保し（Claude Code の Bash 相当なら 600000ms）、起動直前に foreground 用の予告（「これからレビューを実行します…」。背景用の『バックグラウンドで開始した』は流用しない）を出す。effort は自動判定で既定 high（xhigh 以上は選ばない）。結果は標準出力（戻り値）から取得し（背景用の出力ファイル Read/BashOutput は使わない）、メタヘッダを除いて要約・詳細・推奨対応の形式で報告する。タイムアウトで kill された場合は盲目的に再実行せず effort を一段下げる（high→medium）か対象を絞る",
+      "prompt": "（run_in_background もホスト独自の背景実行機構も持たないホストで）codex-review でこのプロジェクトをレビューして",
+      "expected_output": "起動と合流の型は「非同期実行と合流」で判定する。run_in_background もホストの背景実行機構も無いため同期型にルートし、foreground で実行する。発話窓は実行直前のみなので、そこで所要時間とハングではない旨を予告する。モデルは昇格条件に該当しないため既定の gpt-5.6-terra、effort は自動判定で既定 high（xhigh 以上は選ばない）。結果は標準出力（戻り値）から取得し、メタヘッダを除いて要約・詳細・推奨対応の形式で報告する。同期型では待ち時間が存在しないため「レビュー中の並行作業」は適用外。シェルレベルの detach（nohup / setsid）で背景化しようとしない",
       "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "まだ実装していない新しい配信基盤のアーキテクチャ方針をまとめた。前例が無い方式なので codex-review で見てほしい",
+      "expected_output": "プランニング段階かつ不確実性が高い対象なので昇格条件に該当し、-m gpt-5.6-sol を選ぶ。該当する昇格条件が複数あるため両方を挙げ、所要時間が伸びる旨とあわせて一言添えてから起動する。effort は自動判定で既定 high（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（設計に穴がある前提で反証を試みる）と scope statement 要求を含め、-s read-only を付けて実行し、結果を構造化して報告する",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "実装差分を codex-review に掛けたが、返ってきたのは一般論ばかりで path:line の裏付けも薄い。どうする？",
+      "expected_output": "terra の結果が薄いケースなので、その結果をそのまま採用しない。effort を xhigh へ上げるのではなく、対象スコープを絞り観点を具体化した上で -m gpt-5.6-sol で再実行する。再実行は新規 session で行い、codex exec resume で引き継がない（引き継ぐと1回目の見落としを継承し独立性が失われるため）。再実行したことと、terra の結果との差分を報告する",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "codex-review が終わったみたい。結果を教えて",
+      "expected_output": "既定モデル（gpt-5.6-terra）での結果報告なので、メタヘッダを除いた要約・詳細・推奨対応に加えて判断材料と選択肢を必ず添える。scope statement のうち未検査のまま残った範囲に重要なものがあるかを示し、『このまま採用する』か『スコープを絞って gpt-5.6-sol で再実行する』かを呼び出し元に明示的に問う。指摘は結論ではなく仮説として扱い、path:line の実在を確認する必要があること、BASIS: SPECULATIVE の提案は既定で採用しないことを踏まえて報告する",
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "さっきの codex-review の Finding 2 について、根拠をもっと詳しく聞きたい",
+      "expected_output": "同じ結論の深掘り・根拠確認なので、新規レビューを起動せず codex exec resume SESSION_ID で同じ session を継続する（出力ヘッダーの session id を使う。推測した ID や --last で別 session へ接続しない）。これは昇格のための再実行とは用途が異なり、resume が適切なケースである",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "effort は high で codex-review にかけて。（実行したがホストのタイムアウトで kill された）",
+      "expected_output": "盲目的に同一条件で再実行しない。ユーザーが effort を明示指定しているためガードレール4が優先し、時間超過を理由に自動で降格してはならない。まず対象スコープの絞り込み（特定ファイル・ディレクトリ、複数回への分割）で対処し、それでも収まらなければ降格の可否をユーザーへ確認する。何が起きて次に何をするかをユーザーへ説明する",
+      "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "Codex 上で codex-review を使ってこの差分を見てほしい。待っている間に次のタスクも進めたい",
+      "expected_output": "ホストのコマンド実行ツールが yield 時間とセッションハンドルを持つためハンドル型にルートする。短い yield 時間で起動してハンドルを保持し制御を取り戻す。合流は手元の作業が一段落した時点で1回のツール呼び出し内のブロッキング読み取りで行い、放置しない。シェルレベルの detach（nohup / setsid）は使わない。待ち時間にリポジトリを触る予定があるため references/review-snapshot.md のスナップショット起動を選び、依頼文では対象を HEAD~1..HEAD の差分と伝え .gitignore されたファイルが含まれない旨を添える。汚染チェックはスナップショット worktree 側で行う"
     }
   ]
 }

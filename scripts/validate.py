@@ -79,6 +79,7 @@ def validate() -> tuple[list[str], list[str]]:
     _validate_registry(skills, errors)
     _scan_public_content(errors)
     _validate_markdown_links(errors)
+    _validate_review_mirror(errors)
     return errors, warnings
 
 
@@ -243,6 +244,55 @@ def _validate_markdown_links(errors: list[str]) -> None:
             skill_root = next((root for root in skill_roots if path == root / "SKILL.md" or root in path.parents), None)
             if skill_root and resolved != skill_root and skill_root not in resolved.parents:
                 errors.append(f"skill-local Markdown link escapes skill root in {path.relative_to(ROOT)}: {target}")
+
+
+REVIEW_MIRROR_SKILLS = ("codex-review", "claude-review")
+REVIEW_MIRROR_BEGIN = "<!-- MIRROR:review-async BEGIN -->"
+REVIEW_MIRROR_END = "<!-- MIRROR:review-async END -->"
+REVIEW_MIRROR_FILES = ("references/review-snapshot.md",)
+
+
+def _extract_mirror_block(text: str) -> str | None:
+    start = text.find(REVIEW_MIRROR_BEGIN)
+    end = text.find(REVIEW_MIRROR_END)
+    if start == -1 or end == -1 or end < start:
+        return None
+    return text[start : end + len(REVIEW_MIRROR_END)]
+
+
+def _validate_review_mirror(errors: list[str]) -> None:
+    """The two reviewer skills share host-neutral text; keep it byte-identical.
+
+    Missing markers are an error, not a silent skip: a gate that always passes
+    is worse than no gate.
+    """
+    blocks: dict[str, str] = {}
+    for skill in REVIEW_MIRROR_SKILLS:
+        path = ROOT / "plugins/toolbox/skills" / skill / "SKILL.md"
+        if not path.exists():
+            errors.append(f"review mirror: missing {path.relative_to(ROOT)}")
+            continue
+        block = _extract_mirror_block(path.read_text(encoding="utf-8"))
+        if block is None:
+            errors.append(f"review mirror: markers not found in {path.relative_to(ROOT)}")
+            continue
+        blocks[skill] = block
+    if len(blocks) == len(REVIEW_MIRROR_SKILLS) and len(set(blocks.values())) != 1:
+        errors.append(
+            "review mirror: MIRROR:review-async block differs between "
+            + " and ".join(REVIEW_MIRROR_SKILLS)
+        )
+
+    for relative in REVIEW_MIRROR_FILES:
+        contents: dict[str, str] = {}
+        for skill in REVIEW_MIRROR_SKILLS:
+            path = ROOT / "plugins/toolbox/skills" / skill / relative
+            if not path.exists():
+                errors.append(f"review mirror: missing {path.relative_to(ROOT)}")
+                continue
+            contents[skill] = path.read_text(encoding="utf-8")
+        if len(contents) == len(REVIEW_MIRROR_SKILLS) and len(set(contents.values())) != 1:
+            errors.append(f"review mirror: {relative} differs between {' and '.join(REVIEW_MIRROR_SKILLS)}")
 
 
 def main() -> int:
