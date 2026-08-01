@@ -79,6 +79,10 @@ rm -f "$tmp_index"
 
 done.yml の `verify` を順に実行する。`when_changed` 付きエントリは該当パスに変更がある場合のみ実行。失敗したら修正を試みる（最大3回・収束しなければ停止して報告）。
 
+**`verify` が `quick` / `standard` / `full` を持つオブジェクトの場合は、Step 0 で決めた tier のリストだけを実行する。**
+この形式の config は各 tier に必要なコマンドを重複して書き下している（`full` が `standard` を含む）ので、
+tier をまたいで足し合わせない。合算すると同じコマンドが tier の数だけ走る。
+
 **`verify` は任意で、空でもよい。空ならこのステップを飛ばす。** ここに書くのは
 **「強制力のある層がまだ保証していないもの」だけ**である。git hook（lefthook / pre-commit）がある repo は
 その repo 自身のチェックコマンドへ委譲し（`lefthook run pre-push` 等）、CI しか無い repo は
@@ -132,3 +136,18 @@ tier: <quick|standard|full>
 必須fieldは非空の `repo` だけである。**`repo` が無い done.yml は Stop hook が停止させる**（設定ファイルの存在が opt-in スイッチなので、存在するのに使えない設定は「ゲートを求めたのに動かせない」状態であり、素通りさせるとゲートが黙って無効になる）。
 
 `verify` はコマンド文字列または `{run, when_changed}` のフラットな配列で、任意・空可。`tier_floors.{full, full_conditions, quick}`、`docs_checks`、`review_criteria`、`external_review` はいずれも任意で、省略時にhost固有の暗黙値を補わない。外部review providerの既定は `none` とし、明示された場合だけ起動する。`version` は後方互換のため受理するが参照しない。
+
+### 既存 config のための受理形式（新規には使わない）
+
+いずれも正準形ではないが、既に配置された config を壊さないために受理する。**両方ある場合は正準形が勝つ。**
+
+| 受理する形 | 正準形 | 扱い |
+|---|---|---|
+| `verify: {quick, standard, full}` | `verify:` のフラットな配列 | 選ばれた tier のリストだけを実行（Step 1 参照） |
+| `docs.checks` | `docs_checks` | 両方あれば `docs_checks` を使う |
+| `review.criteria` | `review_criteria` | 両方あれば `review_criteria` を使う |
+| `review.external` | `external_review` | 両方あれば `external_review` を使う。値は文字列のほか `{default, allowed}` 形式も取り、その場合 `default` を provider として読む |
+
+**これらを黙って無視しない。** `docs.checks` だけを書いた repo で `docs_checks` しか見なければ、
+宣言されたドキュメント整合とレビュー観点が何も実行されないまま PASS 署名が出る。設定した側からは
+ゲートが通ったようにしか見えないので、この取りこぼしは検出されない。
