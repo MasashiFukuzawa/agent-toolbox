@@ -79,6 +79,16 @@ rm -f "$tmp_index"
 
 done.yml の `verify` を順に実行する。`when_changed` 付きエントリは該当パスに変更がある場合のみ実行。失敗したら修正を試みる（最大3回・収束しなければ停止して報告）。
 
+**`verify` は任意で、空でもよい。空ならこのステップを飛ばす。** ここに書くのは
+**「強制力のある層がまだ保証していないもの」だけ**である。git hook（lefthook / pre-commit）がある repo は
+その repo 自身のチェックコマンドへ委譲し（`lefthook run pre-push` 等）、CI しか無い repo は
+CI が走らせられない completion-time の検証だけを書く。どちらも無い repo でのみフルスイートを列挙する。
+
+**同じスイートを重ねない。** hook と CI の両方が走らせているコマンドをここにも書くと、1つの変更に対して
+同一の検証が最大3回走る。時間とトークンを使う一方で保証は増えない — hook は `--no-verify` で迂回できるが
+CI は迂回できないので、保証は既に CI 側にある。**done の固有の価値は決定論的な検証ではなく、
+機械にできない判断（tier・docs・レビュー）と、それを特定の tree に束縛する署名にある。**
+
 **quick**: Step 2 完了後、Step 5 へスキップ。
 
 ## Step 2: ドキュメント整合（全 tier）
@@ -119,4 +129,6 @@ tier: <quick|standard|full>
 2. Claude Code では追加の hook 配線は不要。plugin 同梱の Stop hook が plugin enable 時に適用される。repo ローカルの `.claude/settings.json` へ重複配線しない
 3. Codex v1 では Stop hook を設定せず、完了直前に `done` skill を手動実行する
 
-必須fieldは `version: 1`、非空の `repo`、および文字列command配列を持つ `verify.quick` / `verify.standard` / `verify.full`。`tier_floors`、`docs`、`review`は任意で、省略時にhost固有の暗黙値を補わない。外部review providerの既定は `none` とし、明示された場合だけ起動する。
+必須fieldは非空の `repo` だけである。**`repo` が無い done.yml は Stop hook が停止させる**（設定ファイルの存在が opt-in スイッチなので、存在するのに使えない設定は「ゲートを求めたのに動かせない」状態であり、素通りさせるとゲートが黙って無効になる）。
+
+`verify` はコマンド文字列または `{run, when_changed}` のフラットな配列で、任意・空可。`tier_floors.{full, full_conditions, quick}`、`docs_checks`、`review_criteria`、`external_review` はいずれも任意で、省略時にhost固有の暗黙値を補わない。外部review providerの既定は `none` とし、明示された場合だけ起動する。`version` は後方互換のため受理するが参照しない。

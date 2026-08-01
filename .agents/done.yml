@@ -1,20 +1,46 @@
-version: 1
+# .agents/done.yml — この repo 自身の品質ゲート設定。ファイルの存在が Stop hook の opt-in スイッチ。
+# ロジックは書かない（コマンドとデータのみ）。エンジンは done plugin の done skill。
+
 repo: agent-toolbox
+
+# この repo には git hook が無く、CI (.github/workflows/ci.yml) が同じ4コマンドを実行する。
+# CI は merge の条件なので保証はそちらにあるが、push 前に落とす方が安いので完了時にも走らせる。
+# hook を導入したら `lefthook run pre-push` 等への委譲に置き換える。
 verify:
-  quick:
-    - uv run ruff check .
-    - uv run pytest
-    - uv run python -m scripts.validate
-    - uv run python -m scripts.trigger_eval --check
-  standard:
-    - uv run ruff check .
-    - uv run pytest
-    - uv run python -m scripts.validate
-    - uv run python -m scripts.trigger_eval --check
-    - bash -n plugins/done/scripts/quality-gate-stop.sh
+  - run: uv run ruff check .
+  - run: uv run pytest
+  - run: uv run python -m scripts.validate
+  - run: uv run python -m scripts.trigger_eval --check
+  - when_changed:
+      - plugins/done/scripts/
+    run: bash -n plugins/done/scripts/quality-gate-stop.sh
+
+tier_floors:
+  # ここは配布物なので、間違いが他人の repo へそのまま出ていくものを full にする。
   full:
-    - uv run ruff check .
-    - uv run pytest
-    - uv run python -m scripts.validate
-    - uv run python -m scripts.trigger_eval --check
-    - bash -n plugins/done/scripts/quality-gate-stop.sh
+    - "plugins/*/skills/*/SKILL.md"
+    - "plugins/done/scripts/**"
+    - "plugins/*/hooks/**"
+    - ".agents/**"
+    - ".github/workflows/**"
+  # path では表せない、この repo 固有の昇格条件。
+  full_conditions:
+    - "スキルの指示そのものの変更（配布先すべての挙動が変わる）"
+    - "done の設定契約（schema / example / 必須field）の変更（既存の consumer 設定を壊しうる）"
+    - "host 中立性に関わる変更（Claude Code か Codex の一方でしか動かなくなりうるもの）"
+  quick:
+    - "**/*.md"
+    - "docs/**"
+    - "evals/results/**"
+
+docs_checks:
+  - "README と skill の description が実際の挙動と一致している"
+  - "docs/trigger-registry.yml が skill の追加・削除・境界変更に追随している"
+
+review_criteria:
+  - "指示が複数解釈を許さないか（実行するエージェントが意図と違う動きをしないか）"
+  - "markdown 内の shell が実際に動くか（未定義の名前・macOS BSD 互換・引用）"
+  - "host 中立性（Claude Code / Codex 固有の挙動を adapter として明示しているか）"
+  - "公開物として再利用可能か（組織固有名・絶対パス・認証情報が無いか）"
+
+external_review: codex

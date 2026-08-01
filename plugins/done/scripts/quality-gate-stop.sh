@@ -75,9 +75,12 @@ if [[ ! -f "$DONE_CONFIG" ]]; then
 fi
 
 # repo name comes from the config (worktree dir names differ from the repo name).
+# Fail closed: the config's presence is the opt-in switch, so a config that is
+# present but unusable means the gate was asked for and cannot run. Allowing here
+# would disable the gate silently, which is indistinguishable from having no config.
 REPO_NAME="$(sed -n 's/^repo:[[:space:]]*//p' "$DONE_CONFIG" | head -1 | tr -d '"'"'"'"' )"
 if [[ -z "$REPO_NAME" ]]; then
-  allow
+  block ".agents/done.yml has no 'repo:' field, so the quality gate cannot verify which repository a signature belongs to. Add 'repo: <name>' to .agents/done.yml (or delete the file to opt out of the gate)."
 fi
 
 # No uncommitted changes (tracked or untracked): nothing to gate.
@@ -122,7 +125,7 @@ except Exception:
 newline = r"(?:\\n|\r?\n)"
 signature_pattern = re.compile(
     rf"quality-gate:\s*PASS{newline}\s*"
-    rf"repo:\s*(?P<repo>[A-Za-z0-9._-]+){newline}\s*"
+    rf"repo:\s*(?P<repo>[A-Za-z0-9._/-]+){newline}\s*"
     rf"head:\s*(?P<head>[0-9a-f]{{40}}){newline}\s*"
     rf"verification-tree:\s*(?P<tree>[0-9a-f]{{40}}){newline}\s*"
     rf"tier:\s*(?P<tier>quick|standard|full)\b",
