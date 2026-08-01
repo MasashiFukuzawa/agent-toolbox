@@ -66,6 +66,13 @@ rm -f "$tmp_index"
    - レビュー済みプランに沿った定型実装（難所はプラン段階で既に片付いている）
 
    **基準への該当可否を判定しきれない場合は full に倒す。** 無人実行では、不要なレビュー1回のコストと、レビューされない設計変更が本番へ出るコストは非対称である。ただし「迷った」とは**基準の該当可否が判定できない状態**を指す。基準名を挙げられないのに「重要そうだから」で昇格しない。基準に該当するのに時間やコストを理由に降格しない。
+
+   **config の `tier_floors.full_conditions` は無条件の昇格トリガーであり、上の negative list より優先する。** repo 側が「認可・セキュリティ機微な変更」「cross-package を横断する変更」のように宣言した条件は、スキルが先取りできないドメイン知識である。**上の「該当しない例」はモデル自身の裁量的な昇格を抑えるためのものであって、config が宣言した条件を打ち消してはならない。** 判定順は次のとおり。
+
+   1. `tier_floors` の path 一致 → 該当すれば floor 確定
+   2. `full_conditions` の各条件 → 該当すれば **full**（negative list を適用しない）
+   3. 上の5基準によるモデルの判断 → 該当すれば full（negative list を適用する）
+   4. 以上の最大値を採る。**降格は行わない**
 6. Tier classification を必ず出力する（Changed files / Floor triggers / Model assessment / Verification tree / Tier）。quick 選択時は全変更ファイルが自明である理由の説明が必須
 
 ## Step 1: ローカル検証（全 tier）
