@@ -273,7 +273,7 @@ worker が `halt` / `needs_orchestrator` を返した場合は orchestrator が�
 **委譲した場合も、`done` Skill は orchestrator が実行する**（worker には実行させない。理由は「実行モデル」参照）。
 **出力末尾の `quality-gate: PASS` 署名のみを成功判定の根拠**とし、`done` の内部（tier 判定・検証ステップ）には一切踏み込まない。
 
-**PASS を得たら、orchestrator が作業ブランチへ commit する（このタスクで唯一の commit 地点）。**
+**PASS を得たら、orchestrator が作業ブランチへ commit する（出荷される唯一の commit）。**
 worker に commit させず `done` の後にまとめるのは、`done` が検証だけでなく**修正も行う**ため
 （検証失敗の修正・simplify・レビュー指摘の反映）。
 
@@ -484,6 +484,6 @@ repo の特徴を自動検出し、config の雛形を提案する（**実行は
 - **前セッションの値・他repoの設定を流用しない。常に起動時に読み直す**
 - **worker に push / PR / merge / deploy / board 更新をさせない。外部書き込みは orchestrator が行い、worker 完了後に形跡が無いか確認する**
 - **`done` を worker に実行させない。品質ゲートは orchestrator が実行する**
-- **commit は Step 5 の PASS 後に orchestrator が 1 回だけ行う。worker には commit させない**
+- **出荷される commit は Step 5 の PASS 後に orchestrator が作る 1 つだけ。worker には commit させない**（escalated-skip 時の WIP commit は push も PR もしない隔離用で、この規則の明示的な例外）
 - **worker の自己申告 status で出荷しない。出荷判定は Step 5 の ship-gate のみ**（done.yml がある repo では `quality-gate: PASS` 署名、無い repo では config の `verify` 全成功。どちらも無ければ出荷しない）
 - **feature ブランチは常に最新の base から分岐する（前タスクのローカル commit を持ち越さない）**

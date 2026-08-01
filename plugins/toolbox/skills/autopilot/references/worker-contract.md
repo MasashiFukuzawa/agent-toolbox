@@ -13,7 +13,8 @@ worker は**コードを書くところまで**を担い、それ以外はすべ
 | **commit（Step 5 の PASS 後に 1 回）** | ✅ | — |
 | push / PR / merge / deploy / board 更新（Step 6〜11） | ✅ | — |
 
-**commit は done が PASS した後に orchestrator が 1 回だけ行う。** worker は commit しない。
+**出荷される commit は、done が PASS した後に orchestrator が作る 1 つだけ。** worker は commit しない。
+（唯一の例外は escalated-skip 時の WIP commit で、これは push も PR もされない隔離用である。後述「後始末」）
 `done` は未コミットの作業ツリーを検証する前提で設計されており（一時 index に `git add -A` して verification tree を計算する）、
 かつ `done` 自身が検証失敗の修正・simplify・レビュー指摘の反映でファイルを書き換える。
 **検証と修正がすべて終わってから 1 回 commit することで、署名が保証した内容と push される内容が完全に一致する。**
@@ -89,53 +90,58 @@ worker は次の形の JSON を返す。**受け取り方は engine で異なる
 - parser は**最後の出現**を使う（本文中で区切り文字列に言及しても壊れない）
 - JSON ブロックが無い出力は失敗として扱い、再実行する（黙って生テキストを採用しない）
 
-## 作業ツリーの tree ID（共通ヘルパ）
+## 検証の書き方について
 
-`git status --porcelain` は「どのパスが変わったか」しか表さないため、**worker が既存の未コミット変更を別内容で
-上書きしても同じ文字列になりうる**。内容の同一性を見るときは必ず tree ID を使う（実 index を汚さない）。
+以下は**満たすべき条件の一覧**であって、コピーして実行するスクリプトではない。
+コマンド例は取得手段の目安で、実際の判定・分岐・エラー処理は実行するエージェントが担う。
+
+3つの規律がすべての判定に共通して掛かる。
+
+1. **条件を満たさなければ、その先へ進まない。** 「確認する」で終わらせず、満たさなかった場合の行き先を必ず決める
+2. **判定できなかったことを合格にしない。** コマンドがエラー・タイムアウト・認証失敗で空出力を返した場合は
+   「異常なし」ではなく**判定不能**として扱い、タスクを止める（fail-closed）
+3. **内容の同一性は tree ID で見る。** `git status --porcelain` はパスしか表さないため、
+   既存の未コミット変更が別内容で上書きされても同じ文字列になる
+
+**作業ツリーの tree ID**（未コミット分を含む。実 index を汚さない）は、`done` の Step 0 と同じ方法で得る。
 
 ```bash
-worktree_tree() {                      # 引数: repo root。未コミット分を含む tree ID を出す
-  local idx; idx=$(mktemp "${TMPDIR:-/tmp}/autopilot-index.XXXXXX"); rm -f "$idx"
-  GIT_INDEX_FILE="$idx" git -C "$1" read-tree HEAD
-  GIT_INDEX_FILE="$idx" git -C "$1" add -A
-  GIT_INDEX_FILE="$idx" git -C "$1" write-tree
-  rm -f "$idx"
-}
+idx=$(mktemp "${TMPDIR:-/tmp}/autopilot-index.XXXXXX"); rm -f "$idx"
+GIT_INDEX_FILE="$idx" git read-tree HEAD
+GIT_INDEX_FILE="$idx" git add -A
+GIT_INDEX_FILE="$idx" git write-tree      # ← これが tree ID
+rm -f "$idx"
 ```
 
-## 起動前の baseline 取得（orchestrator 側・必須）
+## worker 起動前に控える baseline（必須）
 
-baseline を取らないと、**worker 着手前から存在した変更を worker の成果と誤認**し、
+baseline が無いと、**着手前から存在した変更を worker の成果と誤認**し、
 worker が既存の未コミット変更を上書き・削除しても検出できない。
 
-```bash
-REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1                 # 必ず絶対パスに解決する
-BEFORE_BRANCH=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short HEAD) || exit 1
-[[ "$BEFORE_BRANCH" == "$BRANCH" ]] || exit 1                        # detached HEAD / 別ブランチで起動しない
-BEFORE_HEAD=$(git -C "$REPO_ROOT" rev-parse HEAD)
-BEFORE_TREE=$(worktree_tree "$REPO_ROOT")
-# ゲート設定の固定（不変条件 2）: worker 起動前の内容を控える
-GATE_POLICY=$(git -C "$REPO_ROOT" hash-object .agents/done.yml 2>/dev/null || echo none)
-```
+| 控えるもの | 取得 | 用途 |
+|---|---|---|
+| repo root | `git rev-parse --show-toplevel` | 以降の `git -C` に使う絶対パス |
+| ブランチ | `git symbolic-ref --quiet --short HEAD` | `$BRANCH` と一致しなければ**起動しない**（detached HEAD も不可） |
+| HEAD | `git rev-parse HEAD` | worker が commit していないことの照合 |
+| tree ID | 上記ヘルパ | 変更の有無と内容の照合 |
+| ゲート設定 | `.agents/done.yml` と `.agents/autopilot.json` の `git hash-object`（無ければ「無し」と記録） | 不変条件 2 の照合 |
 
-## 受け取り時の確認（orchestrator 側）
+## worker 受け取り時の判定
 
-`status` を鵜呑みにせず、**表示ではなく判定として**次を実行する。1つでも満たさなければ Step 5 へ進まない。
+**すべて満たした場合のみ Step 5 へ進む。**
 
-```bash
-AFTER_BRANCH=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short HEAD) || exit 1
-[[ "$AFTER_BRANCH" == "$BRANCH" ]]                              || FAIL "branch を切り替えられた"
-[[ -z "$(git ls-remote --heads origin "$BRANCH")" ]]            || FAIL "worker が push した"
-[[ -z "$(gh pr list --repo "$EXPECTED_REPO" --head "$BRANCH" \
-          --json number --jq '.[].number')" ]]                  || FAIL "worker が PR を作った"
-AFTER_GATE=$(git -C "$REPO_ROOT" hash-object .agents/done.yml 2>/dev/null || echo none)
-[[ "$AFTER_GATE" == "$GATE_POLICY" ]]                           || FAIL "ゲート設定が変更された"
-AFTER_TREE=$(worktree_tree "$REPO_ROOT")
-[[ "$AFTER_TREE" != "$BEFORE_TREE" ]]                           || FAIL "変更が無い"
-```
+| 条件 | 満たさない場合 |
+|---|---|
+| 現在ブランチが `$BRANCH` と一致する | ブランチ切替は契約違反。**`$BRANCH` へ戻してから**後続の判定を行う |
+| `git ls-remote --heads origin "$BRANCH"` が空（push されていない） | 契約違反 → escalated-skip。**コマンドが失敗したら判定不能として同様に停止** |
+| `gh pr list --repo "$EXPECTED_REPO" --head "$BRANCH"` が空（PR が無い） | 同上 |
+| `.agents/done.yml` と `.agents/autopilot.json` の hash が baseline と一致 | **fail-closed**（後述） |
+| HEAD が baseline と一致（worker が commit していない） | 後述の巻き戻しを行う |
+| tree ID が baseline と異なる（実装された変更がある） | 指摘を添えて再実行 |
 
 `git log origin/<branch>` は使わない。Step 6 まで push しないため remote-tracking ref が存在せず、正常系で失敗する。
+
+判定に失敗した場合の再実行は**最大3回**。収束しなければ escalated-skip。品質そのものの判定は Step 5 の `done` が行う。
 
 ### ゲート設定が変更されていた場合（fail-closed）
 
@@ -143,52 +149,44 @@ AFTER_TREE=$(worktree_tree "$REPO_ROOT")
 当該タスクを escalated-skip にし、ブランチを残して人間へエスカレーションする。
 **ゲート設定の変更自体が目的のタスクでも同じ**で、autopilot では扱わず人間へ返す。
 
+照合は 1 回では足りない。**`done` を起動する直前と、署名を受け取った直後にも baseline と照合する**
+（worker が残した非同期処理などで、受け取り判定の後に書き換わる余地があるため）。
+
 ### worker が commit していた場合
 
-`claude-subagent` では起こりうる（`codex-exec` は `.git/` が書けないため通常起きない）。
+`claude-subagent` では起こりうる（`codex-exec` は `.git/` が書けないため通常は起きない）。
 **そのまま Step 5 へ進めてはいけない。** `done` は `git diff HEAD` と `git status` で変更ファイルを判定するため、
 commit 済みの変更は tier 判定にもレビュー対象にも入らず、PASS 後の `git add -A` も `nothing to commit` で失敗する。
 
-上の push / PR 判定を通過していることを確認したうえで、**未コミット状態へ戻してから** Step 5 へ進む。
-
-```bash
-git -C "$REPO_ROOT" reset --mixed "$BEFORE_HEAD"   # 変更内容は作業ツリーに保たれる
-```
-
-契約違反として記録し、再実行時の指摘に含める。
-
-判定に失敗した場合は指摘を添えて再実行する（**最大3回**。収束しなければ escalated-skip）。
-品質そのものの判定は Step 5 の done が行う。
+push / PR が無いことを確認したうえで `git reset --mixed <baseline の HEAD>` を実行し、
+**変更内容を作業ツリーに残したまま**未コミット状態へ戻してから Step 5 へ進む。契約違反として記録する。
 
 ## commit と後始末（orchestrator 側）
 
-### PASS 後の commit（このタスクで唯一の commit 地点）
+### PASS 後の commit（出荷される唯一の commit）
 
-署名の `verification-tree` と実際の tree を、**commit の前後で照合する**。
+`done` の署名から `verification-tree` の値を読み、**commit の前後で実際の tree と照合する**。
 
-```bash
-SIG_TREE=<署名の verification-tree>
-[[ "$(worktree_tree "$REPO_ROOT")" == "$SIG_TREE" ]] || FAIL "署名後にツリーが変化した"
-git -C "$REPO_ROOT" add -A
-git -C "$REPO_ROOT" commit -m "<タスクに対応するコミットメッセージ>"
-[[ "$(git -C "$REPO_ROOT" rev-parse 'HEAD^{tree}')" == "$SIG_TREE" ]] || FAIL "commit 内容が署名と不一致"
-```
+| 時点 | 照合 | 不一致が意味すること |
+|---|---|---|
+| commit 前 | 作業ツリーの tree ID == 署名の `verification-tree` | PASS 後に別プロセスが作業ツリーを触った |
+| commit 後 | `git rev-parse 'HEAD^{tree}'` == 署名の `verification-tree` | pre-commit hook がファイルや index を書き換えて成功した |
 
-前段は「PASS 後に別プロセスが作業ツリーを触った」場合を、後段は「pre-commit hook がファイルや index を書き換えて
-exit 0 した」場合を捕まえる。どちらも不一致なら **push せず `done` を再実行する**（書き換え後の内容で検証し直す）。
+**どちらの不一致でも push しない。** commit 後に不一致だった場合は、`done` を再実行する前に
+`git reset --mixed` で未コミット状態へ戻す（戻さないと `done` が変更を見落とす。理由は上の「worker が commit していた場合」と同じ）。
 `--no-verify` で hook を迂回してはならない。
 
 ### タスクを終える前の後始末（escalated-skip でも必須）
 
 未コミット変更を残したまま次タスクへ進むと、ブランチを切り替えても変更は持ち越され、次タスクの `git add -A` が
-それを巻き込む。**破棄はせず**、当該ブランチへ WIP として commit して隔離する。
+それを巻き込む。**破棄はせず**、当該タスクのブランチへ WIP として commit して隔離する（`push` はしない）。
 
-```bash
-if [[ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]]; then
-  git -C "$REPO_ROOT" add -A
-  git -C "$REPO_ROOT" commit -q -m "WIP: escalated-skip — $TASK_TITLE"   # push はしない
-fi
-```
+- **commit 先が `$BRANCH` であることを必ず確認してから行う。** ブランチ切替が原因で escalated-skip した場合は、
+  先に `$BRANCH` へ戻す。確認できないなら commit せず、作業ツリーを触らずに人間へエスカレーションする
+- **pre-commit hook が失敗する場合がある**（失敗途中のコードは hook を通らないことが多い）。
+  この WIP commit は出荷物ではないので、**hook で止まったら `--no-verify` を使ってよい**。
+  それでも commit できなければ、作業ツリーを保持したまま run 全体を停止して人間へ返す（次タスクへは進まない）
+- この WIP commit は「出荷される唯一の commit」規則の**明示的な例外**である。push されず PR にもならない
 
 作業は該当ブランチに保全され、作業ツリーは clean になり、次タスクが Step 1 の clean 検査を通れる。
 ブランチ名を End-of-run レポートに残す。
@@ -272,16 +270,22 @@ cat > "$SCHEMA_FILE" <<'SCHEMA'
 SCHEMA
 ```
 
-プロンプトは single-quoted heredoc なので `<プラン・受入条件・品質要件>` は**展開されない**。
-プランをファイルへ書き出し、heredoc の外で連結して渡す（プランに `$` やバッククォートが含まれても壊れないため）。
+**プロンプトの組み立てに注意する。** 固定部分は single-quoted heredoc で書く（プランに `$` やバッククォート、
+Markdown のコード片が含まれても shell に解釈させないため）。ただし single-quoted heredoc の中では変数が展開されないので、
+**プラン本文をその中に変数として埋め込むことはできない**。
+
+固定部分とプラン本文をそれぞれファイルへ書き出し、**連結したものを 1 つの引数として渡す**。
 
 ```bash
-printf '%s\n' "$PLAN_TEXT" > "$WORK/plan.md"
-PROMPT="$(cat <<'AUTOPILOT_WORKER_PROMPT'
-...固定部分（下記）...
+cat > "$WORK/preamble.txt" <<'AUTOPILOT_WORKER_PROMPT'
+（下の固定部分をそのまま書く）
 AUTOPILOT_WORKER_PROMPT
-)"$'\n\n'"$(cat "$WORK/plan.md")"
+# Step 2〜3 で確定したプラン本文を、shell を経由せずファイルへ書き出す
+cat "$WORK/preamble.txt" "$WORK/plan.md" > "$WORK/prompt.txt"
 ```
+
+そのうえで、プロンプト引数には `"$(cat "$WORK/prompt.txt")"` を渡す。
+**固定部分だけを渡してはならない**（プランが worker に届かず、受入条件の無い実装が始まる）。
 
 ```bash
 codex exec \
@@ -295,16 +299,20 @@ codex exec \
   --disable multi_agent_v2 \
   --output-schema "$SCHEMA_FILE" \
   -o "$RESULT_FILE" \
-  "$(cat <<'AUTOPILOT_WORKER_PROMPT'
+  "$(cat "$WORK/prompt.txt")" < /dev/null
+```
+
+`$WORK/preamble.txt` に書く固定部分:
+
+```text
 You are the implementation worker. Work only inside the directory given by -C.
 Do not push, open PRs, merge, deploy, update the board, or comment on issues.
+Do not modify .agents/done.yml or .agents/autopilot.json; they are read-only to you.
 Do not switch branches. Do not commit; leave your changes in the working tree.
 Do not run the done quality gate; the orchestrator runs it, then commits, after you finish.
 Do not invoke codex exec, claude -p, or any nested worker or reviewer.
 
-<プラン・受入条件・品質要件>
-AUTOPILOT_WORKER_PROMPT
-)" < /dev/null
+The plan and acceptance criteria follow.
 ```
 
 `$SCHEMA_FILE` には「出力契約」の JSON Schema を書き出す。`$RESULT_FILE` に最終メッセージだけが入るので、
