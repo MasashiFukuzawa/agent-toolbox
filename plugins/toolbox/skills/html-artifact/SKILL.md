@@ -276,6 +276,11 @@ Drag-and-drop card sorters, form editors for config — powerful but treat as a 
 
 Full checklist: `references/self-containment-checklist.md`
 
+**納品前のvisual自己点検（主観判断なので読み返しは1回。コスト規律参照）:**
+- web fontsがblockされてもfallback stackだけでintentionalに見えるか
+- print previewがclipや不要なinkなしで読めるか
+- すべての色が意味を持ち、semantic stateには色以外のlabelも付いているか
+
 ## interaction pattern（任意）
 
 Add interactivity only when it solves one of these problems. If none apply, use static HTML.
@@ -361,14 +366,8 @@ CSSは `references/visual-system.md` の Components にある。`overflow` conta
 | 100-line Markdown... in an HTML `<pre>` | Defeats the purpose; this is just Markdown inside HTML | Structure it: tabs, collapsible sections, tables |
 | Dump full HTML in chat reply | Walls of code are unreadable; reader cannot open it in a browser | Write to a `.html` file; give the path and an `open` command |
 | Markdown would have been 40 lines | Over-engineering; HTML has a cost | Use Markdown for short, linear answers |
-| 長くなるので詳解・図・用語集を削る | 長さは制約ではない。削ると本Skillの利点そのものが消える | 表層は短く保ち、削らず `<details>` へ入れる |
-| 「30KBに収めました」「◯行です」と報告 | サイズ・行数は読み手の関心事ではなく、報告はノイズ | pathと要点だけ報告する |
-| `<abbr title="HKDF">` で済ませる | keyboardで開けず、touchで出ず、情報の存在が見えない | term chip + 用語集（基本原則8） |
-| 同じ語を出現ごとにchip化 | 注釈だらけで本文が読めなくなる | 初出のみchip、以降は素のテキスト |
-| 内輪の略語を使い、用語集で補う | 解説は言い換えの代用にならない。読者は毎回変換を強いられる | 一般名詞・正式名称に言い換える（基本原則8の(1)） |
-| API・HTTP・cacheをchip化 | 一般的なSWEの語彙内。注釈が本文を埋める | 素のまま使い、その範囲を超える語だけ解説する |
-| 用語集に本文未参照の項目を置く | 読まれない定義。chipのlink切れも同様に不可 | 本文のchipと用語集の項目を1:1に保つ |
-| 図がないsectionを散文で埋める | 構造・流れ・比較は散文で最も伝わりにくい | SVG・表・timelineを付ける（基本原則6） |
+
+語彙・詳解・報告の禁止事項（`<abbr>` 単体、毎回chip化、内輪略語、長さを理由の削除、サイズ報告など）は基本原則6〜8と「報告に含めないもの」に定めてある — この表には本文にない知見だけを載せる。
 
 ## File delivery & naming
 
