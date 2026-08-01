@@ -22,7 +22,7 @@
     {
       "id": 4,
       "prompt": "詳細設計どおりに実装した差分がある。claude-review で実装者が気づいていない観点を見てほしい",
-      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定のまま --model claude-sonnet-5 を選び、Opus へ昇格しない。effort の指定が無いので自動判定で既定の high を選ぶ（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（問題がある前提で反証を試みる）と、型・lint・テストで検出できるものより実装者の視野外の観点を優先する旨を含める。claude -p \"...\" --model claude-sonnet-5 --effort high --add-dir <dir> --permission-mode plan --disallowedTools 'Edit,Write,NotebookEdit' を Bash の run_in_background: true で起動し（ガードレール1により --permission-mode plan と --disallowedTools は両方必須）、起動直後に『バックグラウンドで開始した・数分〜数十分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する。完了通知で出力ファイルを Read/BashOutput して結果を要約・詳細・推奨対応の形式で報告する",
+      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定のまま --model claude-sonnet-5 を選び、Opus へ昇格しない。effort の指定が無いので自動判定で既定の high を選ぶ（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（問題がある前提で反証を試みる）、型・lint・テストで検出できるものより実装者の視野外の観点を優先する旨、網羅性要求（self-filter させない・scope statement を返させる）、BASIS ラベルと単純案の併記要求を含める。claude -p \"...\" --model claude-sonnet-5 --effort high --add-dir <dir> --permission-mode plan --disallowedTools 'Edit,Write,NotebookEdit' を Bash の run_in_background: true で起動し（ガードレール1により --permission-mode plan と --disallowedTools は両方必須）、起動直後に『バックグラウンドで開始した・数分〜数十分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する。完了通知で出力ファイルを Read/BashOutput して結果を要約・詳細・推奨対応の形式で報告する",
       "files": []
     },
     {
@@ -46,7 +46,7 @@
     {
       "id": 8,
       "prompt": "claude-review が終わったみたい。結果を教えて",
-      "expected_output": "既定モデル（claude-sonnet-5）での結果報告なので、要約・詳細・推奨対応に加えて判断材料と選択肢を必ず添える。具体的には、レビュー結果の scope statement のうち未検査のまま残った範囲に重要なものがあるかを示し、『このまま採用する』か『スコープを絞って claude-opus-5 で再実行する』かを呼び出し元に明示的に問う。指摘は結論ではなく仮説として扱い、path:line の実在を確認したうえで報告する",
+      "expected_output": "既定モデル（claude-sonnet-5）での結果報告なので、要約・詳細・推奨対応に加えて判断材料と選択肢を必ず添える。具体的には、レビュー結果の scope statement のうち未検査のまま残った範囲に重要なものがあるかを示し、『このまま採用する』か『スコープを絞って claude-opus-5 で再実行する』かを呼び出し元に明示的に問う。指摘は結論ではなく仮説として扱い、path:line の実在を確認する必要があること、BASIS: SPECULATIVE の提案は既定で採用しないことを踏まえて報告する",
       "files": []
     },
     {
