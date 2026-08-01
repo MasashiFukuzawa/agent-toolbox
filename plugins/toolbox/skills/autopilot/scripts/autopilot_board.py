@@ -144,18 +144,47 @@ def cmd_preflight(args: argparse.Namespace) -> dict[str, Any]:
         )
 
     base = config.get("baseBranch", "main")
-    result: dict[str, Any] = {"repo": expected, "baseBranch": base, "mergeGate": "human"}
+    result: dict[str, Any] = {
+        "repo": expected,
+        "baseBranch": base,
+        "mergeGate": "human",
+        "deployGate": "auto" if gate_allows(config, "deploy") else "human",
+        "notes": [],
+    }
 
     if gate_allows(config, "merge"):
-        raw = run_gh(["api", f"repos/{expected}/branches/{base}/protection"])
-        enforced, reasons = protection_is_enforced(json.loads(raw))
-        if not enforced:
-            raise Failure(
-                f"gates.merge is 'auto' but {base} is not protected enough to merge unattended: "
-                + "; ".join(reasons)
+        enforced, reasons = branch_protection_state(expected, base)
+        if enforced:
+            result["mergeGate"] = "auto"
+        else:
+            # Downgrade rather than refuse. The task itself is still worth doing, and
+            # stopping at PR creation is the behaviour the config would have had if the
+            # gate were simply unset -- whereas refusing to start strands the whole
+            # backlog over a repository setting no task can fix.
+            result["notes"].append(
+                f"gates.merge asked for automatic merge, but {base} cannot enforce it "
+                f"({'; '.join(reasons)}). Running with a human merge gate instead."
             )
-        result["mergeGate"] = "auto"
     return result
+
+
+def branch_protection_state(repo: str, branch: str) -> tuple[bool, list[str]]:
+    """Whether the branch can enforce an unattended merge, and why not when it cannot.
+
+    A missing or inaccessible protection endpoint is itself an answer: 404 means the
+    branch is unprotected, 403 means the plan does not offer protection for this
+    repository. Both mean the same thing here -- nothing would stop a bad merge.
+    """
+    try:
+        raw = run_gh(["api", f"repos/{repo}/branches/{branch}/protection"])
+    except Failure as exc:
+        message = str(exc)
+        if "404" in message or "Not Found" in message:
+            return False, ["the branch has no protection rule"]
+        if "403" in message:
+            return False, ["branch protection is not available for this repository"]
+        raise
+    return protection_is_enforced(json.loads(raw))
 
 
 def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
@@ -174,8 +203,13 @@ def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
         run_gh(["project", "item-list", number, "--owner", owner, "--format", "json"])
     ).get("items", [])
 
-    resumable = pick_item(items, ["In Progress"])
-    picked = resumable or pick_item(items, source.get("pickFrom", ["Ready"]))
+    # Items escalated earlier in this run are excluded so one task that cannot converge
+    # does not get re-claimed by the resume path forever, starving the rest of the board.
+    excluded = set(args.exclude or [])
+    available = [item for item in items if item.get("id") not in excluded]
+
+    resumable = pick_item(available, ["In Progress"])
+    picked = resumable or pick_item(available, source.get("pickFrom", ["Ready"]))
     if picked is None:
         return {"task": None}
 
@@ -224,13 +258,32 @@ def cmd_set_status(args: argparse.Namespace) -> dict[str, Any]:
     return {"itemId": args.item_id, "status": args.status}
 
 
+def cmd_branch_name(args: argparse.Namespace) -> dict[str, Any]:
+    """Derive a branch name outside the board path, so plan-doc and none modes
+    get the same naming and the same non-ASCII fallback."""
+    return {"branch": branch_name(args.title, args.issue_number)}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=".agents/autopilot.json")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("preflight", help="verify repository identity and the merge gate")
-    sub.add_parser("next-task", help="resume or claim the next task, and move it to In Progress")
+    sub.add_parser("preflight", help="verify repository identity and resolve the gates")
+
+    nxt = sub.add_parser(
+        "next-task", help="resume or claim the next task, and move it to In Progress"
+    )
+    nxt.add_argument(
+        "--exclude",
+        action="append",
+        metavar="ITEM_ID",
+        help="skip this item; pass once per task already escalated in this run",
+    )
+
+    name = sub.add_parser("branch-name", help="derive a branch name (for non-board task sources)")
+    name.add_argument("--title", required=True)
+    name.add_argument("--issue-number", default=None)
 
     status = sub.add_parser("set-status", help="move a board item to a status")
     status.add_argument("--project-id", required=True)
@@ -245,6 +298,7 @@ def main(argv: list[str] | None = None) -> int:
         "preflight": cmd_preflight,
         "next-task": cmd_next_task,
         "set-status": cmd_set_status,
+        "branch-name": cmd_branch_name,
     }
     try:
         print(json.dumps(handlers[args.command](args), ensure_ascii=False, indent=2))

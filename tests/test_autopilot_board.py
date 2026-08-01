@@ -14,7 +14,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location(
-    "autopilot_board", ROOT / "plugins/toolbox/scripts/autopilot_board.py"
+    "autopilot_board", ROOT / "plugins/toolbox/skills/autopilot/scripts/autopilot_board.py"
 )
 board = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(board)
@@ -155,17 +155,166 @@ class TestPreflight:
         monkeypatch.setattr(board, "run_gh", lambda a: json.dumps({"nameWithOwner": "owner/name"}))
         assert board.main(["--config", str(self._config(tmp_path)), "preflight"]) == 0
 
-    def test_auto_gate_refuses_on_an_unprotected_branch(self, tmp_path, monkeypatch, capsys):
+    def test_protection_that_exists_but_cannot_enforce_also_downgrades(
+        self, tmp_path, monkeypatch, capsys
+    ):
         def fake(args):
             if args[0] == "repo":
                 return json.dumps({"nameWithOwner": "owner/name"})
-            return json.dumps({})
+            return json.dumps({})  # a rule exists but enforces nothing
 
         monkeypatch.setattr(board, "run_gh", fake)
         config = self._config(tmp_path, gates={"merge": "auto"})
-        assert board.main(["--config", str(config), "preflight"]) == 1
-        assert "not protected enough" in capsys.readouterr().err
+        assert board.main(["--config", str(config), "preflight"]) == 0
+        out = json.loads(capsys.readouterr().out)
+        assert out["mergeGate"] == "human"
+        assert "enforce_admins" in out["notes"][0]
+
+    def test_a_protected_branch_keeps_the_automatic_gate(self, tmp_path, monkeypatch, capsys):
+        def fake(args):
+            if args[0] == "repo":
+                return json.dumps({"nameWithOwner": "owner/name"})
+            return json.dumps(TestProtectionIsEnforced.GOOD)
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        config = self._config(tmp_path, gates={"merge": "auto"})
+        assert board.main(["--config", str(config), "preflight"]) == 0
+        assert json.loads(capsys.readouterr().out)["mergeGate"] == "auto"
 
     def test_missing_config_stops_the_run(self, tmp_path, capsys):
         assert board.main(["--config", str(tmp_path / "absent.json"), "preflight"]) == 1
         assert "not found" in capsys.readouterr().err
+
+    def test_unprotected_branch_downgrades_instead_of_refusing(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        # Refusing would strand a whole backlog over a repository setting no task can
+        # fix; stopping at PR creation is what an unset gate would have done anyway.
+        def fake(args):
+            if args[0] == "repo":
+                return json.dumps({"nameWithOwner": "owner/name"})
+            raise board.Failure("gh api failed: HTTP 404: Branch not protected")
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        config = self._config(tmp_path, gates={"merge": "auto"})
+        assert board.main(["--config", str(config), "preflight"]) == 0
+        out = json.loads(capsys.readouterr().out)
+        assert out["mergeGate"] == "human"
+        assert "no protection rule" in out["notes"][0]
+
+    def test_a_plan_that_cannot_protect_also_downgrades(self, tmp_path, monkeypatch, capsys):
+        def fake(args):
+            if args[0] == "repo":
+                return json.dumps({"nameWithOwner": "owner/name"})
+            raise board.Failure("gh api failed: HTTP 403: Upgrade to GitHub Pro")
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        config = self._config(tmp_path, gates={"merge": True})
+        assert board.main(["--config", str(config), "preflight"]) == 0
+        assert json.loads(capsys.readouterr().out)["mergeGate"] == "human"
+
+    def test_an_unexpected_gh_error_still_stops(self, tmp_path, monkeypatch):
+        def fake(args):
+            if args[0] == "repo":
+                return json.dumps({"nameWithOwner": "owner/name"})
+            raise board.Failure("gh api failed: HTTP 500")
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        config = self._config(tmp_path, gates={"merge": "auto"})
+        assert board.main(["--config", str(config), "preflight"]) == 1
+
+    def test_deploy_gate_is_resolved_too(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.setattr(board, "run_gh", lambda a: json.dumps({"nameWithOwner": "owner/name"}))
+        config = self._config(tmp_path, gates={"deploy": True})
+        board.main(["--config", str(config), "preflight"])
+        assert json.loads(capsys.readouterr().out)["deployGate"] == "auto"
+
+
+class TestNextTask:
+    PROJECT = {"id": "PVT_1"}
+    FIELDS = {
+        "fields": [
+            {
+                "id": "f",
+                "name": "Status",
+                "options": [
+                    {"id": "ready", "name": "Ready"},
+                    {"id": "wip", "name": "In Progress"},
+                ],
+            }
+        ]
+    }
+
+    def _run(self, tmp_path, monkeypatch, items, extra_args=()):
+        config = tmp_path / "autopilot.json"
+        config.write_text(
+            json.dumps(
+                {
+                    "repo": "owner/name",
+                    "taskSource": {
+                        "githubProjects": {"owner": "o", "projectNumber": 1, "pickFrom": ["Ready"]}
+                    },
+                }
+            )
+        )
+        calls = []
+
+        def fake(args):
+            calls.append(args)
+            if args[1] == "view":
+                return json.dumps(self.PROJECT)
+            if args[1] == "field-list":
+                return json.dumps(self.FIELDS)
+            if args[1] == "item-list":
+                return json.dumps({"items": items})
+            return ""
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        args = board.build_parser().parse_args(
+            ["--config", str(config), "next-task", *extra_args]
+        )
+        return board.cmd_next_task(args), calls
+
+    def test_claiming_a_task_moves_it_to_in_progress(self, tmp_path, monkeypatch):
+        items = [{"id": "i1", "status": "Ready", "title": "Add cache", "content": {"number": 3}}]
+        result, calls = self._run(tmp_path, monkeypatch, items)
+        assert result["task"]["itemId"] == "i1"
+        assert result["task"]["branch"] == "autopilot/add-cache"
+        assert result["task"]["projectId"] == "PVT_1"
+        assert result["task"]["resumed"] is False
+        edits = [c for c in calls if c[1] == "item-edit"]
+        assert len(edits) == 1 and "wip" in edits[0]
+
+    def test_resuming_does_not_rewrite_the_board(self, tmp_path, monkeypatch):
+        items = [
+            {"id": "i1", "status": "Ready", "title": "New", "content": {"number": 1}},
+            {"id": "i2", "status": "In Progress", "title": "Half done", "content": {"number": 2}},
+        ]
+        result, calls = self._run(tmp_path, monkeypatch, items)
+        assert result["task"]["itemId"] == "i2", "an in-flight task outranks a fresh one"
+        assert result["task"]["resumed"] is True
+        assert not [c for c in calls if c[1] == "item-edit"], "already In Progress; nothing to set"
+
+    def test_an_excluded_task_does_not_block_the_rest_of_the_board(self, tmp_path, monkeypatch):
+        # The escalated task is still sitting In Progress; without exclusion the resume
+        # path re-claims it every iteration and no other task ever runs.
+        items = [
+            {"id": "stuck", "status": "In Progress", "title": "Stuck", "content": {"number": 1}},
+            {"id": "next", "status": "Ready", "title": "Next one", "content": {"number": 2}},
+        ]
+        result, _ = self._run(tmp_path, monkeypatch, items, ["--exclude", "stuck"])
+        assert result["task"]["itemId"] == "next"
+
+    def test_an_empty_board_ends_the_run_cleanly(self, tmp_path, monkeypatch):
+        result, _ = self._run(tmp_path, monkeypatch, [{"id": "x", "status": "Done"}])
+        assert result == {"task": None}
+
+
+class TestBranchNameCommand:
+    def test_available_outside_the_board_path(self, capsys):
+        assert board.main(["branch-name", "--title", "Fix the parser"]) == 0
+        assert json.loads(capsys.readouterr().out)["branch"] == "autopilot/fix-the-parser"
+
+    def test_non_ascii_needs_an_issue_number(self, capsys):
+        assert board.main(["branch-name", "--title", "日本語", "--issue-number", "8"]) == 0
+        assert json.loads(capsys.readouterr().out)["branch"] == "autopilot/issue-8"

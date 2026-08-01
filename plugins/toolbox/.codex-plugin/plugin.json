@@ -1,6 +1,6 @@
 {
   "name": "toolbox",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "Reusable engineering agent skills",
   "author": {
     "name": "Agent Toolbox Contributors"
@@ -12,9 +12,7 @@
     "longDescription": "Reusable engineering agent skills",
     "developerName": "Agent Toolbox Contributors",
     "category": "Productivity",
-    "capabilities": [
-
-    ],
+    "capabilities": [],
     "defaultPrompt": "Choose the relevant Toolbox skill for this engineering task, respect its negative boundaries, and explain any safety gate before acting."
   }
 }

@@ -50,18 +50,31 @@ description: >-
 ## Preflight（起動時に必ず実行）
 
 ```bash
-plugins/toolbox/scripts/autopilot_board.py preflight
+<skill-dir>/scripts/autopilot_board.py preflight
 ```
 
 このコマンドは次を検証し、いずれか満たさなければ**非ゼロで終了する。終了したら書き込みを一切行わない。**
 
 - `.agents/autopilot.json` が存在し、`repo` を持つ
 - **`gh repo view` で見た実際の repo が config の `repo` と一致する**（不一致は tenant 境界越え。最優先の不変条件）
-- `gates.merge` が `auto` のとき、base ブランチの branch protection が実際に無人 merge を止められる状態にある
-  （required status checks がある / `enforce_admins` が有効 / force push が禁止）。
-  **「auto と宣言したが裸の repo だった」を機構で塞ぐ。**
+- `gates.merge` が `auto` のとき、base ブランチの branch protection が実際に無人 merge を止められるか
+  （required status checks がある / `enforce_admins` が有効 / force push が禁止）を確認する。
+  **止められないなら human ゲートへ降格し、理由を `notes` に載せて実行は続ける。**
+  ここで run ごと拒否すると、タスク側では直しようのない repo 設定のためにバックログ全体が止まる。
+  降格後の挙動は「gates 未設定」と同じ（PR 作成まで自律・その先は人間）。
 
-出力（JSON）の `baseBranch` と `mergeGate` を以降で使う。加えて、後続で使う実行環境を判定する。
+**出力（JSON）が以降で使う値の唯一の定義元である。** 各フィールドを次の変数へ取り、
+以降のステップはこれらだけを参照する（config を再度読み直さない）。
+
+```bash
+PREFLIGHT=$(<skill-dir>/scripts/autopilot_board.py preflight) || exit 1
+EXPECTED_REPO=$(echo "$PREFLIGHT" | jq -r '.repo')
+BASE_BRANCH=$(echo "$PREFLIGHT" | jq -r '.baseBranch')
+MERGE_GATE=$(echo "$PREFLIGHT" | jq -r '.mergeGate')   # "auto" または "human" に正規化済み
+DEPLOY_GATE=$(echo "$PREFLIGHT" | jq -r '.deployGate')
+```
+
+加えて、後続で使う実行環境を判定する。
 
 - `run_in_background` 可否: Claude Code 上なら可、`codex exec` 内なら不可（foreground のみ）
 - MCP 可否: Chrome DevTools / Playwright / staging MCP が利用可能か
@@ -80,22 +93,37 @@ config の `taskSource.mode` に従う:
 #### `github-projects` モード
 
 ```bash
-plugins/toolbox/scripts/autopilot_board.py next-task
+NEXT=$(<skill-dir>/scripts/autopilot_board.py next-task) || exit 1
 ```
 
 Project / field / option の id を実行時に解決し、**In Progress のタスクがあればそれを再開**、無ければ
 config の `pickFrom` の順序（先頭が最優先）で次のタスクを選んで In Progress へ移す。
-出力の `task` が `null` なら対象なしなので正常終了する。それ以外は `itemId` / `title` /
-`issueUrl` / `issueNumber` / `branch` / `projectId` / `resumed` を以降で使う。
+出力の `task` が `null` なら対象なしなので正常終了する。それ以外は**出力が以降で使う値の唯一の定義元**である。
+
+```bash
+TASK=$(echo "$NEXT" | jq -r '.task')
+[[ "$TASK" == "null" ]] && { echo "INFO: 対象タスクなし。"; exit 0; }
+ITEM_ID=$(echo "$TASK" | jq -r '.itemId')
+PROJECT_ID=$(echo "$TASK" | jq -r '.projectId')
+TASK_TITLE=$(echo "$TASK" | jq -r '.title')
+ISSUE_URL=$(echo "$TASK" | jq -r '.issueUrl // empty')
+ISSUE_NUMBER=$(echo "$TASK" | jq -r '.issueNumber // empty')
+BRANCH=$(echo "$TASK" | jq -r '.branch')
+RESUMED=$(echo "$TASK" | jq -r '.resumed')
+```
 
 **id を config にハードコードしない。** Project の構成は変わるので、毎回解決する。
+
+**この run で escalated-skip したタスクは `--exclude <itemId>` で除外する（複数可）。**
+escalated-skip した item は In Progress のまま残るため、除外しないと次の反復で再開対象として
+毎回同じものを掴み、**1件の詰まりがボード全体を止める**。
 
 #### `plan-doc` モード
 
 config の `taskSource.planDoc.path` を読み、未チェック（`- [ ]`）の先頭項目を次タスクとする。
 完了時にチェックマーク（`- [x]`）に書き換える。
 
-`issueQuery` が設定されている場合は `gh issue list --repo "$EXPECTED_REPO" --search "$QUERY"` で取得。
+`issueQuery` が設定されている場合は、その値を検索式として `gh issue list --repo "$EXPECTED_REPO" --search <issueQuery>` で取得する。
 
 #### `none` モード
 
@@ -106,6 +134,12 @@ config の `taskSource.planDoc.path` を読み、未チェック（`- [ ]`）の
 ### Step 1: feature ブランチ作成
 
 ブランチ名は Step 0 の出力（`branch`）を使う。非ASCII タイトルは Issue 番号へフォールバック済み。
+**plan-doc / none モードでは board を経由しないので、同じ規則を次で得る。**
+
+```bash
+BRANCH=$(<skill-dir>/scripts/autopilot_board.py branch-name \
+  --title "$TASK_TITLE" --issue-number "$ISSUE_NUMBER" | jq -r '.branch')
+```
 
 ```bash
 # 着手前に作業ツリーが clean であることを必須にする。
@@ -194,11 +228,11 @@ git push --set-upstream origin "$BRANCH"
 PR_URL=$(gh pr create \
   --repo "$EXPECTED_REPO" \
   --title "$TASK_TITLE" \
-  --body "$PR_BODY" \
+  --body "<プランと変更点の要約>" \
   --base "$BASE_BRANCH")
 
 # board の Status を In Review へ（github-projects モード）
-plugins/toolbox/scripts/autopilot_board.py set-status \
+<skill-dir>/scripts/autopilot_board.py set-status \
   --project-id "$PROJECT_ID" --item-id "$ITEM_ID" --status "In Review"
 ```
 
@@ -231,7 +265,8 @@ CI が赤で終わった場合は 3 回リトライしてから escalated-skip �
 Step 7 で CI green を確認済みなので `--auto` は不要。merge戦略フラグは排他なので単一で指定する:
 
 ```bash
-MERGE_GATE=$(echo "$CONFIG" | jq -r '.gates.merge // "human"')
+# MERGE_GATE は Preflight が正規化済み（"auto" | "human"）。ここで config を読み直さない
+# — 読み直すと真偽値 true が "auto" と一致せず、Preflight と判断が食い違う。
 [[ "$MERGE_GATE" == "auto" ]] || {
   echo "INFO: merge requires a human gate; stopping after PR creation."
   exit 0
@@ -243,28 +278,14 @@ gh pr merge "$PR_URL" --repo "$EXPECTED_REPO" --squash
 
 ### Step 9: デプロイ
 
-config の `deploy.steps` を順番に実行する。`needed: false` なら省略。
+`DEPLOY_GATE`（Preflight で正規化済み）が `auto` でなければ、ここで停止して人間へ返す。
+`auto` のときだけ config の `deploy.steps` を**上から順に**実行する。`deploy.needed` が `false` なら省略。
 
-**注意: `deploy.steps[].run` は config から読んだコマンドをそのまま実行する。**
-生の `terraform apply` を config に書くことを禁止する（`gh workflow run` 等のラッパー経由）。
+各 step の `run` と `monitor` は **config に書かれたコマンドそのもの**である。
+1つでも失敗したらその時点で停止し、以降の step を実行しない（部分適用のまま次タスクへ進まない）。
 
-```bash
-DEPLOY_NEEDED=$(echo "$CONFIG" | jq -r '.deploy.needed // false')
-if [[ "$DEPLOY_NEEDED" == "true" ]]; then
-  DEPLOY_GATE=$(echo "$CONFIG" | jq -r '.gates.deploy // "human"')
-  [[ "$DEPLOY_GATE" == "auto" ]] || {
-    echo "INFO: deploy requires a human gate; stopping before deploy."
-    exit 0
-  }
-  # 各 step を実行
-  for step in $(echo "$CONFIG" | jq -r '.deploy.steps[] | @base64'); do
-    CMD=$(echo "$step" | base64 --decode | jq -r '.run // ""')
-    MONITOR=$(echo "$step" | base64 --decode | jq -r '.monitor // ""')
-    [[ -n "$CMD" ]] && eval "$CMD"
-    [[ -n "$MONITOR" ]] && eval "$MONITOR"
-  done
-fi
-```
+**config に生の `terraform apply` 等を書くことを禁止する。** deploy は `gh workflow run` のような
+ラッパー経由にする。config への書き込み権限は、ここに書かれた任意コマンドの実行権限と等価である。
 
 ---
 
@@ -283,7 +304,7 @@ MCP が使えない環境・エンジンでは `method: mcp` でも理由をメ�
 ### Step 11: board を Done へ → 次タスクへ
 
 ```bash
-plugins/toolbox/scripts/autopilot_board.py set-status \
+<skill-dir>/scripts/autopilot_board.py set-status \
   --project-id "$PROJECT_ID" --item-id "$ITEM_ID" --status Done
 ```
 
@@ -364,7 +385,7 @@ repo の特徴を自動検出し、config の雛形を提案する（**実行は
 
 1. `terraform` ディレクトリ or `Taskfile.yml` の存在 → infra repo と判定
 2. `.github/workflows/` の内容 → デプロイワークフロー候補を列挙
-3. `gh project list --owner "$ORG"` → リンク済み Project の候補を提示
+3. `gh project list --owner <owner>` → リンク済み Project の候補を提示
 4. 雛形を `.agents/autopilot.json` に出力し、中身を確認・編集するよう求める
 5. unattended 運用前に必ずコミットするよう案内する
 
