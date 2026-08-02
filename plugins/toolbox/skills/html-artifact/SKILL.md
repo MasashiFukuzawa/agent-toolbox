@@ -107,7 +107,7 @@ Before writing CSS, read `references/visual-system.md`. Start from the nearest f
    - **解説しない（素のまま使う）:** 一般的なソフトウェアエンジニアが理解できる範囲。API・HTTP・cache・index・CI/CD・race condition・rollback・schema・token 等
    - **用語解説を作る:** その範囲を超える語すべて。①特定領域の専門用語（distributed tracing の span / context propagation、暗号の HKDF、会計の ARR 等）②標準仕様の略号（OTLP、W3C traceparent、SCIM 等）③特定product/serviceに固有の概念名 ④一般的でないlibrary/tool名 ⑤(1)で言い換え不能だった固有の略語
    - **判定軸は閾値ひとつ。①〜⑤は「閾値を超える語の典型例」であって独立した強制カテゴリではない。** カテゴリに当てはまっても閾値の内側ならchip化しない（例: JWT・TLS・SQL・REST は標準仕様の略号だが一般的なSWEの語彙内なので素のまま使う）。カテゴリと閾値の判定が食い違ったら**常に閾値が勝つ**
-   - key question契約で宣言した読み手が一般的なSWEより語彙が狭いとき（非エンジニア、他領域のjunior等）は、**この閾値を下げる**。上げない
+   - key question契約で宣言した読み手が一般的なSWEより語彙が狭いとき（非エンジニア、他領域のjunior等）は、**この閾値を下げる**。上げない。例: 読み手が「コードを読まない EM/PM」なら閾値は「バックエンド出身の一般的な EM の語彙」— 業界標準の運用用語（CI/CD・rollback・staging 等）は素のまま、実装詳細レベルの語は閾値外として扱う（progress-report スキルの読み手定義と同一基準）
    - **迷ったら解説する側に倒す。** 用語集は折りたたまれているので、余分な1項目のコストはほぼゼロ。逆に説明のない専門用語は読者をその場で止める
    - ただし1文に2つ以上のchipが並ぶなら、その文自体を書き直す（原因は語彙ではなく文の詰め込み）
 

@@ -6,7 +6,7 @@
       "id": 1,
       "name": "inventory-sync-mode-b-median",
       "prompt": "<fixtures>/inventory-sync にあるリポジトリ、前に別の AI エージェントに作業させてたんだけど途中で止まってるみたい。私は経緯をほとんど把握してないので、今どういう状況なのか進捗を報告してください。",
-      "expected_output": "v2 テンプレート（結論先行: ステータス行 + TL;DR + 要対応が先頭）構成の進捗報告。失敗テスト 2 件の根本原因（404→None 仕様変更と resolve_conflict の衝突）と API キー失効ブロッカーが特定され、ネクストアクションに接続される。スコープ外（在庫予測・複数倉庫）は混入しない。",
+      "expected_output": "新テンプレート（結論先行: ステータス行 + TL;DR + 要対応が先頭、全体マップは大地図→小地図の2段、末尾に健全性）構成の進捗報告。失敗テスト 2 件の根本原因（404→None 仕様変更と resolve_conflict の衝突）と API キー失効ブロッカーが特定され、要対応・次の一手に接続される。スコープ外（在庫予測・複数倉庫）は混入しない。",
       "files": [
         "progress-report-workspace/fixtures/inventory-sync"
       ],
@@ -32,11 +32,11 @@
           "type": "qualitative"
         },
         {
-          "text": "「やったことの詳細」が 3〜7 項目に絞られ、重要性の説明と参照がある",
+          "text": "作業ログの網羅列挙（「やったこと」一覧）を含まず、詳細は求めに応じる方針で §1〜§4 に絞られている",
           "type": "qualitative"
         },
         {
-          "text": "v2 テンプレートの構成（ステータス行 + TL;DR + 要対応 + 全体像 + 現在地 + やったこと + ネクストアクション + その他）が定義の順序で揃い、ステータス行が実態と整合している",
+          "text": "テンプレートの構成（ステータス行 + TL;DR + 要対応 + 全体マップ（大地図→小地図）+ 次の一手 + 健全性）が定義の順序で揃い、ステータス行・進捗バーが実態と整合している",
           "type": "structural"
         }
       ]
@@ -45,7 +45,7 @@
       "id": 2,
       "name": "auth-migration-mode-a-median",
       "prompt": "あなたは TeamBoard の認証移行作業を 6 時間自律で行った直後のエージェントです。<fixtures>/auth-migration/work-log.md があなたのこのセッションの全作業記録（セッション記憶の代わり）です。読み込んだ上で自分自身の作業として扱ってください。ユーザーからのメッセージ:「進捗どう？」",
-      "expected_output": "v2 テンプレート（結論先行: ステータス行 + TL;DR + 要対応が先頭）構成の進捗報告。Okta 管理コンソール権限のブロッカーがユーザー対応として明示され、モバイル WebView リスクは「その他」に報告されつつスコープには混入しない。定量進捗（5画面中3、テスト47中44）が正確。",
+      "expected_output": "新テンプレート（結論先行: ステータス行 + TL;DR + 要対応が先頭、全体マップは大地図→小地図の2段、末尾に健全性）構成の進捗報告。Okta 管理コンソール権限のブロッカーがユーザー対応として明示され、モバイル WebView リスクは §4 健全性（または §2 要対応）に報告されつつスコープには混入しない。定量進捗（5画面中3、テスト47中44）が正確。",
       "files": [
         "progress-report-workspace/fixtures/auth-migration/work-log.md"
       ],
@@ -55,11 +55,11 @@
           "type": "blank-reader"
         },
         {
-          "text": "[critical] ブロッカー（staging Okta の redirect URI 登録に管理権限が必要）がネクストアクションでユーザー対応として明示されている",
+          "text": "[critical] ブロッカー（staging Okta の redirect URI 登録に管理権限が必要）が §2 要対応・要判断でユーザー対応として明示されている",
           "type": "qualitative"
         },
         {
-          "text": "[critical] モバイル WebView 非互換リスクが「その他/リスク」に報告され、かつスコープ・ネクストアクションに in-scope 作業として混入していない",
+          "text": "[critical] モバイル WebView 非互換リスクが §4 健全性（または §2 要対応）に報告され、かつスコープ・次の一手に in-scope 作業として混入していない",
           "type": "qualitative"
         },
         {
@@ -67,7 +67,7 @@
           "type": "qualitative"
         },
         {
-          "text": "想定外（silent refresh 断念 → rotation 切替）が「その他」で報告されている",
+          "text": "想定外（silent refresh 断念 → rotation 切替）が §4 健全性で報告されている",
           "type": "qualitative"
         },
         {
@@ -75,7 +75,7 @@
           "type": "qualitative"
         },
         {
-          "text": "v2 テンプレートの構成（ステータス行 + TL;DR + 要対応 + 全体像 + 現在地 + やったこと + ネクストアクション + その他）が定義の順序で揃い、ステータス行が実態と整合している",
+          "text": "テンプレートの構成（ステータス行 + TL;DR + 要対応 + 全体マップ（大地図→小地図）+ 次の一手 + 健全性）が定義の順序で揃い、ステータス行・進捗バーが実態と整合している",
           "type": "structural"
         }
       ]
@@ -84,7 +84,7 @@
       "id": 3,
       "name": "sparse-traces-mode-b-edge",
       "prompt": "<fixtures>/sparse-traces のリポジトリで何が行われていたのか、状況をまとめて報告してください。誰がなぜ作業していたのか私は全く知りません。",
-      "expected_output": "事実と推測が区別された v2 テンプレート構成の報告。CSV エクスポート追加が根拠付き推測として提示され、date_utils の変更意図は「不明」と明記。ImportError による起動不能が検出され、作者への意図確認がネクストアクションに含まれる。",
+      "expected_output": "事実と推測が区別された新テンプレート構成の報告。上位計画が痕跡から特定できない場合はマイルストーン数・進捗バーを創作せず「全体母数は不明」と明記する。CSV エクスポート追加が根拠付き推測として提示され、date_utils の変更意図は「不明」と明記。ImportError による起動不能が検出され、作者への意図確認が次の一手・要対応に含まれる。",
       "files": [
         "progress-report-workspace/fixtures/sparse-traces"
       ],
@@ -110,7 +110,7 @@
           "type": "blank-reader"
         },
         {
-          "text": "v2 テンプレートの構成が定義の順序で揃い、情報がないセクションは「不明」「特になし」と明記されている",
+          "text": "テンプレートの構成が定義の順序で揃い、情報がないセクションは「不明」「なし」と明記され、特定できない全体母数を創作していない",
           "type": "structural"
         }
       ]
@@ -120,7 +120,7 @@
       "name": "etl-migration-holdout",
       "holdout": true,
       "prompt": "<fixtures>/etl-migration-holdout のリポジトリは AI エージェントに pandas から polars への移行を任せていたものです。今の状況を報告してください。",
-      "expected_output": "v2 テンプレート構成の報告。groupby ソート順差異の根本原因と「下流の行順依存は未確認」という要判断事項、Shift_JIS と polars write_csv の衝突リスクが報告される。EPT 収束後の過適合チェック専用。",
+      "expected_output": "新テンプレート構成の報告。groupby ソート順差異の根本原因と「下流の行順依存は未確認」という要判断事項、Shift_JIS と polars write_csv の衝突リスクが報告される。EPT 収束後の過適合チェック専用。",
       "files": [
         "progress-report-workspace/fixtures/etl-migration-holdout"
       ],
@@ -146,7 +146,7 @@
           "type": "qualitative"
         },
         {
-          "text": "「やったことの詳細」が絞られ、参照付きである",
+          "text": "作業ログの網羅列挙を含まず、要対応・マップ・健全性の該当箇所に必要な参照（ファイル・コミット）が付いている",
           "type": "qualitative"
         }
       ]
