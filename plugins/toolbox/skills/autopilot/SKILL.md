@@ -388,8 +388,11 @@ hook で止まった場合は `--no-verify` を使ってよい。** それでも
 - ⏭️ skipped: タスク名・スキップ理由
 - ⚠️ escalated: タスク名・詰まった箇所・次に取るべき手順
 
-progress-report のテンプレート構造との対応: shipped/skipped/escalated の一覧は L2 全体マップの表として
-載せ、escalated の要対応事項は L1 の「要対応・要判断」へ、各タスクの詳細は L3 詳細へ載せる。
+progress-report のテンプレート構造との対応: shipped/skipped/escalated の一覧は §3 全体マップ（大地図）
+の表として載せる。状態は ✅（shipped）⏭️（skipped）⚠️（escalated）を使い、表に「結果・参照」列を
+追加して PR URL・merge SHA・skip 理由・escalated の次手を各1行で載せる（無人 run の監査可能性を
+優先する、progress-report の detail on demand に対する明示的な例外）。escalated の要対応事項は
+§2「要対応・要判断」へ。それ以外の作業詳細は報告に書かず、聞かれたら答える。
 複数のレポートを Issueコメントに散らさない。1本を朝に読める形で出力する。
 
 ### 蓄積した複雑度の点検（この run で2件以上 ship した場合のみ）
