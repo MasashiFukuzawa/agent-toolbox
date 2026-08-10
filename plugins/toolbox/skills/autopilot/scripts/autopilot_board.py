@@ -15,6 +15,7 @@ the caller must stop: every failure here is a precondition for a write.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -24,6 +25,11 @@ from typing import Any
 
 BRANCH_PREFIX = "autopilot/"
 BRANCH_MAX = 50
+DEFAULT_STATUS_NAMES = {
+    "inProgress": "In Progress",
+    "inReview": "In Review",
+    "done": "Done",
+}
 
 
 class Failure(Exception):
@@ -49,9 +55,11 @@ def branch_name(title: str, issue_number: str | int | None) -> str:
     slug = re.sub(r"-{2,}", "-", slug).strip("-")[:BRANCH_MAX].rstrip("-")
     if len(slug) < 3:
         if issue_number in (None, ""):
-            raise Failure(
-                f"cannot derive a branch name from {title!r} and no issue number is available"
-            )
+            normalized_title = unicodedata.normalize("NFKC", title).strip()
+            if not normalized_title:
+                raise Failure("cannot derive a branch name from an empty title")
+            digest = hashlib.sha256(normalized_title.encode()).hexdigest()[:12]
+            return f"{BRANCH_PREFIX}task-{digest}"
         return f"{BRANCH_PREFIX}issue-{issue_number}"
     return f"{BRANCH_PREFIX}{slug}"
 
@@ -128,6 +136,24 @@ def load_config(path: str) -> dict[str, Any]:
         raise Failure(f"{path} not found; autopilot will not write without a config") from exc
     except json.JSONDecodeError as exc:
         raise Failure(f"{path} is not valid JSON: {exc}") from exc
+
+
+def status_name(source: dict[str, Any], phase: str) -> str:
+    """Resolve a semantic lifecycle phase inside the GitHub Projects adapter."""
+    if phase not in DEFAULT_STATUS_NAMES:
+        raise Failure(f"unknown lifecycle phase {phase!r}")
+    configured = source.get("statusNames", {})
+    if not isinstance(configured, dict):
+        raise Failure("taskSource.githubProjects.statusNames must be an object")
+    unknown = sorted(set(configured) - set(DEFAULT_STATUS_NAMES))
+    if unknown:
+        raise Failure(
+            "taskSource.githubProjects.statusNames has unknown keys: " + ", ".join(unknown)
+        )
+    value = configured.get(phase, DEFAULT_STATUS_NAMES[phase])
+    if not isinstance(value, str) or not value.strip():
+        raise Failure(f"taskSource.githubProjects.statusNames.{phase} must be a non-empty string")
+    return value
 
 
 def cmd_preflight(args: argparse.Namespace) -> dict[str, Any]:
@@ -208,12 +234,20 @@ def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
     excluded = set(args.exclude or [])
     available = [item for item in items if item.get("id") not in excluded]
 
-    resumable = pick_item(available, ["In Progress"])
+    in_progress = status_name(source, "inProgress")
+    resumable = pick_item(available, [in_progress])
     picked = resumable or pick_item(available, source.get("pickFrom", ["Ready"]))
     if picked is None:
         return {"task": None}
 
-    field_id, option_id = resolve_option_id(fields, "Status", "In Progress")
+    content = picked.get("content") or {}
+    if not content.get("url") or content.get("type") == "DraftIssue":
+        raise Failure(
+            f"Project item {picked.get('id', '<unknown>')} has no durable Issue journal; "
+            "refusing to claim a draft item"
+        )
+
+    field_id, option_id = resolve_option_id(fields, "Status", in_progress)
     if resumable is None:
         run_gh(
             [
@@ -224,7 +258,6 @@ def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
                 "--single-select-option-id", option_id,
             ]
         )
-    content = picked.get("content") or {}
     return {
         "task": {
             "itemId": picked["id"],
@@ -245,7 +278,8 @@ def cmd_set_status(args: argparse.Namespace) -> dict[str, Any]:
     fields = json.loads(
         run_gh(["project", "field-list", number, "--owner", owner, "--format", "json"])
     )
-    field_id, option_id = resolve_option_id(fields, "Status", args.status)
+    requested = args.status or status_name(source, args.phase)
+    field_id, option_id = resolve_option_id(fields, "Status", requested)
     run_gh(
         [
             "project", "item-edit",
@@ -255,7 +289,7 @@ def cmd_set_status(args: argparse.Namespace) -> dict[str, Any]:
             "--single-select-option-id", option_id,
         ]
     )
-    return {"itemId": args.item_id, "status": args.status}
+    return {"itemId": args.item_id, "status": requested}
 
 
 def cmd_branch_name(args: argparse.Namespace) -> dict[str, Any]:
@@ -288,7 +322,9 @@ def build_parser() -> argparse.ArgumentParser:
     status = sub.add_parser("set-status", help="move a board item to a status")
     status.add_argument("--project-id", required=True)
     status.add_argument("--item-id", required=True)
-    status.add_argument("--status", required=True)
+    target = status.add_mutually_exclusive_group(required=True)
+    target.add_argument("--phase", choices=tuple(DEFAULT_STATUS_NAMES))
+    target.add_argument("--status", help="literal status name; retained for compatibility")
     return parser
 
 

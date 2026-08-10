@@ -22,12 +22,17 @@
         "Priority",
         "CreatedAt",
         "UpdatedAt"
-      ]
+      ],
+      "statusNames": {
+        "inProgress": "In Progress",
+        "inReview": "In Review",
+        "done": "Done"
+      },
+      "_statusNamesNote": "Project側の名称が既定と異なる場合だけ変更する。autopilot内部ではstart/review/completeの意味で扱う。"
     },
     "planDoc": {
       "_note": "mode が plan-doc の場合に使う。どちらか一方だけ指定する。",
-      "path": "docs/plan.md",
-      "issueQuery": ""
+      "path": "docs/plan.md"
     }
   },
   "review": {

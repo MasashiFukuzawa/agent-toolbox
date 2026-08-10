@@ -21,6 +21,7 @@ description: >-
 | **reviewer** | プランの第三者レビュー（逆エンジン） | claude 上→codex-review / codex 上→claude-review / cursor 上→codex-review。使えない場合は使える方 |
 | **e2e** | UI/E2E 検証の安全方針 | e2e-capability-verification（browser tool の選択は browser-operations の優先順位に従う） |
 | **reporter** | 進捗・引き継ぎレポート | progress-report |
+| **task-source** | タスクの選択・作業journal・対応可能な状態遷移 | `taskSource.mode` のadapter。契約と能力差は [task sources](references/task-sources.md) |
 
 ### 破壊的操作の確認境界（拡張点と独立の不変ルール）
 
@@ -87,14 +88,17 @@ DEPLOY_GATE=$(echo "$PREFLIGHT" | jq -r '.deployGate')
 
 ## Per-task Loop
 
-**1タスクを終端状態（Done または escalated-skip）にしてから次を取得する（直列・再開可能）。**
-再起動時に In Progress のタスクが既にある場合は**再開扱い**（二重着手しない）。
+**1タスクを終端状態（complete または escalated-skip）にしてから次を取得する（直列・再開可能）。**
+再起動時にtask-sourceのin-progress状態（github-projectsの既定名は`In Progress`）があれば
+**再開扱い**にする（二重着手しない）。
 
 ---
 
-### Step 0: タスク源の確認と次タスク選択
+### Step 0: task-source の確認と次タスク選択
 
-config の `taskSource.mode` に従う:
+config の `taskSource.mode` に従う。task-source は選択・journal・状態遷移を同じadapterで扱う。
+モードごとの能力とjournal形式は [task sources](references/task-sources.md) を正とし、未対応能力を
+別のtrackerやローカル状態で黙って模倣しない。
 
 #### `github-projects` モード
 
@@ -102,7 +106,7 @@ config の `taskSource.mode` に従う:
 NEXT=$(<skill-dir>/scripts/autopilot_board.py next-task) || exit 1
 ```
 
-Project / field / option の id を実行時に解決し、**In Progress のタスクがあればそれを再開**、無ければ
+Project / field / option の id を実行時に解決し、**adapterのin-progress状態にあるタスクを再開**、無ければ
 config の `pickFrom` の順序（先頭が最優先）で次のタスクを選んで In Progress へ移す。
 出力の `task` が `null` なら対象なしなので正常終了する。それ以外は**出力が以降で使う値の唯一の定義元**である。
 
@@ -118,6 +122,9 @@ BRANCH=$(echo "$TASK" | jq -r '.branch')
 RESUMED=$(echo "$TASK" | jq -r '.resumed')
 ```
 
+`ISSUE_URL`が空ならdurable journalを持たないdraft itemである。adapterはclaim前にfailするため、
+その状態で実装へ進まない。
+
 **id を config にハードコードしない。** Project の構成は変わるので、毎回解決する。
 
 **この run で escalated-skip したタスクは `--exclude <itemId>` で除外する（複数可）。**
@@ -126,10 +133,15 @@ escalated-skip した item は In Progress のまま残るため、除外しな�
 
 #### `plan-doc` モード
 
-config の `taskSource.planDoc.path` を読み、未チェック（`- [ ]`）の先頭項目を次タスクとする。
-完了時にチェックマーク（`- [x]`）に書き換える。
-
-`issueQuery` が設定されている場合は、その値を検索式として `gh issue list --repo "$EXPECTED_REPO" --search <issueQuery>` で取得する。
+base branchをcheckoutせず、`git fetch -q origin "$BASE_BRANCH"`後の
+`git show "origin/$BASE_BRANCH:<plan path>"`をqueueの正として読み、未チェック（`- [ ]`）の
+先頭項目を次タスクとする。linked worktreeで別worktreeがbaseをcheckout中でもbranchを動かさない。
+tracked planとtask branchの整合を安全に保てないため、**1 runで1件だけ**処理し、journalは会話へ出す。
+同じrunで次項目をclaimしない。完了チェックをbase branchへ直接commitしてはならない。
+branch名を導出したら、同じhead branchのPRを確認する。local branchだけなら再開、open PRなら既存PRの
+review gateで停止する。closed-unmerged、またはmergedなのに最新baseで同じ項目が未チェックなら、
+tracking stateの矛盾としてfail loudlyとし再実装しない。具体的な完了経路は
+[task sources](references/task-sources.md)に従う。
 
 #### `none` モード
 
@@ -139,7 +151,8 @@ config の `taskSource.planDoc.path` を読み、未チェック（`- [ ]`）の
 
 ### Step 1: feature ブランチ作成
 
-ブランチ名は Step 0 の出力（`branch`）を使う。非ASCII タイトルは Issue 番号へフォールバック済み。
+ブランチ名は Step 0 の出力（`branch`）を使う。非ASCIIタイトルはIssue番号、無ければ正規化titleの
+stable hashへフォールバック済み。
 **plan-doc / none モードでは board を経由しないので、同じ規則を次で得る。**
 
 ```bash
@@ -171,10 +184,10 @@ fi
 
 ### Step 2: プランニング
 
-実装前にプランを作成し出力する。
-
-- **github-projects モード**: Issueのコメントとして出力（`gh issue comment "$ISSUE_URL" --repo "$EXPECTED_REPO" --body "..."`)。
-- **plan-doc / none モード**: 会話に出力し確認を求める。
+実装前にプランを作成し、task-sourceがdurable journalを持つ場合は `## Plan` として追記する。
+持たない場合は会話へ出す。自律実行が明示されたrunでは、通常の設計判断を人間確認で止めず、
+選択肢・判断理由・非スコープをjournalへ残して推奨案で進む。権限拡張やProduct方針変更など、
+本スキルの人間ゲートに該当する判断だけをエスカレーションする。
 
 ---
 
@@ -190,13 +203,17 @@ fi
 出せないため、host の逆エンジンを既定とする明示的な例外である。ユーザーまたは config が provider を
 明示した場合はそれに従う。
 
+各roundのreview target・verdict・must-fix・採否と理由・再review結果を `## Review — round N` として
+task-sourceのjournalへ記録する。review skill自身はread-onlyのまま外部へ投稿させない。
+
 ---
 
 ### Step 4: 実装
 
 現在のhostが読み込んだrepository instructions（`AGENTS.md`、`CLAUDE.md`等）の開発原則を厳守して実装する。
 - 既存コード・ユーティリティを必ず調べて再利用する
-- 設計・アプローチに迷ったら実装前に会話に提示し確認する
+- 設計・アプローチに迷ったらStep 2の判断規律に従う。自律runでは選択肢と理由をjournalへ残して
+  推奨案で進み、人間ゲートに該当する場合だけ確認する
 - 品質に妥協しない
 - **受入条件・承認済みプランに無い機構を足さない。** fallback・再試行・防御的検証・設定項目・抽象は、
   いま観測されている要求に対してだけ書く。「将来必要になりそう」は書かない理由である
@@ -207,6 +224,9 @@ pre-commit hook にフォーマッタを置く構成（`biome check --write` や
 実際に commit された内容がずれる。しかも作業ツリーが clean なら Stop hook は検査しないので、
 このずれは誰にも検出されない。** 先に commit すれば hook の書き換えは検証より前に済み、
 検証したツリー = push されるツリーが成立する。
+
+`plan-doc` modeでは、実装完了時に対象項目を`- [x]`へ変え、同じtask commitへ含める。
+baseへ反映されるのはmerge時なので、未mergeの作業をbase上で完了扱いしない。
 
 ---
 
@@ -229,7 +249,7 @@ browser-operations の優先順位で利用可能な browser tool が無い環�
 
 ---
 
-### Step 6: PR 作成 → board を In Review へ
+### Step 6: PR 作成 → task-source を review 状態へ
 
 ```bash
 # ブランチを push（未 push だと gh pr create が対話プロンプトで止まるため先に実行）
@@ -244,9 +264,9 @@ PR_URL=$(gh pr create \
   --body "<プランと変更点の要約>" \
   --base "$BASE_BRANCH")
 
-# board の Status を In Review へ（github-projects モード）
+# github-projects adapter の review 遷移。他modeは対応能力に従う。
 <skill-dir>/scripts/autopilot_board.py set-status \
-  --project-id "$PROJECT_ID" --item-id "$ITEM_ID" --status "In Review"
+  --project-id "$PROJECT_ID" --item-id "$ITEM_ID" --phase inReview
 ```
 
 ---
@@ -314,14 +334,18 @@ MCP が使えない環境・エンジンでは `method: mcp` でも理由をメ�
 
 ---
 
-### Step 11: board を Done へ → 次タスクへ
+### Step 11: completion evidence → task-source を complete 状態へ
+
+task-sourceがdurable journalを持つ場合、`## Completion evidence` に利用可能になった能力、done署名、
+PRまたは同等の変更参照、検証対象revision、merge/release revision、必要なruntime検証、既知制約と
+follow-upを記録する。squash mergeではdone署名の`head`とmerge SHAが異なるため両方を残す。
 
 ```bash
 <skill-dir>/scripts/autopilot_board.py set-status \
-  --project-id "$PROJECT_ID" --item-id "$ITEM_ID" --status Done
+  --project-id "$PROJECT_ID" --item-id "$ITEM_ID" --phase done
 ```
 
-plan-doc モードはチェックマーク（`- [x]`）に書き換える。次タスクへ。
+`github-projects`以外はtask-sourceの能力に従う。`plan-doc` / `none` は次タスクへ進まずrunを終了する。
 
 ---
 
@@ -357,8 +381,8 @@ hook で止まった場合は `--no-verify` を使ってよい。** それでも
 ## 差し込みタスク
 
 途中でタスク追加が必要になった場合:
-- **github-projects モード**: 利用可能な Issue 作成スキル、または
-  `gh issue create --repo "$EXPECTED_REPO"` で作成後、Project に追加。
+- task-sourceがfollow-up作成を支える場合は、そのadapterまたは利用可能なtask作成skillを使う。
+- 支えない場合は、durable taskを捏造せずEnd-of-run Reportへ再開条件つきで記録する。
 - 全体を俯瞰して着手順を整理しなおす。大きな変更なら逆エンジンレビューを通す。
 
 ---
@@ -377,7 +401,8 @@ hook で止まった場合は `--no-verify` を使ってよい。** それでも
 ## Escalation
 
 詰まったら逆エンジンの review スキルにヘルプ依頼する。
-それでも解決しなければ、エスカレーション内容を Issue コメントまたは会話に記録してスキップする。
+それでも解決しなければ、task-sourceのjournalへ `## Escalation` として記録する。durable journalが
+無ければ会話に記録してスキップする。
 
 ---
 

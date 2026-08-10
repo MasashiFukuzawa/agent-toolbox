@@ -39,9 +39,15 @@ class TestBranchName:
         assert len(name) <= len(board.BRANCH_PREFIX) + board.BRANCH_MAX
         assert not name.endswith("-")
 
-    def test_fails_when_neither_title_nor_number_is_usable(self):
-        with pytest.raises(board.Failure):
-            board.branch_name("日本語のみ", None)
+    def test_non_ascii_without_an_issue_number_uses_a_stable_hash(self):
+        assert board.branch_name("日本語のみ", None) == "autopilot/task-1864ec8f49b1"
+
+    def test_non_ascii_hash_fallback_is_nfkc_stable(self):
+        assert board.branch_name("ＡＩ タスク", None) == board.branch_name("AI タスク", None)
+
+    def test_empty_title_without_an_issue_number_still_fails(self):
+        with pytest.raises(board.Failure, match="empty title"):
+            board.branch_name("", None)
 
 
 class TestPickItem:
@@ -104,6 +110,31 @@ class TestGateAllows:
 
     def test_missing_gates_block(self):
         assert board.gate_allows({}, "merge") is False
+
+
+class TestStatusName:
+    def test_uses_the_existing_names_by_default(self):
+        assert board.status_name({}, "inProgress") == "In Progress"
+        assert board.status_name({}, "inReview") == "In Review"
+        assert board.status_name({}, "done") == "Done"
+
+    def test_accepts_adapter_local_names(self):
+        source = {"statusNames": {"inProgress": "Doing", "inReview": "Checking"}}
+        assert board.status_name(source, "inProgress") == "Doing"
+        assert board.status_name(source, "inReview") == "Checking"
+        assert board.status_name(source, "done") == "Done"
+
+    def test_rejects_empty_or_unknown_names(self):
+        with pytest.raises(board.Failure, match="non-empty string"):
+            board.status_name({"statusNames": {"done": ""}}, "done")
+        with pytest.raises(board.Failure, match="unknown lifecycle phase"):
+            board.status_name({}, "blocked")
+
+    def test_rejects_a_non_object_or_unknown_mapping_key(self):
+        with pytest.raises(board.Failure, match="must be an object"):
+            board.status_name({"statusNames": "Doing"}, "done")
+        with pytest.raises(board.Failure, match="unknown keys: inreview"):
+            board.status_name({"statusNames": {"inreview": "Checking"}}, "done")
 
 
 class TestProtectionIsEnforced:
@@ -276,7 +307,14 @@ class TestNextTask:
         return board.cmd_next_task(args), calls
 
     def test_claiming_a_task_moves_it_to_in_progress(self, tmp_path, monkeypatch):
-        items = [{"id": "i1", "status": "Ready", "title": "Add cache", "content": {"number": 3}}]
+        items = [
+            {
+                "id": "i1",
+                "status": "Ready",
+                "title": "Add cache",
+                "content": {"number": 3, "url": "https://example.test/3"},
+            }
+        ]
         result, calls = self._run(tmp_path, monkeypatch, items)
         assert result["task"]["itemId"] == "i1"
         assert result["task"]["branch"] == "autopilot/add-cache"
@@ -287,8 +325,18 @@ class TestNextTask:
 
     def test_resuming_does_not_rewrite_the_board(self, tmp_path, monkeypatch):
         items = [
-            {"id": "i1", "status": "Ready", "title": "New", "content": {"number": 1}},
-            {"id": "i2", "status": "In Progress", "title": "Half done", "content": {"number": 2}},
+            {
+                "id": "i1",
+                "status": "Ready",
+                "title": "New",
+                "content": {"number": 1, "url": "https://example.test/1"},
+            },
+            {
+                "id": "i2",
+                "status": "In Progress",
+                "title": "Half done",
+                "content": {"number": 2, "url": "https://example.test/2"},
+            },
         ]
         result, calls = self._run(tmp_path, monkeypatch, items)
         assert result["task"]["itemId"] == "i2", "an in-flight task outranks a fresh one"
@@ -299,15 +347,258 @@ class TestNextTask:
         # The escalated task is still sitting In Progress; without exclusion the resume
         # path re-claims it every iteration and no other task ever runs.
         items = [
-            {"id": "stuck", "status": "In Progress", "title": "Stuck", "content": {"number": 1}},
-            {"id": "next", "status": "Ready", "title": "Next one", "content": {"number": 2}},
+            {
+                "id": "stuck",
+                "status": "In Progress",
+                "title": "Stuck",
+                "content": {"number": 1, "url": "https://example.test/1"},
+            },
+            {
+                "id": "next",
+                "status": "Ready",
+                "title": "Next one",
+                "content": {"number": 2, "url": "https://example.test/2"},
+            },
         ]
         result, _ = self._run(tmp_path, monkeypatch, items, ["--exclude", "stuck"])
         assert result["task"]["itemId"] == "next"
 
     def test_an_empty_board_ends_the_run_cleanly(self, tmp_path, monkeypatch):
-        result, _ = self._run(tmp_path, monkeypatch, [{"id": "x", "status": "Done"}])
+        result, _ = self._run(
+            tmp_path,
+            monkeypatch,
+            [{"id": "x", "status": "Done", "content": {"url": "https://example.test/1"}}],
+        )
         assert result == {"task": None}
+
+    def test_custom_in_progress_name_is_used_for_claim(self, tmp_path, monkeypatch):
+        config = tmp_path / "autopilot.json"
+        config.write_text(
+            json.dumps(
+                {
+                    "repo": "owner/name",
+                    "taskSource": {
+                        "githubProjects": {
+                            "owner": "o",
+                            "projectNumber": 1,
+                            "pickFrom": ["Ready"],
+                            "statusNames": {"inProgress": "Doing"},
+                        }
+                    },
+                }
+            )
+        )
+        fields = {
+            "fields": [
+                {
+                    "id": "f",
+                    "name": "Status",
+                    "options": [
+                        {"id": "ready", "name": "Ready"},
+                        {"id": "doing", "name": "Doing"},
+                    ],
+                }
+            ]
+        }
+        calls = []
+
+        def fake(args):
+            calls.append(args)
+            if args[1] == "view":
+                return json.dumps(self.PROJECT)
+            if args[1] == "field-list":
+                return json.dumps(fields)
+            if args[1] == "item-list":
+                return json.dumps(
+                    {
+                        "items": [
+                            {
+                                "id": "i1",
+                                "status": "Ready",
+                                "title": "Add cache",
+                                "content": {"number": 3, "url": "https://example.test/3"},
+                            }
+                        ]
+                    }
+                )
+            return ""
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        args = board.build_parser().parse_args(["--config", str(config), "next-task"])
+        assert board.cmd_next_task(args)["task"]["itemId"] == "i1"
+        assert any("doing" in call for call in calls if call[1] == "item-edit")
+
+    def test_custom_in_progress_name_is_used_for_resume(self, tmp_path, monkeypatch):
+        items = [
+            {
+                "id": "i1",
+                "status": "Doing",
+                "title": "Half done",
+                "content": {"number": 3, "url": "https://example.test/3"},
+            }
+        ]
+        config = tmp_path / "autopilot.json"
+        config.write_text(
+            json.dumps(
+                {
+                    "repo": "owner/name",
+                    "taskSource": {
+                        "githubProjects": {
+                            "owner": "o",
+                            "projectNumber": 1,
+                            "pickFrom": ["Ready"],
+                            "statusNames": {"inProgress": "Doing"},
+                        }
+                    },
+                }
+            )
+        )
+        calls = []
+
+        def fake(args):
+            calls.append(args)
+            if args[1] == "view":
+                return json.dumps(self.PROJECT)
+            if args[1] == "field-list":
+                return json.dumps(
+                    {
+                        "fields": [
+                            {
+                                "id": "f",
+                                "name": "Status",
+                                "options": [{"id": "doing", "name": "Doing"}],
+                            }
+                        ]
+                    }
+                )
+            if args[1] == "item-list":
+                return json.dumps({"items": items})
+            return ""
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        args = board.build_parser().parse_args(["--config", str(config), "next-task"])
+        result = board.cmd_next_task(args)
+        assert result["task"]["resumed"] is True
+        assert not [call for call in calls if call[1] == "item-edit"]
+
+    def test_draft_item_is_rejected_before_it_is_claimed(self, tmp_path, monkeypatch):
+        config = tmp_path / "autopilot.json"
+        config.write_text(
+            json.dumps(
+                {
+                    "repo": "owner/name",
+                    "taskSource": {
+                        "githubProjects": {
+                            "owner": "o",
+                            "projectNumber": 1,
+                            "pickFrom": ["Ready"],
+                        }
+                    },
+                }
+            )
+        )
+        calls = []
+
+        def fake(args):
+            calls.append(args)
+            if args[1] == "view":
+                return json.dumps(self.PROJECT)
+            if args[1] == "field-list":
+                return json.dumps(self.FIELDS)
+            if args[1] == "item-list":
+                return json.dumps(
+                    {
+                        "items": [
+                            {
+                                "id": "draft",
+                                "status": "Ready",
+                                "title": "Untracked",
+                                "content": {},
+                            }
+                        ]
+                    }
+                )
+            return ""
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        args = board.build_parser().parse_args(["--config", str(config), "next-task"])
+        with pytest.raises(board.Failure, match="no durable Issue journal"):
+            board.cmd_next_task(args)
+        assert not [call for call in calls if call[1] == "item-edit"]
+
+
+class TestSetStatus:
+    def _run(self, tmp_path, monkeypatch, extra_args, status_names=None):
+        config = tmp_path / "autopilot.json"
+        source = {"owner": "o", "projectNumber": 1}
+        if status_names:
+            source["statusNames"] = status_names
+        config.write_text(
+            json.dumps({"repo": "owner/name", "taskSource": {"githubProjects": source}})
+        )
+        calls = []
+
+        def fake(args):
+            calls.append(args)
+            if args[1] == "field-list":
+                return json.dumps(
+                    {
+                        "fields": [
+                            {
+                                "id": "f",
+                                "name": "Status",
+                                "options": [
+                                    {"id": "checking", "name": "Checking"},
+                                    {"id": "review", "name": "In Review"},
+                                ],
+                            }
+                        ]
+                    }
+                )
+            return ""
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        args = board.build_parser().parse_args(
+            [
+                "--config",
+                str(config),
+                "set-status",
+                "--project-id",
+                "p",
+                "--item-id",
+                "i",
+                *extra_args,
+            ]
+        )
+        return board.cmd_set_status(args), calls
+
+    def test_semantic_phase_uses_the_adapter_mapping(self, tmp_path, monkeypatch):
+        result, calls = self._run(
+            tmp_path, monkeypatch, ["--phase", "inReview"], {"inReview": "Checking"}
+        )
+        assert result["status"] == "Checking"
+        assert any("checking" in call for call in calls if call[1] == "item-edit")
+
+    def test_literal_status_remains_backward_compatible(self, tmp_path, monkeypatch):
+        result, calls = self._run(tmp_path, monkeypatch, ["--status", "In Review"])
+        assert result["status"] == "In Review"
+        assert any("review" in call for call in calls if call[1] == "item-edit")
+
+    def test_phase_and_literal_status_are_mutually_exclusive(self):
+        with pytest.raises(SystemExit):
+            board.build_parser().parse_args(
+                [
+                    "set-status",
+                    "--project-id",
+                    "p",
+                    "--item-id",
+                    "i",
+                    "--phase",
+                    "done",
+                    "--status",
+                    "Done",
+                ]
+            )
 
 
 class TestBranchNameCommand:
@@ -318,3 +609,7 @@ class TestBranchNameCommand:
     def test_non_ascii_needs_an_issue_number(self, capsys):
         assert board.main(["branch-name", "--title", "日本語", "--issue-number", "8"]) == 0
         assert json.loads(capsys.readouterr().out)["branch"] == "autopilot/issue-8"
+
+    def test_non_ascii_without_an_issue_number_uses_a_stable_hash(self, capsys):
+        assert board.main(["branch-name", "--title", "日本語"]) == 0
+        assert json.loads(capsys.readouterr().out)["branch"].startswith("autopilot/task-")
