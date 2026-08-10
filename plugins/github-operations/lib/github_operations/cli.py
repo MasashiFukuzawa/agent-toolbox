@@ -6,6 +6,9 @@ import sys
 from pathlib import Path
 
 from .github import (
+    create_project,
+    create_project_view,
+    create_single_select_field,
     project_fields,
     project_structure,
     require_project,
@@ -13,6 +16,9 @@ from .github import (
     resolve_option,
     resolve_project,
     run_gh,
+    update_project,
+    update_project_view,
+    update_single_select_field,
 )
 from .planning import (
     find_config,
@@ -108,16 +114,93 @@ def _verify_observed(plan: dict, config: dict) -> None:
         raise SafetyError("GitHub state changed after planning; create and approve a new plan")
 
 
+def _option_specs(expected: list, existing: list[dict] | None = None) -> list[dict[str, str]]:
+    existing_by_name = {item.get("name"): item for item in (existing or [])}
+    colors = ["GRAY", "GREEN", "YELLOW", "ORANGE", "PURPLE"]
+    specs = []
+    for index, value in enumerate(expected):
+        if isinstance(value, str):
+            spec = {"name": value, "description": "", "color": colors[min(index, len(colors) - 1)]}
+        elif isinstance(value, dict) and isinstance(value.get("name"), str) and value["name"]:
+            spec = {
+                "name": value["name"],
+                "description": str(value.get("description", "")),
+                "color": str(value.get("color", colors[min(index, len(colors) - 1)])).upper(),
+            }
+        else:
+            raise SafetyError("single-select options must be strings or objects with a non-empty name")
+        previous = existing_by_name.get(spec["name"])
+        if previous and previous.get("id"):
+            spec["id"] = previous["id"]
+        specs.append(spec)
+    return specs
+
+
+def _ensure_single_select_field(owner: str, project: dict, name: str, expected: list) -> None:
+    fields = project_fields(run_gh, owner, int(project["number"]))
+    field = next((item for item in fields if item.get("name") == name), None)
+    if field is None and name == "Status":
+        raise SafetyError("new Projects must expose GitHub's built-in Status field")
+    specs = _option_specs(expected, field.get("options", []) if field else None)
+    actual_names = [item.get("name") for item in field.get("options", [])] if field else []
+    expected_names = [item["name"] for item in specs]
+    if field is None:
+        create_single_select_field(run_gh, project["id"], name, specs)
+    elif actual_names != expected_names:
+        update_single_select_field(run_gh, field["id"], name, specs)
+
+
+def _view_field_ids(owner: str, project: dict, view: dict) -> list[str]:
+    fields = {field["name"]: field["id"] for field in project_fields(run_gh, owner, int(project["number"]))}
+    missing = [name for name in view.get("fields", []) if name not in fields]
+    if missing:
+        raise SafetyError(f"view {view.get('name')!r} references unknown fields: {', '.join(missing)}")
+    return [fields[name] for name in view.get("fields", [])]
+
+
+def _ensure_view(owner: str, project: dict, structure: dict, view: dict) -> None:
+    name = view.get("name")
+    layout = view.get("layout")
+    if not isinstance(name, str) or not name or layout not in {"BOARD_LAYOUT", "TABLE_LAYOUT", "ROADMAP_LAYOUT"}:
+        raise SafetyError("view requires a name and a supported ProjectV2 layout")
+    field_ids = _view_field_ids(owner, project, view)
+    existing = next((item for item in structure.get("views", []) if item.get("name") == name), None)
+    if existing:
+        update_project_view(
+            run_gh,
+            existing["id"],
+            name=name,
+            layout=layout,
+            visible_field_ids=field_ids,
+            filter_value=view.get("filter", ""),
+        )
+    else:
+        created = create_project_view(run_gh, project["id"], name, layout, field_ids)
+        if view.get("filter", ""):
+            update_project_view(
+                run_gh,
+                created["id"],
+                name=name,
+                layout=layout,
+                visible_field_ids=field_ids,
+                filter_value=view["filter"],
+            )
+
+
 def _apply_project(plan: dict, config: dict, journal: dict, *, allow_reconcile: bool) -> dict:
     owner = config["owner"]
     project_cfg = config["project"]
     template = plan["observed"]["template"]
     planned_project = plan["observed"]["existing"]
-    if plan["observed"].get("drift"):
+    bootstrap = template is None and planned_project is None
+    if plan["observed"].get("drift") and not bootstrap:
         raise SafetyError("Project contract drift requires manual remediation; apply was not attempted")
-    recovery_steps = {"copy-attempted", "project-copied"} & set(journal.get("steps", []))
+    recovery_steps = {"copy-attempted", "project-copied", "create-attempted", "project-created"} & set(
+        journal.get("steps", [])
+    )
     if allow_reconcile and planned_project is None and not recovery_steps:
-        raise SafetyError("Project resume requires a journal proving that this plan attempted the copy")
+        action = "creation" if bootstrap else "copy"
+        raise SafetyError(f"Project resume requires a journal proving that this plan attempted the {action}")
     project = resolve_project(run_gh, owner, project_cfg["title"])
     if planned_project is not None:
         if project is None or project["id"] != planned_project["id"]:
@@ -128,36 +211,79 @@ def _apply_project(plan: dict, config: dict, journal: dict, *, allow_reconcile: 
         raise SafetyError("journal Project ID does not match the current target Project")
     if project is None:
         journal.setdefault("steps", [])
-        if "copy-attempted" not in journal["steps"]:
-            journal["steps"].append("copy-attempted")
+        attempt_step = "create-attempted" if bootstrap else "copy-attempted"
+        if attempt_step not in journal["steps"]:
+            journal["steps"].append(attempt_step)
             save_journal(plan["plan_id"], journal)
         try:
-            run_gh(
-                [
-                    "project",
-                    "copy",
-                    str(template["number"]),
-                    "--source-owner",
-                    project_cfg["template"]["owner"],
-                    "--target-owner",
-                    owner,
-                    "--title",
+            if bootstrap:
+                default_repository = config.get("default_repository")
+                repository_id = next(
+                    (
+                        repository["id"]
+                        for repository in plan["observed"].get("repositories", [])
+                        if repository["nameWithOwner"] == f"{owner}/{default_repository}"
+                    ),
+                    None,
+                )
+                project = create_project(
+                    run_gh,
+                    plan["observed"]["preflight"]["organization"]["id"],
                     project_cfg["title"],
-                ],
-                retries=0,
-            )
+                    repository_id,
+                )
+                visibility = project_cfg.get("visibility", "PRIVATE")
+                update_project(
+                    run_gh,
+                    project["id"],
+                    public=visibility == "PUBLIC",
+                    short_description=project_cfg.get("short_description"),
+                    readme=project_cfg.get("readme"),
+                )
+            else:
+                run_gh(
+                    [
+                        "project",
+                        "copy",
+                        str(template["number"]),
+                        "--source-owner",
+                        project_cfg["template"]["owner"],
+                        "--target-owner",
+                        owner,
+                        "--title",
+                        project_cfg["title"],
+                    ],
+                    retries=0,
+                )
         except SafetyError:
             project = resolve_project(run_gh, owner, project_cfg["title"])
             if project is None:
                 raise
         else:
-            project = require_project(run_gh, owner, project_cfg["title"])
+            if project is None:
+                project = require_project(run_gh, owner, project_cfg["title"])
+        journal["project_id"] = project["id"]
+        journal["project_number"] = project["number"]
+        journal.setdefault("steps", [])
+        journal["steps"].append("project-created" if bootstrap else "project-copied")
+        save_journal(plan["plan_id"], journal)
     journal["project_id"] = project["id"]
     journal["project_number"] = project["number"]
     journal.setdefault("steps", [])
-    if "project-copied" not in journal["steps"] and planned_project is None:
-        journal["steps"].append("project-copied")
     save_journal(plan["plan_id"], journal)
+
+    if bootstrap:
+        contract = project_cfg.get("contract", {})
+        status_options = contract.get("statuses", [])
+        if status_options:
+            _ensure_single_select_field(owner, project, project_cfg.get("status_field", "Status"), status_options)
+        priority_options = contract.get("priorities", [])
+        if priority_options:
+            _ensure_single_select_field(owner, project, project_cfg.get("priority_field", "Priority"), priority_options)
+        structure = project_structure(run_gh, project["id"])
+        for view in contract.get("views", []):
+            _ensure_view(owner, project, structure, view)
+
     linked = set(project_structure(run_gh, project["id"])["repositories"])
     for repo in config.get("repositories", []):
         full_name = f"{owner}/{repo}"
@@ -172,8 +298,16 @@ def _apply_project(plan: dict, config: dict, journal: dict, *, allow_reconcile: 
                     raise
             journal["steps"].append(f"repository-linked:{full_name}")
             save_journal(plan["plan_id"], journal)
-    current = observe_project(run_gh, config)
-    verification_errors = project_verification_errors(current, config)
+    current = (
+        observe_project(run_gh, config)
+        if not bootstrap
+        else observe_project(run_gh, config, include_browser=False)
+    )
+    verification_errors = (
+        project_verification_errors(current, config)
+        if not bootstrap
+        else project_verification_errors(current, config, include_browser=False)
+    )
     if verification_errors:
         raise SafetyError("post-apply verification failed: " + "; ".join(verification_errors))
     journal["steps"].append("verified")
@@ -181,7 +315,20 @@ def _apply_project(plan: dict, config: dict, journal: dict, *, allow_reconcile: 
     return {
         "project": current["existing"],
         "verified": True,
-        "browser_required": bool(config.get("auto_add")),
+        "browser_required": bool(
+            config.get("auto_add")
+            or (
+                bootstrap
+                and (
+                    current["drift"]
+                    or config["project"].get("contract", {}).get("workflows")
+                    or any(
+                        view.get("group_by") or view.get("vertical_group_by")
+                        for view in config["project"].get("contract", {}).get("views", [])
+                    )
+                )
+            )
+        ),
         "journal": journal,
     }
 
