@@ -139,6 +139,68 @@ def test_project_plan_is_deterministic_except_identity_fields(config_path: Path)
     assert [operation["type"] for operation in plan.operations] == ["ensure-repository-link", "verify-contract"]
 
 
+def test_project_plan_bootstraps_when_template_is_omitted(tmp_path: Path) -> None:
+    path = tmp_path / "bootstrap.json"
+    path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "owner": "target-owner",
+                "repositories": ["primary"],
+                "default_repository": "primary",
+                "project": {
+                    "title": "Product Development",
+                    "contract": {
+                        "statuses": ["Inbox", "Done"],
+                        "priorities": ["P0: now", "P1: next"],
+                        "views": [{"name": "Board", "layout": "BOARD_LAYOUT", "fields": ["Title"]}],
+                        "workflows": [{"name": "Item added to project", "enabled": True, "set_status": "Inbox"}],
+                    },
+                },
+            }
+        )
+    )
+
+    def runner(args: list[str]) -> str:
+        command = " ".join(args)
+        if command.startswith("api --hostname=github.com user"):
+            return json.dumps({"login": "reviewer", "node_id": "U_1"})
+        if command.startswith("auth status --active --hostname github.com"):
+            return json.dumps({"hosts": {"github.com": [{"login": "reviewer", "active": True}]}})
+        if command.startswith("api --hostname=github.com orgs/target-owner"):
+            return json.dumps({"login": "target-owner", "plan": {"name": "free"}})
+        if command.startswith("project list --owner target-owner"):
+            return json.dumps({"projects": []})
+        if command.startswith("repo view target-owner/primary"):
+            return json.dumps({"id": "R_PRIMARY", "nameWithOwner": "target-owner/primary", "url": "url"})
+        if command.startswith("api graphql") and "login=target-owner" in command:
+            return json.dumps(
+                {
+                    "data": {
+                        "organization": {
+                            "id": "O_TARGET",
+                            "login": "target-owner",
+                            "viewerCanCreateProjects": True,
+                        }
+                    }
+                }
+            )
+        raise AssertionError(args)
+
+    config = load_config(path)
+    plan = make_project_plan(runner, path, config)
+    operation_types = [operation["type"] for operation in plan.operations]
+    assert "create-project" in operation_types
+    assert "copy-project" not in operation_types
+    assert "ensure-single-select-field" in operation_types
+    assert "ensure-view" in operation_types
+    assert "browser-required-workflows" in operation_types
+    workflow_operation = next(
+        operation for operation in plan.operations if operation["type"] == "browser-required-workflows"
+    )
+    assert workflow_operation["workflows"][0]["set_status"] == "Inbox"
+
+
 def test_issue_plan_resolves_fields_by_semantic_name(config_path: Path) -> None:
     config = load_config(config_path)
     plan = make_issue_plan(
@@ -434,6 +496,78 @@ def test_project_apply_copies_links_and_post_verifies(tmp_path: Path, monkeypatc
     assert state["linked"] == {"target-owner/primary", "target-owner/secondary"}
     assert sum(call[:2] == ["project", "copy"] for call in calls) == 1
     assert sum(call[:2] == ["project", "link"] for call in calls) == 2
+
+
+def test_project_apply_bootstraps_without_copying_a_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path))
+    project = {"id": "P_NEW", "number": 9, "title": "Product Development"}
+    state = {"project": None, "views": []}
+    calls: list[str] = []
+
+    def resolve(_runner, _owner: str, _title: str):
+        return state["project"]
+
+    def create(_runner, owner_id: str, title: str, repository_id: str | None = None):
+        calls.append("create")
+        assert owner_id == "O_TARGET"
+        assert repository_id == "R_PRIMARY"
+        state["project"] = project
+        return project
+
+    monkeypatch.setattr(cli, "resolve_project", resolve)
+    monkeypatch.setattr(cli, "create_project", create)
+    monkeypatch.setattr(cli, "update_project", lambda *_args, **_kwargs: project)
+    monkeypatch.setattr(
+        cli,
+        "project_fields",
+        lambda *_args: [{"id": "F_TITLE", "name": "Title", "options": []}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "project_structure",
+        lambda *_args: {"repositories": [], "views": state["views"], "workflows": []},
+    )
+    monkeypatch.setattr(
+        cli,
+        "create_project_view",
+        lambda *_args: {"id": "V_BOARD", "name": "Board", "layout": "BOARD_LAYOUT", "filter": ""},
+    )
+    monkeypatch.setattr(cli, "update_project_view", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        cli,
+        "observe_project",
+        lambda *_args, **_kwargs: {
+            "existing": project,
+            "drift": [],
+            "structure": {"repositories": ["target-owner/primary"], "views": [], "workflows": []},
+        },
+    )
+    monkeypatch.setattr(cli, "run_gh", lambda args, **_kwargs: calls.append(" ".join(args)) or "")
+
+    plan = {
+        "plan_id": "PLAN_BOOTSTRAP",
+        "observed": {
+            "template": None,
+            "existing": None,
+            "drift": [],
+            "preflight": {"organization": {"id": "O_TARGET"}},
+            "repositories": [{"id": "R_PRIMARY", "nameWithOwner": "target-owner/primary"}],
+        },
+    }
+    config = {
+        "owner": "target-owner",
+        "repositories": ["primary"],
+        "default_repository": "primary",
+        "project": {
+            "title": "Product Development",
+            "contract": {"views": [{"name": "Board", "layout": "BOARD_LAYOUT", "fields": ["Title"]}]},
+        },
+    }
+
+    result = cli._apply_project(plan, config, {}, allow_reconcile=False)
+    assert result["verified"] is True
+    assert calls[0] == "create"
+    assert not any(call.startswith("project copy") for call in calls)
 
 
 def test_verify_returns_nonzero_for_project_drift(

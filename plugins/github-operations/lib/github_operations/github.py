@@ -35,6 +35,190 @@ def json_gh(runner: Runner, args: list[str]) -> Any:
         raise SafetyError(f"gh returned invalid JSON for: {' '.join(args)}") from exc
 
 
+def graphql(runner: Runner, query: str) -> dict[str, Any]:
+    data = json_gh(runner, ["api", "graphql", "-f", f"query={query}"])
+    errors = data.get("errors")
+    if errors:
+        messages = "; ".join(str(error.get("message", error)) for error in errors)
+        raise SafetyError(f"GitHub GraphQL request failed: {messages}")
+    return data.get("data", {})
+
+
+def _graphql_string(value: str) -> str:
+    return json.dumps(value, ensure_ascii=False)
+
+
+def create_project(
+    runner: Runner, owner_id: str, title: str, repository_id: str | None = None
+) -> dict[str, Any]:
+    repository_input = f", repositoryId: {_graphql_string(repository_id)}" if repository_id else ""
+    query = f"""
+    mutation {{
+      createProjectV2(input: {{
+        ownerId: {_graphql_string(owner_id)},
+        title: {_graphql_string(title)}{repository_input}
+      }}) {{
+        projectV2 {{ id number title }}
+      }}
+    }}
+    """
+    project = graphql(runner, query).get("createProjectV2", {}).get("projectV2")
+    if not project:
+        raise SafetyError("GitHub did not return the newly created Project")
+    return project
+
+
+def update_project(
+    runner: Runner,
+    project_id: str,
+    *,
+    public: bool | None = None,
+    short_description: str | None = None,
+    readme: str | None = None,
+) -> dict[str, Any]:
+    inputs = [f"projectId: {_graphql_string(project_id)}"]
+    if public is not None:
+        inputs.append(f"public: {'true' if public else 'false'}")
+    if short_description is not None:
+        inputs.append(f"shortDescription: {_graphql_string(short_description)}")
+    if readme is not None:
+        inputs.append(f"readme: {_graphql_string(readme)}")
+    query = f"""
+    mutation {{
+      updateProjectV2(input: {{{', '.join(inputs)}}}) {{
+        projectV2 {{ id number title }}
+      }}
+    }}
+    """
+    project = graphql(runner, query).get("updateProjectV2", {}).get("projectV2")
+    if not project:
+        raise SafetyError("GitHub did not return the updated Project")
+    return project
+
+
+def _single_select_options(options: list[dict[str, str]]) -> str:
+    rendered = []
+    for option in options:
+        rendered.append(
+            "{"
+            f"name: {_graphql_string(option['name'])}, "
+            f"description: {_graphql_string(option.get('description', ''))}, "
+            f"color: {option.get('color', 'GRAY')}"
+            + (f", id: {_graphql_string(option['id'])}" if option.get("id") else "")
+            + "}"
+        )
+    return "[" + ", ".join(rendered) + "]"
+
+
+def create_single_select_field(
+    runner: Runner, project_id: str, name: str, options: list[dict[str, str]]
+) -> dict[str, Any]:
+    query = f"""
+    mutation {{
+      createProjectV2Field(input: {{
+        projectId: {_graphql_string(project_id)},
+        name: {_graphql_string(name)},
+        dataType: SINGLE_SELECT,
+        singleSelectOptions: {_single_select_options(options)}
+      }}) {{
+        projectV2Field {{
+          ... on ProjectV2SingleSelectField {{ id name options {{ id name }} }}
+        }}
+      }}
+    }}
+    """
+    field = graphql(runner, query).get("createProjectV2Field", {}).get("projectV2Field")
+    if not field:
+        raise SafetyError(f"GitHub did not return the new field {name!r}")
+    return field
+
+
+def update_single_select_field(
+    runner: Runner, field_id: str, name: str, options: list[dict[str, str]]
+) -> dict[str, Any]:
+    query = f"""
+    mutation {{
+      updateProjectV2Field(input: {{
+        fieldId: {_graphql_string(field_id)},
+        name: {_graphql_string(name)},
+        singleSelectOptions: {_single_select_options(options)}
+      }}) {{
+        projectV2Field {{
+          ... on ProjectV2SingleSelectField {{ id name options {{ id name }} }}
+        }}
+      }}
+    }}
+    """
+    field = graphql(runner, query).get("updateProjectV2Field", {}).get("projectV2Field")
+    if not field:
+        raise SafetyError(f"GitHub did not return the updated field {name!r}")
+    return field
+
+
+def create_project_view(
+    runner: Runner,
+    project_id: str,
+    name: str,
+    layout: str,
+    visible_field_ids: list[str],
+) -> dict[str, Any]:
+    configuration = "" if layout == "ROADMAP_LAYOUT" else (
+        ", configuration: { visibleFieldIds: ["
+        + ", ".join(_graphql_string(value) for value in visible_field_ids)
+        + "] }"
+    )
+    query = f"""
+    mutation {{
+      createProjectV2View(input: {{
+        projectId: {_graphql_string(project_id)},
+        name: {_graphql_string(name)},
+        layout: {layout}{configuration}
+      }}) {{
+        projectV2View {{ id name layout filter }}
+      }}
+    }}
+    """
+    view = graphql(runner, query).get("createProjectV2View", {}).get("projectV2View")
+    if not view:
+        raise SafetyError(f"GitHub did not return the new view {name!r}")
+    return view
+
+
+def update_project_view(
+    runner: Runner,
+    view_id: str,
+    *,
+    name: str,
+    layout: str,
+    visible_field_ids: list[str],
+    filter_value: str | None = None,
+) -> dict[str, Any]:
+    inputs = [
+        f"viewId: {_graphql_string(view_id)}",
+        f"name: {_graphql_string(name)}",
+        f"layout: {layout}",
+    ]
+    if layout != "ROADMAP_LAYOUT":
+        inputs.append(
+            "configuration: { visibleFieldIds: ["
+            + ", ".join(_graphql_string(value) for value in visible_field_ids)
+            + "] }"
+        )
+    if filter_value is not None:
+        inputs.append(f"filter: {_graphql_string(filter_value)}")
+    query = f"""
+    mutation {{
+      updateProjectV2View(input: {{{', '.join(inputs)}}}) {{
+        projectV2View {{ id name layout filter }}
+      }}
+    }}
+    """
+    view = graphql(runner, query).get("updateProjectV2View", {}).get("projectV2View")
+    if not view:
+        raise SafetyError("GitHub did not return the updated Project view")
+    return view
+
+
 def identity(runner: Runner, host: str) -> Identity:
     user = json_gh(runner, ["api", f"--hostname={host}", "user"])
     return Identity(host=host, login=user["login"], node_id=user["node_id"])
@@ -129,7 +313,7 @@ def project_structure(runner: Runner, project_id: str) -> dict[str, Any]:
           repositories(first: 100) { nodes { nameWithOwner } pageInfo { hasNextPage endCursor } }
           views(first: 100) {
             nodes {
-              name layout filter
+              id name layout filter
               fields(first: 100) { nodes { ... on ProjectV2FieldCommon { name } } }
               groupByFields(first: 20) { nodes { ... on ProjectV2FieldCommon { name } } }
               verticalGroupByFields(first: 20) { nodes { ... on ProjectV2FieldCommon { name } } }

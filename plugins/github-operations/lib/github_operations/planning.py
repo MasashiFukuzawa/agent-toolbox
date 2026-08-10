@@ -57,6 +57,14 @@ def load_config(path: Path) -> dict[str, Any]:
         raise SafetyError("config owner must be a non-empty string")
     if not isinstance(config["project"], dict) or not config["project"].get("title"):
         raise SafetyError("config project.title must be a non-empty string")
+    template = config["project"].get("template")
+    if template is not None and (
+        not isinstance(template, dict) or not template.get("owner") or not template.get("title")
+    ):
+        raise SafetyError("config project.template must contain owner and title when provided")
+    visibility = config["project"].get("visibility", "PRIVATE")
+    if visibility not in {"PRIVATE", "PUBLIC"}:
+        raise SafetyError("config project.visibility must be PRIVATE or PUBLIC")
     repositories = config.get("repositories", [])
     if not isinstance(repositories, list) or not all(isinstance(item, str) and item for item in repositories):
         raise SafetyError("config repositories must be a list of non-empty names")
@@ -101,21 +109,28 @@ def _new_plan(
     return plan
 
 
-def observe_project(runner: Runner, config: dict) -> dict[str, Any]:
+def observe_project(runner: Runner, config: dict, *, include_browser: bool = True) -> dict[str, Any]:
     owner = config["owner"]
     project_cfg = config["project"]
     template_cfg = project_cfg.get("template")
-    if not isinstance(template_cfg, dict) or not template_cfg.get("owner") or not template_cfg.get("title"):
-        raise SafetyError("Project operations require project.template.owner and project.template.title")
-    template = resolve_project(runner, template_cfg["owner"], template_cfg["title"])
-    if template is None:
-        raise SafetyError("template project was not found")
+    template = None
+    if template_cfg is not None:
+        template = resolve_project(runner, template_cfg["owner"], template_cfg["title"])
+        if template is None:
+            raise SafetyError("template project was not found")
     existing = resolve_project(runner, owner, project_cfg["title"])
     repos = [repository(runner, f"{owner}/{name}") for name in config.get("repositories", [])]
     contract_project = existing or template
-    fields = project_fields(runner, existing and owner or template_cfg["owner"], int(contract_project["number"]))
-    structure = project_structure(runner, contract_project["id"])
-    drift = contract_drift(project_cfg.get("contract", {}), fields, structure)
+    if contract_project is None:
+        fields = []
+        structure = {"repositories": [], "views": [], "workflows": []}
+        if not project_cfg.get("contract"):
+            raise SafetyError("a project without a template requires project.contract")
+    else:
+        contract_owner = owner if existing else template_cfg["owner"]
+        fields = project_fields(runner, contract_owner, int(contract_project["number"]))
+        structure = project_structure(runner, contract_project["id"])
+    drift = contract_drift(project_cfg.get("contract", {}), fields, structure, include_browser=include_browser)
     preflight = organization_preflight(runner, owner, config.get("host", "github.com"))
     if not preflight["organization"]["viewerCanCreateProjects"] and existing is None:
         raise SafetyError(f"authenticated user cannot create Projects under {owner}")
@@ -129,7 +144,13 @@ def observe_project(runner: Runner, config: dict) -> dict[str, Any]:
     }
 
 
-def contract_drift(contract: dict, fields: list[dict[str, Any]], structure: dict[str, Any]) -> list[str]:
+def _option_names(expected: list[Any]) -> list[str]:
+    return [item if isinstance(item, str) else item["name"] for item in expected]
+
+
+def contract_drift(
+    contract: dict, fields: list[dict[str, Any]], structure: dict[str, Any], *, include_browser: bool = True
+) -> list[str]:
     drift: list[str] = []
     fields_by_name = {field["name"]: field for field in fields}
     for key, default_field in (("statuses", "Status"), ("priorities", "Priority")):
@@ -138,7 +159,7 @@ def contract_drift(contract: dict, fields: list[dict[str, Any]], structure: dict
             continue
         field = fields_by_name.get(default_field)
         actual = [option["name"] for option in field.get("options", [])] if field else []
-        if actual != expected:
+        if actual != _option_names(expected):
             drift.append(f"{default_field} options differ: expected={expected!r} actual={actual!r}")
     expected_views = contract.get("views")
     if expected_views:
@@ -159,13 +180,15 @@ def contract_drift(contract: dict, fields: list[dict[str, Any]], structure: dict
                 ],
             }
             for key, expected_value in expected.items():
+                if key in {"group_by", "vertical_group_by"} and not include_browser:
+                    continue
                 if key != "name" and comparisons.get(key) != expected_value:
                     drift.append(
                         f"view {expected['name']!r} {key} differs: "
                         f"expected={expected_value!r} actual={comparisons.get(key)!r}"
                     )
     expected_workflows = contract.get("workflows")
-    if expected_workflows:
+    if expected_workflows and include_browser:
         actual_workflows = {workflow["name"]: workflow["enabled"] for workflow in structure["workflows"]}
         for expected in expected_workflows:
             expected = {"name": expected, "enabled": True} if isinstance(expected, str) else expected
@@ -177,8 +200,18 @@ def contract_drift(contract: dict, fields: list[dict[str, Any]], structure: dict
     return drift
 
 
-def project_verification_errors(observed: dict[str, Any], config: dict) -> list[str]:
+def project_verification_errors(
+    observed: dict[str, Any], config: dict, *, include_browser: bool = True
+) -> list[str]:
     errors = list(observed.get("drift", []))
+    if not include_browser:
+        errors = [
+            error
+            for error in errors
+            if not error.startswith("workflow ")
+            and "group_by differs" not in error
+            and "vertical_group_by differs" not in error
+        ]
     if observed.get("existing") is None:
         errors.append("target Project does not exist")
     linked = set(observed.get("structure", {}).get("repositories", []))
@@ -194,10 +227,34 @@ def make_project_plan(runner: Runner, path: Path, config: dict) -> Plan:
     observed = observe_project(runner, config)
     project_cfg = config["project"]
     operations: list[dict[str, Any]] = []
-    if observed["existing"] is None and observed["drift"]:
+    template = observed["template"]
+    if observed["existing"] is None and template is not None and observed["drift"]:
         raise SafetyError("template does not satisfy the requested contract: " + "; ".join(observed["drift"]))
-    if observed["existing"] is None:
+    if observed["existing"] is None and template is not None:
         operations.append({"type": "copy-project", "source": observed["template"], "title": project_cfg["title"]})
+    elif observed["existing"] is None:
+        contract = project_cfg.get("contract", {})
+        operations.append(
+            {
+                "type": "create-project",
+                "title": project_cfg["title"],
+                "visibility": project_cfg.get("visibility", "PRIVATE"),
+                "repository": config.get("default_repository"),
+            }
+        )
+        for field_name, key in ((project_cfg.get("status_field", "Status"), "statuses"),):
+            if contract.get(key):
+                operations.append({"type": "ensure-single-select-field", "name": field_name, "options": contract[key]})
+        if contract.get("priorities"):
+            operations.append(
+                {
+                    "type": "ensure-single-select-field",
+                    "name": project_cfg.get("priority_field", "Priority"),
+                    "options": contract["priorities"],
+                }
+            )
+        for view in contract.get("views", []):
+            operations.append({"type": "ensure-view", "view": view})
     linked = set(observed["structure"]["repositories"]) if observed["existing"] else set()
     for repo in observed["repositories"]:
         if repo["nameWithOwner"] not in linked:
@@ -205,6 +262,14 @@ def make_project_plan(runner: Runner, path: Path, config: dict) -> Plan:
     operations.append(
         {"type": "verify-contract", "contract": project_cfg.get("contract", {}), "drift": observed["drift"]}
     )
+    if observed["existing"] is None and template is None and project_cfg.get("contract", {}).get("workflows"):
+        operations.append(
+            {
+                "type": "browser-required-workflows",
+                "workflows": project_cfg["contract"]["workflows"],
+                "reason": "GitHub does not expose a supported create/update mutation for built-in workflow settings",
+            }
+        )
     if config.get("auto_add"):
         plan_name = str(observed["preflight"]["plan"]).lower()
         available = 20 if "enterprise" in plan_name else 5 if plan_name in {"team", "pro"} else 1
