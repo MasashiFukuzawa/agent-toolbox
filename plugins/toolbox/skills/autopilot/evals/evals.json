@@ -28,6 +28,18 @@
       "prompt": "autopilotで継続実行して。gates.merge=auto、gates.deploy=human。",
       "expected_output": "CI成功後のmergeは実行できるが、deploy前で停止する。mergeとdeployのgateを独立評価する。",
       "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "GitHub Issuesを使っていないrepoで、docs/plan.mdの次の項目をautopilotで進めて",
+      "expected_output": "plan-doc task sourceを使い、1件だけ処理する。journalは会話へ出し、base branchへ完了チェックを直接commitせず、同じrunで次項目をclaimしない。",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "trackerのない試作repoで、この会話の作業を自律実行して",
+      "expected_output": "none task sourceとして1件だけ処理し、plan・review disposition・completion evidenceを会話へ残す。Issueやtrackerを新設して模倣しない。",
+      "files": []
     }
   ]
 }
