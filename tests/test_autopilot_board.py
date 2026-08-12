@@ -97,9 +97,7 @@ class TestResolveOptionId:
 
 
 class TestGateAllows:
-    @pytest.mark.parametrize(
-        "value", ["human", "Auto", "AUTO", "auto ", "true", "yes", "", None, 1, 0, False]
-    )
+    @pytest.mark.parametrize("value", ["human", "Auto", "AUTO", "auto ", "true", "yes", "", None, 1, 0, False])
     def test_anything_ambiguous_falls_back_to_human(self, value):
         assert board.gate_allows({"gates": {"merge": value}}, "merge") is False
 
@@ -173,12 +171,8 @@ class TestPreflight:
         path.write_text(json.dumps({"repo": "owner/name", **extra}))
         return path
 
-    def test_refuses_when_the_directory_is_a_different_repository(
-        self, tmp_path, monkeypatch, capsys
-    ):
-        monkeypatch.setattr(
-            board, "run_gh", lambda a: json.dumps({"nameWithOwner": "owner/other"})
-        )
+    def test_refuses_when_the_directory_is_a_different_repository(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.setattr(board, "run_gh", lambda a: json.dumps({"nameWithOwner": "owner/other"}))
         assert board.main(["--config", str(self._config(tmp_path)), "preflight"]) == 1
         assert "repository mismatch" in capsys.readouterr().err
 
@@ -186,9 +180,7 @@ class TestPreflight:
         monkeypatch.setattr(board, "run_gh", lambda a: json.dumps({"nameWithOwner": "owner/name"}))
         assert board.main(["--config", str(self._config(tmp_path)), "preflight"]) == 0
 
-    def test_protection_that_exists_but_cannot_enforce_also_downgrades(
-        self, tmp_path, monkeypatch, capsys
-    ):
+    def test_protection_that_exists_but_cannot_enforce_also_downgrades(self, tmp_path, monkeypatch, capsys):
         def fake(args):
             if args[0] == "repo":
                 return json.dumps({"nameWithOwner": "owner/name"})
@@ -216,9 +208,7 @@ class TestPreflight:
         assert board.main(["--config", str(tmp_path / "absent.json"), "preflight"]) == 1
         assert "not found" in capsys.readouterr().err
 
-    def test_unprotected_branch_downgrades_instead_of_refusing(
-        self, tmp_path, monkeypatch, capsys
-    ):
+    def test_unprotected_branch_downgrades_instead_of_refusing(self, tmp_path, monkeypatch, capsys):
         # Refusing would strand a whole backlog over a repository setting no task can
         # fix; stopping at PR creation is what an unset gate would have done anyway.
         def fake(args):
@@ -282,9 +272,7 @@ class TestNextTask:
             json.dumps(
                 {
                     "repo": "owner/name",
-                    "taskSource": {
-                        "githubProjects": {"owner": "o", "projectNumber": 1, "pickFrom": ["Ready"]}
-                    },
+                    "taskSource": {"githubProjects": {"owner": "o", "projectNumber": 1, "pickFrom": ["Ready"]}},
                 }
             )
         )
@@ -302,7 +290,14 @@ class TestNextTask:
 
         monkeypatch.setattr(board, "run_gh", fake)
         args = board.build_parser().parse_args(
-            ["--config", str(config), "next-task", *extra_args]
+            [
+                "--config",
+                str(config),
+                "next-task",
+                "--expected-config-digest",
+                board.config_digest(json.loads(config.read_text())),
+                *extra_args,
+            ]
         )
         return board.cmd_next_task(args), calls
 
@@ -312,7 +307,7 @@ class TestNextTask:
                 "id": "i1",
                 "status": "Ready",
                 "title": "Add cache",
-                "content": {"number": 3, "url": "https://example.test/3"},
+                "content": {"number": 3, "url": "https://github.com/owner/name/issues/3"},
             }
         ]
         result, calls = self._run(tmp_path, monkeypatch, items)
@@ -320,8 +315,8 @@ class TestNextTask:
         assert result["task"]["branch"] == "autopilot/add-cache"
         assert result["task"]["projectId"] == "PVT_1"
         assert result["task"]["resumed"] is False
-        edits = [c for c in calls if c[1] == "item-edit"]
-        assert len(edits) == 1 and "wip" in edits[0]
+        assert not [c for c in calls if c[1] == "item-edit"]
+        assert not [c for c in calls if c[:2] == ["issue", "edit"]]
 
     def test_resuming_does_not_rewrite_the_board(self, tmp_path, monkeypatch):
         items = [
@@ -329,19 +324,20 @@ class TestNextTask:
                 "id": "i1",
                 "status": "Ready",
                 "title": "New",
-                "content": {"number": 1, "url": "https://example.test/1"},
+                "content": {"number": 1, "url": "https://github.com/owner/name/issues/1"},
             },
             {
                 "id": "i2",
                 "status": "In Progress",
                 "title": "Half done",
-                "content": {"number": 2, "url": "https://example.test/2"},
+                "content": {"number": 2, "url": "https://github.com/owner/name/issues/2"},
             },
         ]
         result, calls = self._run(tmp_path, monkeypatch, items)
         assert result["task"]["itemId"] == "i2", "an in-flight task outranks a fresh one"
         assert result["task"]["resumed"] is True
         assert not [c for c in calls if c[1] == "item-edit"], "already In Progress; nothing to set"
+        assert not [c for c in calls if c[:2] == ["issue", "edit"]]
 
     def test_an_excluded_task_does_not_block_the_rest_of_the_board(self, tmp_path, monkeypatch):
         # The escalated task is still sitting In Progress; without exclusion the resume
@@ -351,13 +347,13 @@ class TestNextTask:
                 "id": "stuck",
                 "status": "In Progress",
                 "title": "Stuck",
-                "content": {"number": 1, "url": "https://example.test/1"},
+                "content": {"number": 1, "url": "https://github.com/owner/name/issues/1"},
             },
             {
                 "id": "next",
                 "status": "Ready",
                 "title": "Next one",
-                "content": {"number": 2, "url": "https://example.test/2"},
+                "content": {"number": 2, "url": "https://github.com/owner/name/issues/2"},
             },
         ]
         result, _ = self._run(tmp_path, monkeypatch, items, ["--exclude", "stuck"])
@@ -367,7 +363,7 @@ class TestNextTask:
         result, _ = self._run(
             tmp_path,
             monkeypatch,
-            [{"id": "x", "status": "Done", "content": {"url": "https://example.test/1"}}],
+            [{"id": "x", "status": "Done", "content": {"url": "https://github.com/owner/name/issues/1"}}],
         )
         assert result == {"task": None}
 
@@ -416,7 +412,7 @@ class TestNextTask:
                                 "id": "i1",
                                 "status": "Ready",
                                 "title": "Add cache",
-                                "content": {"number": 3, "url": "https://example.test/3"},
+                                "content": {"number": 3, "url": "https://github.com/owner/name/issues/3"},
                             }
                         ]
                     }
@@ -424,9 +420,17 @@ class TestNextTask:
             return ""
 
         monkeypatch.setattr(board, "run_gh", fake)
-        args = board.build_parser().parse_args(["--config", str(config), "next-task"])
+        args = board.build_parser().parse_args(
+            [
+                "--config",
+                str(config),
+                "next-task",
+                "--expected-config-digest",
+                board.config_digest(json.loads(config.read_text())),
+            ]
+        )
         assert board.cmd_next_task(args)["task"]["itemId"] == "i1"
-        assert any("doing" in call for call in calls if call[1] == "item-edit")
+        assert not [call for call in calls if call[1] == "item-edit"]
 
     def test_custom_in_progress_name_is_used_for_resume(self, tmp_path, monkeypatch):
         items = [
@@ -434,7 +438,7 @@ class TestNextTask:
                 "id": "i1",
                 "status": "Doing",
                 "title": "Half done",
-                "content": {"number": 3, "url": "https://example.test/3"},
+                "content": {"number": 3, "url": "https://github.com/owner/name/issues/3"},
             }
         ]
         config = tmp_path / "autopilot.json"
@@ -476,10 +480,33 @@ class TestNextTask:
             return ""
 
         monkeypatch.setattr(board, "run_gh", fake)
-        args = board.build_parser().parse_args(["--config", str(config), "next-task"])
+        args = board.build_parser().parse_args(
+            [
+                "--config",
+                str(config),
+                "next-task",
+                "--expected-config-digest",
+                board.config_digest(json.loads(config.read_text())),
+            ]
+        )
         result = board.cmd_next_task(args)
         assert result["task"]["resumed"] is True
         assert not [call for call in calls if call[1] == "item-edit"]
+
+    def test_foreign_repository_issue_is_rejected_without_writes(self, tmp_path, monkeypatch):
+        items = [
+            {
+                "id": "foreign",
+                "status": "Ready",
+                "title": "Wrong repository",
+                "content": {
+                    "number": 3,
+                    "url": "https://github.com/another/repository/issues/3",
+                },
+            }
+        ]
+        with pytest.raises(board.Failure, match="not configured owner/name#3"):
+            self._run(tmp_path, monkeypatch, items)
 
     def test_draft_item_is_rejected_before_it_is_claimed(self, tmp_path, monkeypatch):
         config = tmp_path / "autopilot.json"
@@ -521,7 +548,15 @@ class TestNextTask:
             return ""
 
         monkeypatch.setattr(board, "run_gh", fake)
-        args = board.build_parser().parse_args(["--config", str(config), "next-task"])
+        args = board.build_parser().parse_args(
+            [
+                "--config",
+                str(config),
+                "next-task",
+                "--expected-config-digest",
+                board.config_digest(json.loads(config.read_text())),
+            ]
+        )
         with pytest.raises(board.Failure, match="no durable Issue journal"):
             board.cmd_next_task(args)
         assert not [call for call in calls if call[1] == "item-edit"]
@@ -533,9 +568,7 @@ class TestSetStatus:
         source = {"owner": "o", "projectNumber": 1}
         if status_names:
             source["statusNames"] = status_names
-        config.write_text(
-            json.dumps({"repo": "owner/name", "taskSource": {"githubProjects": source}})
-        )
+        config.write_text(json.dumps({"repo": "owner/name", "taskSource": {"githubProjects": source}}))
         calls = []
 
         def fake(args):
@@ -573,9 +606,7 @@ class TestSetStatus:
         return board.cmd_set_status(args), calls
 
     def test_semantic_phase_uses_the_adapter_mapping(self, tmp_path, monkeypatch):
-        result, calls = self._run(
-            tmp_path, monkeypatch, ["--phase", "inReview"], {"inReview": "Checking"}
-        )
+        result, calls = self._run(tmp_path, monkeypatch, ["--phase", "inReview"], {"inReview": "Checking"})
         assert result["status"] == "Checking"
         assert any("checking" in call for call in calls if call[1] == "item-edit")
 

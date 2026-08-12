@@ -70,8 +70,11 @@ synthetic statusを作らない。
 
 ## `github-projects` adapter
 
-- `next-task`はProjectとfield IDを実行時に解決する。設定されたin-progress状態を最優先で再開し、
-  無ければ`pickFrom`からclaimして`start`へ遷移する。
+- `next-task`は候補をread-onlyで選ぶ。共通collaboration preflight後は`github-operations`のguarded claimを
+  呼ぶ。GitHub固有のidentity再確認、self-assignment、`start`遷移、部分失敗contractをautopilotへ重複実装
+  しない。既にin-progressのタスクを再開するだけならclaimを呼ばず、assigneeを書き換えない。
+- adapterは単一repository Project専用であり、Issue URLのowner/repo/numberがconfigと一致しないitemを
+  claim前にfail loudlyとする。
 - Plan、Reviewの採否、Decision、Progress、Escalation、Completion evidenceを選択したIssueへ追記する。
   Issue comment面を持たないdraft itemはclaim前にfail loudlyとする。
 - `review`と`complete`は設定された`statusNames`を使う。省略時は従来の`In Progress`、

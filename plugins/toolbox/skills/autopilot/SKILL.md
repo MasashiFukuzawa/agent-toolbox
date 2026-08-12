@@ -79,6 +79,10 @@ EXPECTED_REPO=$(echo "$PREFLIGHT" | jq -r '.repo')
 BASE_BRANCH=$(echo "$PREFLIGHT" | jq -r '.baseBranch')
 MERGE_GATE=$(echo "$PREFLIGHT" | jq -r '.mergeGate')   # "auto" または "human" に正規化済み
 DEPLOY_GATE=$(echo "$PREFLIGHT" | jq -r '.deployGate')
+CONFIG_DIGEST=$(echo "$PREFLIGHT" | jq -r '.configDigest')
+PROJECT_OWNER=$(echo "$PREFLIGHT" | jq -r '.githubProjects.owner // empty')
+PROJECT_NUMBER=$(echo "$PREFLIGHT" | jq -r '.githubProjects.projectNumber // empty')
+IN_PROGRESS=$(echo "$PREFLIGHT" | jq -r '.githubProjects.inProgress // empty')
 ```
 
 加えて、後続で使う実行環境を判定する。
@@ -100,26 +104,54 @@ config の `taskSource.mode` に従う。task-source は選択・journal・状�
 モードごとの能力とjournal形式は [task sources](references/task-sources.md) を正とし、未対応能力を
 別のtrackerやローカル状態で黙って模倣しない。
 
+#### Collaboration preflight（選択後・claim前に必須）
+
+[collaboration preflight](references/collaboration-preflight.md) を正として実施する。task-source固有の
+claim、worktree作成、計画、サブエージェントへの分割、コード編集、migration番号の確保は、衝突なしの
+根拠を記録した後に限る。`In Progress`の再開候補でも、別の人間・agentが所有する重複実装が見つかれば
+再開せず統合モードへ切り替える。
+
 #### `github-projects` モード
 
 ```bash
-NEXT=$(<skill-dir>/scripts/autopilot_board.py next-task) || exit 1
+CANDIDATE=$(<skill-dir>/scripts/autopilot_board.py next-task \
+  --expected-config-digest "$CONFIG_DIGEST") || exit 1
 ```
 
 Project / field / option の id を実行時に解決し、**adapterのin-progress状態にあるタスクを再開**、無ければ
-config の `pickFrom` の順序（先頭が最優先）で次のタスクを選んで In Progress へ移す。
+config の `pickFrom` の順序（先頭が最優先）で次のタスクを**read-onlyで選ぶ**。出力がnullなら終了し、
+それ以外は上記collaboration preflightを実施する。衝突なしを記録した新規候補だけ、次の明示的なclaimを行う。
+
+```bash
+TASK=$(echo "$CANDIDATE" | jq -r '.task')
+[[ "$TASK" == "null" ]] && { echo "INFO: 対象タスクなし。"; exit 0; }
+ITEM_ID=$(echo "$TASK" | jq -r '.itemId')
+ISSUE_URL=$(echo "$TASK" | jq -r '.issueUrl')
+ISSUE_NUMBER=$(echo "$TASK" | jq -r '.issueNumber')
+SOURCE_STATUS=$(echo "$TASK" | jq -r '.sourceStatus')
+RESUMED=$(echo "$TASK" | jq -r '.resumed')
+if [[ "$RESUMED" != "true" ]]; then
+  CLAIM=$(<github-operations-plugin>/scripts/project_task.py claim \
+    --repo "$EXPECTED_REPO" --owner "$PROJECT_OWNER" --project-number "$PROJECT_NUMBER" \
+    --in-progress "$IN_PROGRESS" \
+    --item-id "$ITEM_ID" --issue-url "$ISSUE_URL" --issue-number "$ISSUE_NUMBER" \
+    --expected-status "$SOURCE_STATUS") || exit 1
+fi
+```
+
+GitHub固有のclaimは`github-operations`を正本とする。adapterは候補identity/statusを再読込し、既存assigneeを
+残して認証中のGitHub userを追加してからIn Progressへ移す。再開候補は既にclaim済みなのでclaimを呼ばず、
+assigneeも書き換えない。autopilot側へGitHub mutationを再実装しない。
 出力の `task` が `null` なら対象なしなので正常終了する。それ以外は**出力が以降で使う値の唯一の定義元**である。
 
 ```bash
-TASK=$(echo "$NEXT" | jq -r '.task')
-[[ "$TASK" == "null" ]] && { echo "INFO: 対象タスクなし。"; exit 0; }
 ITEM_ID=$(echo "$TASK" | jq -r '.itemId')
 PROJECT_ID=$(echo "$TASK" | jq -r '.projectId')
 TASK_TITLE=$(echo "$TASK" | jq -r '.title')
 ISSUE_URL=$(echo "$TASK" | jq -r '.issueUrl // empty')
 ISSUE_NUMBER=$(echo "$TASK" | jq -r '.issueNumber // empty')
-BRANCH=$(echo "$TASK" | jq -r '.branch')
-RESUMED=$(echo "$TASK" | jq -r '.resumed')
+BRANCH=$(<skill-dir>/scripts/autopilot_board.py branch-name \
+  --title "$TASK_TITLE" --issue-number "$ISSUE_NUMBER" | jq -r '.branch')
 ```
 
 `ISSUE_URL`が空ならdurable journalを持たないdraft itemである。adapterはclaim前にfailするため、
