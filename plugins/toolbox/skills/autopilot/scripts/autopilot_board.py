@@ -22,6 +22,7 @@ import subprocess
 import sys
 import unicodedata
 from typing import Any
+from urllib.parse import urlparse
 
 BRANCH_PREFIX = "autopilot/"
 BRANCH_MAX = 50
@@ -138,6 +139,10 @@ def load_config(path: str) -> dict[str, Any]:
         raise Failure(f"{path} is not valid JSON: {exc}") from exc
 
 
+def config_digest(config: dict[str, Any]) -> str:
+    return hashlib.sha256(json.dumps(config, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
 def status_name(source: dict[str, Any], phase: str) -> str:
     """Resolve a semantic lifecycle phase inside the GitHub Projects adapter."""
     if phase not in DEFAULT_STATUS_NAMES:
@@ -176,7 +181,16 @@ def cmd_preflight(args: argparse.Namespace) -> dict[str, Any]:
         "mergeGate": "human",
         "deployGate": "auto" if gate_allows(config, "deploy") else "human",
         "notes": [],
+        "configDigest": config_digest(config),
     }
+    source = config.get("taskSource", {}).get("githubProjects", {})
+    if config.get("taskSource", {}).get("mode") == "github-projects":
+        result["githubProjects"] = {
+            "owner": source.get("owner"),
+            "projectNumber": source.get("projectNumber"),
+            "pickFrom": source.get("pickFrom", ["Ready"]),
+            "inProgress": status_name(source, "inProgress"),
+        }
 
     if gate_allows(config, "merge"):
         enforced, reasons = branch_protection_state(expected, base)
@@ -215,6 +229,11 @@ def branch_protection_state(repo: str, branch: str) -> tuple[bool, list[str]]:
 
 def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
     config = load_config(args.config)
+    if config_digest(config) != args.expected_config_digest:
+        raise Failure("autopilot config changed after preflight; refusing candidate selection")
+    repo = config.get("repo")
+    if not repo:
+        raise Failure(f"{args.config} has no 'repo'; refusing to guess which Issue to assign")
     source = config.get("taskSource", {}).get("githubProjects", {})
     owner, number = source.get("owner"), source.get("projectNumber")
     if not owner or number is None:
@@ -222,9 +241,6 @@ def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
 
     number = str(number)
     project = json.loads(run_gh(["project", "view", number, "--owner", owner, "--format", "json"]))
-    fields = json.loads(
-        run_gh(["project", "field-list", number, "--owner", owner, "--format", "json"])
-    )
     items = json.loads(
         run_gh(["project", "item-list", number, "--owner", owner, "--format", "json"])
     ).get("items", [])
@@ -247,28 +263,36 @@ def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
             "refusing to claim a draft item"
         )
 
-    field_id, option_id = resolve_option_id(fields, "Status", in_progress)
-    if resumable is None:
-        run_gh(
-            [
-                "project", "item-edit",
-                "--project-id", project["id"],
-                "--id", picked["id"],
-                "--field-id", field_id,
-                "--single-select-option-id", option_id,
-            ]
-        )
+    validate_issue_identity(repo, content)
     return {
         "task": {
             "itemId": picked["id"],
             "title": picked.get("title", ""),
             "issueUrl": content.get("url"),
             "issueNumber": content.get("number"),
+            "sourceStatus": picked.get("status"),
             "branch": branch_name(picked.get("title", ""), content.get("number")),
             "resumed": resumable is not None,
             "projectId": project["id"],
         }
     }
+
+
+def validate_issue_identity(repo: str, content: dict[str, Any]) -> None:
+    """Bind a Project item to the configured single repository before any write."""
+    url = content.get("url")
+    issue_number = content.get("number")
+    if not isinstance(url, str) or not isinstance(issue_number, int):
+        raise Failure("Project item needs an Issue URL and numeric Issue number")
+    parts = [part for part in urlparse(url).path.split("/") if part]
+    if len(parts) != 4 or parts[2] != "issues" or not parts[3].isdigit():
+        raise Failure(f"Project item URL is not a canonical Issue URL: {url}")
+    item_repo = "/".join(parts[:2])
+    if item_repo.casefold() != repo.casefold() or int(parts[3]) != issue_number:
+        raise Failure(
+            f"Project item belongs to {item_repo}#{parts[3]}, not configured {repo}#{issue_number}; "
+            "refusing every write"
+        )
 
 
 def cmd_set_status(args: argparse.Namespace) -> dict[str, Any]:
@@ -305,15 +329,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("preflight", help="verify repository identity and resolve the gates")
 
-    nxt = sub.add_parser(
-        "next-task", help="resume or claim the next task, and move it to In Progress"
-    )
+    nxt = sub.add_parser("next-task", help="select the next task without changing external state")
     nxt.add_argument(
         "--exclude",
         action="append",
         metavar="ITEM_ID",
         help="skip this item; pass once per task already escalated in this run",
     )
+    nxt.add_argument("--expected-config-digest", required=True)
 
     name = sub.add_parser("branch-name", help="derive a branch name (for non-board task sources)")
     name.add_argument("--title", required=True)

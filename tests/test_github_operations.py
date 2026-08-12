@@ -21,6 +21,7 @@ from github_operations.planning import (  # noqa: E402
     make_project_plan,
     project_verification_errors,
 )
+from github_operations.project_task import claim_project_task  # noqa: E402
 from github_operations.safety import SafetyError  # noqa: E402
 from github_operations.state import (  # noqa: E402
     exclusive_lock,
@@ -107,6 +108,105 @@ def fake_runner(args: list[str]) -> str:
     if command.startswith("label list --repo target-owner/primary"):
         return json.dumps([{"name": "bug"}, {"name": "feature"}])
     raise AssertionError(f"unexpected gh call: {args}")
+
+
+def _project_task_runner(*, status: str = "Ready", fail_status: bool = False):
+    calls: list[list[str]] = []
+
+    def runner(args: list[str]) -> str:
+        calls.append(args)
+        command = " ".join(args)
+        if command.startswith("project view 1"):
+            return json.dumps({"id": "P_1"})
+        if command.startswith("project field-list 1"):
+            return json.dumps(
+                {
+                    "fields": [
+                        {
+                            "id": "F_STATUS",
+                            "name": "Status",
+                            "options": [{"id": "O_WIP", "name": "In Progress"}],
+                        }
+                    ]
+                }
+            )
+        if command.startswith("project item-list 1"):
+            return json.dumps(
+                {
+                    "items": [
+                        {
+                            "id": "I_1",
+                            "status": status,
+                            "priority": "P1: next",
+                            "title": "Implement cache",
+                            "content": {
+                                "number": 7,
+                                "url": "https://github.com/target-owner/primary/issues/7",
+                            },
+                        }
+                    ]
+                }
+            )
+        if command.startswith("issue edit 7"):
+            return ""
+        if command.startswith("project item-edit"):
+            if fail_status:
+                raise SafetyError("status denied")
+            return ""
+        raise AssertionError(args)
+
+    return runner, calls
+
+
+def test_project_task_claim_revalidates_and_assigns_before_status() -> None:
+    runner, calls = _project_task_runner()
+    result = claim_project_task(
+        runner,
+        repo="target-owner/primary",
+        owner="target-owner",
+        project_number=1,
+        item_id="I_1",
+        issue_url="https://github.com/target-owner/primary/issues/7",
+        issue_number=7,
+        expected_status="Ready",
+        in_progress="In Progress",
+    )
+    assignment = next(call for call in calls if call[:2] == ["issue", "edit"])
+    status_edit = next(call for call in calls if call[:2] == ["project", "item-edit"])
+    assert calls.index(assignment) < calls.index(status_edit)
+    assert result["status"] == "In Progress"
+
+
+def test_project_task_claim_rejects_foreign_repository() -> None:
+    runner, _ = _project_task_runner()
+    with pytest.raises(SafetyError, match="not configured other/repository"):
+        claim_project_task(
+            runner,
+            repo="other/repository",
+            owner="target-owner",
+            project_number=1,
+            item_id="I_1",
+            issue_url="https://github.com/target-owner/primary/issues/7",
+            issue_number=7,
+            expected_status="Ready",
+            in_progress="In Progress",
+        )
+
+
+def test_project_task_claim_partial_failure_is_actionable() -> None:
+    runner, _ = _project_task_runner(fail_status=True)
+    with pytest.raises(SafetyError, match=r"partial claim.*self-assignment succeeded.*stop implementation"):
+        claim_project_task(
+            runner,
+            repo="target-owner/primary",
+            owner="target-owner",
+            project_number=1,
+            item_id="I_1",
+            issue_url="https://github.com/target-owner/primary/issues/7",
+            issue_number=7,
+            expected_status="Ready",
+            in_progress="In Progress",
+        )
 
 
 @pytest.fixture
