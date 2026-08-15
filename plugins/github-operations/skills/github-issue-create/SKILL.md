@@ -8,12 +8,13 @@ description: >-
 ## Safety contract
 
 - Always create a dry-run plan before creating an Issue.
-- Never apply without explicit approval of owner/repo, title, body, labels, assignee, Project, Status, and Priority.
+- Treat an explicit user request to create an Issue as authorization to plan and apply that Issue within the stated scope. Do not ask for a second approval merely because the dry-run plan now exists.
+- Pause before apply only when the user requested plan/dry-run/review without execution, a material choice remains unresolved, or the observed identity, target, fields, or operations do not match the authorized request and repository policy.
 - Fail closed on identity changes, target mismatch, stale plans, missing labels, ambiguous Project fields, or permissions.
-- Never infer and write Priority from prose alone. Present an inferred value as a proposal and require explicit approval.
+- Never infer and write Priority from urgency prose alone. Set it only when the user explicitly selected it or repository policy deterministically supplies it; otherwise omit it. Do not ask solely to populate an optional Priority.
 - On partial failure, resume the existing Issue; never create a replacement automatically.
 - Apply repository-specific Issue policy when one exists. This skill must not invent routing or labels.
-- `--confirm-target` prevents repository mix-ups; it does not prove human approval. Human approval remains a host-level interaction requirement. The content-derived `plan_id` rejects edits to the approved title, body, labels, fields, or operations.
+- `--confirm-target` prevents repository mix-ups; it is not an authorization mechanism. Authorization comes from the user's mutation request, while the content-derived `plan_id` rejects edits between plan and apply.
 
 ## Prerequisites
 
@@ -41,14 +42,14 @@ Resolve `scripts/run.py` against this skill directory before executing it.
 
    Omit label, assignee, or Priority when not explicitly justified.
 
-3. Display all returned fields, operations, `plan_id`, target, authenticated identity, and expiry. Ask for explicit approval.
-4. Apply only the approved plan:
+3. Inspect all returned fields, operations, `plan_id`, target, authenticated identity, and expiry. If they match the authorized request and repository policy, apply in the same turn without another approval prompt. If the user requested a dry-run only, display the plan and stop.
+4. Apply the matching plan:
 
    ```bash
    python3 <skill-dir>/scripts/run.py apply --plan-id <id> --confirm-target '<owner/repo>'
    ```
 
-5. If creation succeeded but Project registration or field editing failed, show the existing Issue URL and remaining steps. After approval, run:
+5. If creation succeeded but Project registration or field editing failed, show the existing Issue URL and remaining steps. Resume the same plan without recreating the Issue when the original request still authorizes the remaining operations:
 
    ```bash
    python3 <skill-dir>/scripts/run.py resume --plan-id <id> --confirm-target '<owner/repo>'
@@ -58,6 +59,6 @@ If apply reports a stale lock, verify that its process is no longer running, the
 
 ## Output contract
 
-- Dry-run: identity, repo, title, body, labels, assignee, Project, Status, Priority, and every mutation.
+- Requested dry-run: identity, repo, title, body, labels, assignee, Project, Status, Priority, and every mutation; do not apply.
 - Success: Issue URL, Project item ID, applied fields, and verification result.
 - Partial failure: existing Issue URL, completed steps, remaining steps, and safe resume command.
