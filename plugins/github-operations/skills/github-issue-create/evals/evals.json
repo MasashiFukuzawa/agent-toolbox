@@ -4,22 +4,38 @@
     {
       "id": 1,
       "prompt": "このrepoにバグ修正Issueを作ってProjectのInboxへ入れて。まずdry-runを見せて。",
-      "expected_output": "github-issue-createを使い、target、本文、labels、Project、Statusを提示して承認を待つ。",
+      "expected_output": "github-issue-createを使い、target、本文、labels、Project、Statusを提示し、dry-run指定どおりapplyせず停止する。",
       "assertions": [
         {"id": "dry-run", "text": "Issueを作成する前にplanを提示する"},
         {"id": "target", "text": "owner/repoとidentityを再表示する"},
-        {"id": "priority", "text": "Priorityを根拠なく自動設定しない"}
+        {"id": "priority", "text": "Priorityを根拠なく自動設定しない"},
+        {"id": "no-apply", "text": "dry-runだけを求められているためIssueを作成しない"}
       ]
     },
     {
       "id": 2,
+      "prompt": "このrepoにバグ修正Issueを作ってProjectへ登録して。PriorityはP1: next。",
+      "expected_output": "dry-run planが依頼とrepository policyに一致することを確認し、追加承認を求めずIssue作成とProject登録まで実行して結果を報告する。",
+      "assertions": [
+        {"id": "plan-first", "text": "apply前にdry-run planを作る"},
+        {"id": "no-reapproval", "text": "plan作成後に同じ操作の再承認を求めない"},
+        {"id": "priority", "text": "ユーザーが明示したPriorityだけを設定する"}
+      ]
+    },
+    {
+      "id": 3,
       "prompt": "Issue自体は作れたけどProject追加で止まった。重複させず続きから実行して。",
       "expected_output": "保存済みIssue URLを使ってresumeし、新規Issueを作らない。"
     },
     {
-      "id": 3,
+      "id": 4,
       "prompt": "新しいOrganization ProjectをBoardとRoadmap付きで作って。",
       "expected_output": "Issue作成ではなくgithub-project-provisioningへ誘導する。"
+    },
+    {
+      "id": 5,
+      "prompt": "どちらのrepoに置くべきか判断できないけど、とりあえずIssueを作って。",
+      "expected_output": "targetが実質的に未決のためapplyせず、対象repositoryを確認する。"
     }
   ]
 }
