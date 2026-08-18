@@ -241,9 +241,32 @@ def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
 
     number = str(number)
     project = json.loads(run_gh(["project", "view", number, "--owner", owner, "--format", "json"]))
-    items = json.loads(
-        run_gh(["project", "item-list", number, "--owner", owner, "--format", "json"])
-    ).get("items", [])
+    total_count = (project.get("items") or {}).get("totalCount")
+    if not isinstance(total_count, int) or isinstance(total_count, bool) or total_count < 0:
+        raise Failure("GitHub Project did not report a valid items.totalCount; refusing partial selection")
+    if total_count == 0:
+        items = []
+    else:
+        items = json.loads(
+            run_gh(
+                [
+                    "project",
+                    "item-list",
+                    number,
+                    "--owner",
+                    owner,
+                    "--limit",
+                    str(total_count),
+                    "--format",
+                    "json",
+                ]
+            )
+        ).get("items", [])
+    if len(items) != total_count:
+        raise Failure(
+            f"GitHub Project reported {total_count} items but item-list returned {len(items)}; "
+            "refusing partial candidate selection"
+        )
 
     # Items escalated earlier in this run are excluded so one task that cannot converge
     # does not get re-claimed by the resume path forever, starving the rest of the board.
