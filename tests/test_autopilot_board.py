@@ -252,7 +252,7 @@ class TestPreflight:
 
 
 class TestNextTask:
-    PROJECT = {"id": "PVT_1"}
+    PROJECT = {"id": "PVT_1", "items": {"totalCount": 1}}
     FIELDS = {
         "fields": [
             {
@@ -281,7 +281,7 @@ class TestNextTask:
         def fake(args):
             calls.append(args)
             if args[1] == "view":
-                return json.dumps(self.PROJECT)
+                return json.dumps({**self.PROJECT, "items": {"totalCount": len(items)}})
             if args[1] == "field-list":
                 return json.dumps(self.FIELDS)
             if args[1] == "item-list":
@@ -317,6 +317,64 @@ class TestNextTask:
         assert result["task"]["resumed"] is False
         assert not [c for c in calls if c[1] == "item-edit"]
         assert not [c for c in calls if c[:2] == ["issue", "edit"]]
+
+    def test_fetches_every_item_before_selecting_a_candidate(self, tmp_path, monkeypatch):
+        items = [
+            {
+                "id": f"i{index}",
+                "status": "Inbox",
+                "title": f"Backlog {index}",
+                "content": {"number": index, "url": f"https://github.com/owner/name/issues/{index}"},
+            }
+            for index in range(1, 31)
+        ]
+        items.append(
+            {
+                "id": "target",
+                "status": "Ready",
+                "title": "Ready after default page",
+                "content": {"number": 31, "url": "https://github.com/owner/name/issues/31"},
+            }
+        )
+
+        result, calls = self._run(tmp_path, monkeypatch, items)
+
+        assert result["task"]["itemId"] == "target"
+        item_list_call = next(call for call in calls if call[1] == "item-list")
+        assert item_list_call[item_list_call.index("--limit") + 1] == "31"
+
+    def test_rejects_a_partial_project_item_list(self, tmp_path, monkeypatch):
+        config = tmp_path / "autopilot.json"
+        config.write_text(
+            json.dumps(
+                {
+                    "repo": "owner/name",
+                    "taskSource": {
+                        "githubProjects": {"owner": "o", "projectNumber": 1, "pickFrom": ["Ready"]}
+                    },
+                }
+            )
+        )
+
+        def fake(args):
+            if args[1] == "view":
+                return json.dumps({"id": "PVT_1", "items": {"totalCount": 31}})
+            if args[1] == "item-list":
+                return json.dumps({"items": [{"id": f"i{index}"} for index in range(30)]})
+            return ""
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        args = board.build_parser().parse_args(
+            [
+                "--config",
+                str(config),
+                "next-task",
+                "--expected-config-digest",
+                board.config_digest(json.loads(config.read_text())),
+            ]
+        )
+        with pytest.raises(board.Failure, match="refusing partial candidate selection"):
+            board.cmd_next_task(args)
 
     def test_resuming_does_not_rewrite_the_board(self, tmp_path, monkeypatch):
         items = [
