@@ -611,7 +611,7 @@ class TestNextTask:
         [
             "https://evil.example/owner/name/issues/4",
             "http://github.com/owner/name/issues/4",
-            "https://user@github.com/owner/name/issues/4",
+            "https://github.com:443/owner/name/issues/4",
         ],
     )
     def test_noncanonical_github_hosts_fail_closed_on_resume(
