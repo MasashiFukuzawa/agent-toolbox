@@ -551,7 +551,32 @@ class TestNextTask:
         assert result["task"]["resumed"] is True
         assert not [call for call in calls if call[1] == "item-edit"]
 
-    def test_foreign_repository_issue_is_rejected_without_writes(self, tmp_path, monkeypatch):
+    def test_foreign_repository_issue_is_skipped_on_a_shared_project(self, tmp_path, monkeypatch):
+        items = [
+            {
+                "id": "foreign",
+                "status": "In Progress",
+                "title": "Wrong repository",
+                "content": {
+                    "number": 3,
+                    "url": "https://github.com/another/repository/issues/3",
+                },
+            },
+            {
+                "id": "local",
+                "status": "Ready",
+                "title": "Right repository",
+                "content": {
+                    "number": 4,
+                    "url": "https://github.com/owner/name/issues/4",
+                },
+            },
+        ]
+        result, _ = self._run(tmp_path, monkeypatch, items)
+        assert result["task"]["itemId"] == "local"
+        assert result["task"]["resumed"] is False
+
+    def test_only_foreign_repository_issues_end_the_run_cleanly(self, tmp_path, monkeypatch):
         items = [
             {
                 "id": "foreign",
@@ -563,7 +588,85 @@ class TestNextTask:
                 },
             }
         ]
-        with pytest.raises(board.Failure, match="not configured owner/name#3"):
+        result, _ = self._run(tmp_path, monkeypatch, items)
+        assert result == {"task": None}
+
+    def test_mismatched_issue_number_still_fails_closed(self, tmp_path, monkeypatch):
+        items = [
+            {
+                "id": "mismatch",
+                "status": "Ready",
+                "title": "Mismatched issue identity",
+                "content": {
+                    "number": 4,
+                    "url": "https://github.com/another/repository/issues/3",
+                },
+            }
+        ]
+        with pytest.raises(board.Failure, match="does not match content number 4"):
+            self._run(tmp_path, monkeypatch, items)
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "https://evil.example/owner/name/issues/4",
+            "http://github.com/owner/name/issues/4",
+            "https://github.com:443/owner/name/issues/4",
+        ],
+    )
+    def test_noncanonical_github_hosts_fail_closed_on_resume(
+        self, tmp_path, monkeypatch, url
+    ):
+        items = [
+            {
+                "id": "malformed",
+                "status": "In Progress",
+                "title": "Malformed identity",
+                "content": {"number": 4, "url": url},
+            }
+        ]
+        with pytest.raises(board.Failure, match="must use https://github.com"):
+            self._run(tmp_path, monkeypatch, items)
+
+    def test_url_bearing_draft_is_not_hidden_as_foreign(self, tmp_path, monkeypatch):
+        items = [
+            {
+                "id": "draft",
+                "status": "In Progress",
+                "title": "Draft with an unexpected identity shape",
+                "content": {
+                    "type": "DraftIssue",
+                    "number": 3,
+                    "url": "https://github.com/another/repository/issues/3",
+                },
+            },
+            {
+                "id": "local",
+                "status": "Ready",
+                "title": "Right repository",
+                "content": {
+                    "number": 4,
+                    "url": "https://github.com/owner/name/issues/4",
+                },
+            },
+        ]
+        with pytest.raises(board.Failure, match="no durable Issue journal"):
+            self._run(tmp_path, monkeypatch, items)
+
+    @pytest.mark.parametrize("number", [True, 0, -1])
+    def test_invalid_numeric_issue_number_fails_closed(self, tmp_path, monkeypatch, number):
+        items = [
+            {
+                "id": "invalid-number",
+                "status": "In Progress",
+                "title": "Invalid issue number",
+                "content": {
+                    "number": number,
+                    "url": "https://github.com/owner/name/issues/1",
+                },
+            }
+        ]
+        with pytest.raises(board.Failure, match="positive numeric Issue number"):
             self._run(tmp_path, monkeypatch, items)
 
     def test_draft_item_is_rejected_before_it_is_claimed(self, tmp_path, monkeypatch):

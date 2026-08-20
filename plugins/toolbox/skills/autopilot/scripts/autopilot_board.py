@@ -272,6 +272,16 @@ def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
     # does not get re-claimed by the resume path forever, starving the rest of the board.
     excluded = set(args.exclude or [])
     available = [item for item in items if item.get("id") not in excluded]
+    # Organization Projects may intentionally aggregate several repositories. Filter
+    # canonical Issues from other repositories before status selection so an unrelated
+    # In Progress item cannot starve this repository's queue. Malformed and draft items
+    # remain visible and fail closed if selected because their repository identity cannot
+    # be established safely.
+    available = [
+        item
+        for item in available
+        if not _is_canonical_foreign_issue(repo, item.get("content") or {})
+    ]
 
     in_progress = status_name(source, "inProgress")
     resumable = pick_item(available, [in_progress])
@@ -303,19 +313,47 @@ def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
 
 def validate_issue_identity(repo: str, content: dict[str, Any]) -> None:
     """Bind a Project item to the configured single repository before any write."""
-    url = content.get("url")
-    issue_number = content.get("number")
-    if not isinstance(url, str) or not isinstance(issue_number, int):
-        raise Failure("Project item needs an Issue URL and numeric Issue number")
-    parts = [part for part in urlparse(url).path.split("/") if part]
-    if len(parts) != 4 or parts[2] != "issues" or not parts[3].isdigit():
-        raise Failure(f"Project item URL is not a canonical Issue URL: {url}")
-    item_repo = "/".join(parts[:2])
-    if item_repo.casefold() != repo.casefold() or int(parts[3]) != issue_number:
+    item_repo, issue_number = _parse_issue_identity(content)
+    if item_repo.casefold() != repo.casefold():
         raise Failure(
-            f"Project item belongs to {item_repo}#{parts[3]}, not configured {repo}#{issue_number}; "
+            f"Project item belongs to {item_repo}#{issue_number}, not configured {repo}#{issue_number}; "
             "refusing every write"
         )
+
+
+def _is_canonical_foreign_issue(repo: str, content: dict[str, Any]) -> bool:
+    """Return true only for a well-formed Issue that belongs to another repository."""
+    if content.get("type") == "DraftIssue":
+        return False
+    try:
+        item_repo, _ = _parse_issue_identity(content)
+    except Failure:
+        return False
+    return item_repo.casefold() != repo.casefold()
+
+
+def _parse_issue_identity(content: dict[str, Any]) -> tuple[str, int]:
+    """Parse one canonical GitHub Issue identity or fail closed."""
+    url = content.get("url")
+    issue_number = content.get("number")
+    if (
+        not isinstance(url, str)
+        or not isinstance(issue_number, int)
+        or isinstance(issue_number, bool)
+        or issue_number <= 0
+    ):
+        raise Failure("Project item needs an Issue URL and positive numeric Issue number")
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or parsed.netloc.casefold() != "github.com":
+        raise Failure(f"Project item URL must use https://github.com: {url}")
+    parts = [part for part in parsed.path.split("/") if part]
+    if len(parts) != 4 or parts[2] != "issues" or not parts[3].isdigit():
+        raise Failure(f"Project item URL is not a canonical Issue URL: {url}")
+    if int(parts[3]) != issue_number:
+        raise Failure(
+            f"Project item URL issue number {parts[3]} does not match content number {issue_number}"
+        )
+    return "/".join(parts[:2]), issue_number
 
 
 def cmd_set_status(args: argparse.Namespace) -> dict[str, Any]:
