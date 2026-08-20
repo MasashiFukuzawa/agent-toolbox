@@ -73,8 +73,9 @@ synthetic statusを作らない。
 - `next-task`は候補をread-onlyで選ぶ。共通collaboration preflight後は`github-operations`のguarded claimを
   呼ぶ。GitHub固有のidentity再確認、self-assignment、`start`遷移、部分失敗contractをautopilotへ重複実装
   しない。既にin-progressのタスクを再開するだけならclaimを呼ばず、assigneeを書き換えない。
-- adapterは単一repository Project専用であり、Issue URLのowner/repo/numberがconfigと一致しないitemを
-  claim前にfail loudlyとする。
+- adapterは単一repositoryのqueueだけを扱う。共有Projectではcanonical Issue URLから別repositoryと確認できる
+  itemを候補選択前に除外し、選択したIssueのowner/repo/numberはclaim前にconfigと完全一致しなければ
+  fail loudlyとする。repositoryを安全に判定できないdraft・不正URLは除外で隠さない。
 - Plan、Reviewの採否、Decision、Progress、Escalation、Completion evidenceを選択したIssueへ追記する。
   Issue comment面を持たないdraft itemはclaim前にfail loudlyとする。
 - `review`と`complete`は設定された`statusNames`を使う。省略時は従来の`In Progress`、
