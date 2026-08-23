@@ -26,7 +26,7 @@ git -c core.hooksPath=/dev/null worktree add --detach <リポジトリ外のパ�
 
 ## 後始末
 
-レビュー完了後に worktree を除去する。残すと worktree が溜まる。
+レビュー結果の回収・報告が完了し、session recoveryが不要になった後にworktreeを除去する。割り込み中や未回収の状態では、resume先が同じ対象を再読取できるようにworktreeとsnapshot commitを保持する。復旧不能を報告して回収を断念した時点、またはユーザーが新規レビューを選んだ時点でも不要になる。残すとworktreeが溜まる。
 
 ```bash
 git worktree remove <作成したパス>

@@ -22,7 +22,7 @@
     {
       "id": 4,
       "prompt": "詳細設計どおりに実装した差分がある。codex-review で実装者が気づいていない観点を見てほしい",
-      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定のまま -m gpt-5.6-terra を選び、sol へ昇格しない。effort の指定が無いので自動判定で既定の high を選ぶ（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（問題がある前提で反証を試みる）、型・lint・テストで検出できるものより実装者の視野外の観点を優先する旨、scope statement 要求、BASIS ラベルと単純案の併記要求を含める。codex exec -s read-only -m gpt-5.6-terra -C <dir> -c model_reasoning_effort='high' を run_in_background:true で起動し、起動直後に『バックグラウンドで開始した・数分〜数十分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する",
+      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定の -m gpt-5.6-terra、effort highを選ぶ。新しいrun UUIDを採番し、永続state rootの専用run directoryを作ってlocatorを通知する。codex exec --json -oをdurable wrapper内でread-only実行し、event/final/stderrは引用済みの新規専用pathへ保存する。wrapperはrecord.jsonへprocess identityとprepared/running/exited・exit statusを原子的に記録する。thread.startedの正確なsession IDをrecordへ保存する。依頼文には懐疑的スタンス、scope statement、BASISラベルを含め、起動直後に所要時間と中断不要を予告する",
       "files": []
     },
     {
@@ -52,19 +52,37 @@
     {
       "id": 9,
       "prompt": "さっきの codex-review の Finding 2 について、根拠をもっと詳しく聞きたい",
-      "expected_output": "同じ結論の深掘り・根拠確認なので、新規レビューを起動せず codex exec resume SESSION_ID で同じ session を継続する（出力ヘッダーの session id を使う。推測した ID や --last で別 session へ接続しない）。これは昇格のための再実行とは用途が異なり、resume が適切なケースである",
+      "expected_output": "同じ結論の深掘り・根拠確認なので、元processの終了と既存出力を先に確認し、新規レビューを起動せず codex exec resume SESSION_ID -c sandbox_mode='read-only' で同じsessionを継続する。記録済みevent logのthread.startedにある正確なIDを使い、推測したIDや--lastで別sessionへ接続しない。これは昇格のための独立再レビューとは用途が異なる",
       "files": []
     },
     {
       "id": 10,
       "prompt": "effort は high で codex-review にかけて。（実行したがホストのタイムアウトで kill された）",
-      "expected_output": "盲目的に同一条件で再実行しない。ユーザーが effort を明示指定しているためガードレール4が優先し、時間超過を理由に自動で降格してはならない。まず対象スコープの絞り込み（特定ファイル・ディレクトリ、複数回への分割）で対処し、それでも収まらなければ降格の可否をユーザーへ確認する。何が起きて次に何をするかをユーザーへ説明する",
+      "expected_output": "会話やホストのタイムアウトとレビュー失敗を同一視しない。通知済みrun UUIDからrecord.jsonを開き、lifecycle stateとprocess identityをホストハンドルより先に確認する。identity一致のprocessが生存中なら同じハンドルから待機し、終了済みならevent・stderr・exit statusを確認する。thread.startedから記録した正確なsession IDがある場合だけ、元のmodel・high effort・対象・read-only制約を維持して未完了部分をresumeする。resumeだけで同じtimeoutを再発させず、host-native非同期実行かscope縮小を組み合わせ、時間超過を理由に明示highを自動降格しない。調査済み範囲をゼロからやり直さず、--lastや推測IDは使わない。復旧不能なら新規レビューのコストと選択肢をユーザーへ説明する",
       "files": []
     },
     {
       "id": 11,
       "prompt": "Codex 上で codex-review を使ってこの差分を見てほしい。待っている間に次のタスクも進めたい",
       "expected_output": "ホストのコマンド実行ツールが yield 時間とセッションハンドルを持つためハンドル型にルートする。短い yield 時間で起動してハンドルを保持し制御を取り戻す。合流は手元の作業が一段落した時点で1回のツール呼び出し内のブロッキング読み取りで行い、放置しない。シェルレベルの detach（nohup / setsid）は使わない。待ち時間にリポジトリを触る予定があるため references/review-snapshot.md のスナップショット起動を選び、依頼文では対象を HEAD~1..HEAD の差分と伝え .gitignore されたファイルが含まれない旨を添える。汚染チェックはスナップショット worktree 側で行う"
+    },
+    {
+      "id": 12,
+      "prompt": "codex-reviewの実行中に会話が割り込まれた。結果を回収できなかったので、もう一度レビューして。元processはまだ動いている。",
+      "expected_output": "会話の割り込みをレビュー失敗と見なさず、新規レビューもresumeも起動しない。元processが生存中なので、記録済みのホストハンドル・task・出力先を使って待機し、同じprocessから結果を回収する。同じsessionへ同時にresumeすると二重実行になるため禁止する",
+      "files": []
+    },
+    {
+      "id": 13,
+      "prompt": "codex-reviewは完了したはずだが出力ハンドルを失った。記録したsession IDは分かっている。結果だけ回収して。",
+      "expected_output": "元processが終了済みであることと、記録済みfinal outputから既存本文を回収できないことを確認した上で、新規レビューを起動せず、event logのthread.startedにある正確なIDを指定したcodex exec resume SESSION_ID -c sandbox_mode='read-only'で同じsessionを再開する。調査済み範囲をゼロからやり直さず、中断後の継続生成であって逐語的再掲ではないと明示し、今回検査範囲と履歴継承範囲を分けたscope statementを要求する。元modelとeffortを維持し、-sと-Cは追加しない。--lastは使わない",
+      "files": []
+    },
+    {
+      "id": 14,
+      "prompt": "codex-reviewを起動したが、CLIがpromptを受理する前に-Cのパスエラーで終了し、session IDも出なかった。復旧して。",
+      "expected_output": "process・出力・session metadataのいずれからもsession成立を確認できず、prompt受理前のパスエラーなので起動失敗として扱う。推測ID、--last、resumeは使わず、パスを修正して新規sessionを起動する。これはsession成立後のレビューをゼロからやり直すことではない",
+      "files": []
     }
   ]
 }
