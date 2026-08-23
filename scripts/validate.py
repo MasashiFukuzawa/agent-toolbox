@@ -250,7 +250,10 @@ def _validate_markdown_links(errors: list[str]) -> None:
 REVIEW_MIRROR_SKILLS = ("codex-review", "claude-review")
 REVIEW_MIRROR_BEGIN = "<!-- MIRROR:review-async BEGIN -->"
 REVIEW_MIRROR_END = "<!-- MIRROR:review-async END -->"
-REVIEW_MIRROR_FILES = ("references/review-snapshot.md",)
+REVIEW_MIRROR_FILES = (
+    "references/review-snapshot.md",
+    "references/durable-run-record.md",
+)
 
 
 def _extract_mirror_block(text: str) -> str | None:

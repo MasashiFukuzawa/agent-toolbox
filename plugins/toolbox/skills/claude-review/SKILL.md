@@ -66,7 +66,7 @@ description: >-
 
 **既定モデルでの結果を報告するときは、判断材料と選択肢を添える（必須）。** 報告の最後に、(1) scope statement のうち未検査のまま残った範囲に重要なものがあるか、(2) 「このまま採用する」か「スコープを絞って `claude-opus-5` で再実行する」かの選択、を明示して呼び出し元に問う。黙って結果だけ返すと、浅い1回で打ち切られたのか十分だったのかが呼び出し元から区別できない。
 
-**再実行は必ず新規プロセスで行う。`--resume` / `--continue` / `--fork-session` で1回目のセッションを引き継がない。** 引き継ぐと2回目は1回目の結論・探索経路・見落としをそのまま継承し、本スキルの唯一の価値である独立性が失われる。とくに「1回目が見落とした観点」を拾いたい場面では、同じ文脈を渡すことが最も効かない。
+**品質不足を補う独立再レビューは、新しいUUIDを採番した新規 session で行う。`--resume` / `--continue` / `--fork-session` で1回目を引き継がない。** 引き継ぐと2回目は1回目の結論・探索経路・見落としをそのまま継承し、本スキルの唯一の価値である独立性が失われる。これは割り込みから同じレビューを完了させる recovery とは別であり、recovery には後述の `--resume <session_uuid>` を使う。
 
 **`claude-fable-5` はユーザーが「Fable で」「fable-5 を使って」と明示した場合のみ使用する。** 自動選択は絶対にしない。
 
@@ -114,7 +114,7 @@ Use only read-only repository inspection commands and return findings directly.
 
 ## 実行コマンド
 
-プロンプト本文は必ず **single-quoted heredoc** で渡す。Markdown のバッククォート、`$VAR`、`$(...)`、型注釈、引用符を含むレビュー依頼を `claude -p "..."` に直接入れると、shell がコマンド置換や変数展開として解釈してプロンプトを壊す。
+プロンプト本文は必ず **single-quoted heredoc** で渡す。Markdown のバッククォート、`$VAR`、`$(...)`、型注釈、引用符を含むレビュー依頼を `claude -p "..."` に直接入れると、shell がコマンド置換や変数展開として解釈してプロンプトを壊す。以下はCLI payloadであり、単独で直実行しない。必ず「durable recovery record」のwrapperがrun directory作成、record更新、process identity記録、終了status記録を行う内側で実行する。
 
 ```bash
 claude -p "$(cat <<'CLAUDE_REVIEW_PROMPT'
@@ -125,20 +125,25 @@ Use only read-only repository inspection commands and return findings directly.
 <依頼内容>
 CLAUDE_REVIEW_PROMPT
 )" \
+  --session-id <session_uuid> \
   --model claude-sonnet-5 \
   --effort <level> \
   --add-dir /path/to/project \
   --permission-mode plan \
+  --output-format stream-json \
+  --verbose \
   --disallowedTools "Edit,Write,NotebookEdit" \
-  < /dev/null
+  < /dev/null > "<event_log>" 2> "<stderr_log>"
 ```
 
 **重要**: heredoc delimiter は必ず引用する（例: `<<'CLAUDE_REVIEW_PROMPT'`）。引用しない `<<EOF` は shell 展開を許すため使わない。プロンプト内に delimiter と同じ行が含まれる場合だけ、別の一意な delimiter 名に変える。
 **重要**: プロンプト本文（heredoc 内）に `$HOME` などの変数を書かない。single-quoted heredoc では展開されず、リテラル文字列 `$HOME` のままレビュー先へ渡る。対象パスは heredoc の外にある `--add-dir` で渡し、本文では「`--add-dir` で許可されたディレクトリ」と参照するか、展開済みの絶対パスを書く。
 **重要**: `--disallowedTools` は可変長フラグのため、プロンプトは必ずフラグ群より前（最初の引数）に置くこと。後ろに置くとプロンプトが認識されずエラーになる。
 **重要**: 実行直前に、生成したコマンドへ`--permission-mode plan`と`--disallowedTools`が両方存在することを再確認する。
+**重要**: 起動前に新しい有効な UUID を採番して `<session_uuid>` に渡す。`--no-session-persistence` は付けない。`--output-format stream-json --verbose`で初期eventを`<event_log>`へ即時永続化し、そのeventのsession IDが採番UUIDと一致することをsession成立の根拠にする。最終本文は終了後にresult eventから抽出する。
+**重要**: 下記「durable recovery record」に従い、UUID専用run directory・event log・stderr log・lifecycle recordをCLI起動前に作る。すべてのpathを引用し、既存fileを再利用しない。
 **重要**: 末尾の `< /dev/null` は必須。明示prompt以外のstdin待ちを防ぐ。stdin読取を示すメッセージが出ても、redirect済みで本文生成が進んでいればハングではない。
-**重要**: このコマンドは**呼び出し元を解放する形で起動する**（起動と合流の型は後述の「非同期実行と合流」を参照）。既定 `high` でも対象が大きければ処理は数分〜数十分かかりうるが、背景実行なら Bash の10分上限で kill されず、呼び出し元もブロックしない。`claude -p` は非対話の print モードで標準出力に結果を出すため、背景起動でも出力ファイルから完全に回収できる。
+**重要**: このコマンドは**呼び出し元を解放する形で起動する**（起動と合流の型は後述の「非同期実行と合流」を参照）。既定 `high` でも対象が大きければ処理は数分〜数十分かかりうるが、背景実行なら Bash の10分上限で kill されず、呼び出し元もブロックしない。`claude -p` は非対話の print モードでstream-jsonを標準出力へ継続出力するため、背景起動でもevent logからsession成立と最終resultを回収できる。
 
 - `--model claude-sonnet-5`: 使用モデルを明示固定（既定・昇格条件は「モデルと effort」セクション参照）
 - `--effort <level>`: 既定 `high`（自動判定。`xhigh` 以上は使わない）
@@ -165,12 +170,15 @@ Use only read-only repository inspection commands and return findings directly.
 この差分には問題がある前提で反証を試みてください。実装者が気づいていない観点の指摘を優先します。
 CLAUDE_REVIEW_PROMPT
 )" \
+  --session-id <session_uuid> \
   --model claude-sonnet-5 \
   --effort high \
   --add-dir $HOME/my-project \
   --permission-mode plan \
+  --output-format stream-json \
+  --verbose \
   --disallowedTools "Edit,Write,NotebookEdit" \
-  < /dev/null
+  < /dev/null > "<event_log>" 2> "<stderr_log>"
 ```
 
 ```bash
@@ -183,15 +191,28 @@ Use only read-only repository inspection commands and return findings directly.
 この設計方針には穴がある前提で反証を試みてください。検討していない失敗モードと、選択しなかった代替案を優先して挙げてください。
 CLAUDE_REVIEW_PROMPT
 )" \
+  --session-id <session_uuid> \
   --model claude-opus-5 \
   --effort high \
   --add-dir $HOME/other-project \
   --permission-mode plan \
+  --output-format stream-json \
+  --verbose \
   --disallowedTools "Edit,Write,NotebookEdit" \
-  < /dev/null
+  < /dev/null > "<event_log>" 2> "<stderr_log>"
 ```
 
 <!-- MIRROR:review-async BEGIN -->
+## durable recovery record
+
+wrapperの最小schemaと更新手順は[`references/durable-run-record.md`](references/durable-run-record.md)を正とする。
+
+ホストハンドルだけをrecovery recordにしてはならない。起動ごとに新しいrun UUIDを作り、ホストの永続state root配下の`reviews/<run_uuid>/`を専用run directoryにする。場所は一時directoryやrepo内ではなく、再開後も残る既知のrootとし、起動前にrun UUIDと絶対pathをユーザーへ通知する。別runのdirectoryやfileは再利用しない。
+
+run directoryには少なくとも`record.json`、event/stdout、stderr、final outputを置く。`record.json`はrun UUID・provider session ID・cwd・対象root/path・model・effort・各出力path・host handle・process identity（PIDだけでなく起動時刻等の照合値）・`prepared|running|exited`・exit statusを含む。CLIを包むwrapperが、起動直前に`running`、終了直後に`exited`とstatusを書き、同じdirectory内の一時fileを`rename`して原子的に更新する。stderrも専用fileへ保存する。
+
+割り込み後は、通知済みrun UUIDからdirectoryを決定的に開く。`latest`、mtime、候補一覧では選ばない。`running`のままなら記録したprocess identityを照合し、生存中なら待機する。不在またはidentity不一致なら元processは終了済みとして扱い、eventとstderrからsession成立・失敗理由を確認する。これによりhost handleを失っても、session成立済みなら正確なIDでresumeでき、未成立なら診断後に新規起動できる。run UUIDもlocatorも失った場合だけ復旧不能としてstep 3へ進む。
+
 ## 非同期実行と合流
 
 レビューは対象が大規模なほど時間がかかり、数分〜数十分に達しうる。出力が無い間も停止やハングではなく推論を継続している。**長時間化を理由に kill・キャンセル・再実行をしてはならない。**
@@ -229,11 +250,52 @@ CLAUDE_REVIEW_PROMPT
 **待ち時間に何を進めるかは制限しない。** 別 worktree での後続タスク実装を含めてよい。ただしそのブランチを merge するのは、レビュー結果を処理したあとにする。サブエージェントへ委譲するときは、上の制約と再帰起動の禁止をそのまま伝える（委譲先の完了時に別のレビューが自動起動する仕組みがあれば、それも止める）。
 <!-- MIRROR:review-async END -->
 
+## 中断・回収失敗からの復旧
+
+会話の割り込みや合流失敗を、レビュー自体の失敗と同一視しない。**session成立後の割り込みでは**次の順で復旧し、新規レビューを先に起動してはならない。CLIがpromptを受理する前に終了し、process・出力・session metadataのいずれからもsession成立を確認できない場合は起動失敗であり、原因を直して新しいUUIDで新規起動する。事前採番したUUIDだけではsession成立の証拠にならない。
+
+1. 通知済みrun UUIDから`record.json`を開き、lifecycle stateと記録済みprocess identityを先に確認する。`running`でidentityが一致するprocessが生存中なら、記録したホストハンドル（または同期型ホストの結果）で待機・回収し、同じsessionへ同時にresumeしない。process不在またはidentity不一致なら終了済みとしてevent・stderr・exit statusを確認する。run recordを開けず状態を確定できなければ、process名・mtime・候補sessionから推測せず、resumeもforkも新規起動もせずユーザーへ報告する
+2. 終了済みなら、記録した出力先またはホストの最終結果から既存出力を先に回収する。元promptが要求した終端要素（少なくともレビュー結論とscope statement）が欠ける場合を未完了とし、回収不能または未完了の場合だけ、記録した正確な`session_uuid`を`--resume`して同じレビューを完了させる
+3. session UUIDを安全に特定できなければ、推測したIDや`--continue`で別sessionへ接続せず、復旧不能と、新規レビューでは時間・トークンを再消費し元の探索文脈も継承できないことをユーザーへ報告して判断を返す
+
+```bash
+claude -p "$(cat <<'CLAUDE_REVIEW_RECOVERY'
+You are the reviewer. Do not invoke codex-review, claude-review, codex exec, claude -p, or any nested reviewer.
+Use only read-only repository inspection commands and return findings directly.
+
+直前のレビューを継続してください。調査済みの範囲をゼロからやり直さず、未完了部分だけを完了させてください。
+この回答は中断後の継続生成であり、元の最終本文の逐語的な再掲とは主張しないでください。
+今回実際に検査した範囲と、session履歴から引き継いだ範囲を区別したscope statementを必ず返してください。新しいレビュー観点は追加せず、リポジトリは変更しないでください。
+CLAUDE_REVIEW_RECOVERY
+)" \
+  --resume <session_uuid> \
+  --model <original_model> \
+  --effort <original_effort> \
+  --add-dir /path/to/project \
+  --permission-mode plan \
+  --output-format stream-json \
+  --verbose \
+  --disallowedTools "Edit,Write,NotebookEdit" \
+  < /dev/null > "<recovery_event_log>" 2> "<recovery_stderr_log>"
+```
+
+復旧を起動したら、`<recovery_event_log>`と`<recovery_stderr_log>`も同じrecovery recordへ追記し、以後の回収では元の出力先と混同しない。最終本文はresult eventから抽出する。
+
+recoveryはrecovery recordの起動cwdから実行し、元のmodel・effort・作業root/対象path・read-only制約を維持する。snapshot起動なら同じsnapshot worktreeを使い、新しい観点やスコープを加えない。同じhost timeoutが再発する条件ではhost-nativeな非同期実行へ直すかscopeを縮小し、縮小範囲をscope statementへ記録する。明示model/effortは変更しない。正確なUUIDとして扱えるのは、起動時の記録、記録済みホストtaskのmetadata、記録済み出力に含まれるIDのように元processと一意に対応する値だけである。cwdのlatest、更新時刻、候補一覧からの推測は使わない。`--continue`はcurrent directoryの直近sessionを暗黙選択し、並行sessionがあると誤接続するため使わない。`--fork-session`も同じレビューの復旧には使わない。resumeがsession不存在で失敗した場合は繰り返さず、復旧不能としてstep 3の報告へ進む。
+
+### 同じレビューへの追加質問
+
+findingの深掘りや反論確認は、上のrecovery promptを流用せず、同じread-only flagsと正確なsession UUIDで質問本文だけを渡し、stream-jsonとstderrはリポジトリ外の専用`<followup_event_log>`・`<followup_stderr_log>`へ保存する。両出力先もrecovery recordへ追記し、既存出力を上書きしない。
+
+```text
+Finding 2を、根拠となるpath:lineと成立条件を示して詳しく説明してください。新規レビューやnested reviewerは起動しないでください。
+```
+
 ## 結果の整理と報告
 
 Claudeの指摘は結論ではなく仮説として受け取り、採用前に該当path:lineと実装を自分で確認する。必要であれば以下の観点で整理する:
 
-回収した出力は数百KBになることがある。ファイル全体を `Read` せず `tail` で末尾から確認し、論点位置は `rg -n "VERDICT|must-fix" <output>` で特定する。同じ最終本文が再掲される場合は二重報告しない。
+回収したstream-jsonは数百KBになることがある。全体を読まずresult eventから最終本文を抽出し、同じ最終本文が再掲される場合は二重報告しない。
 
 1. **要約**: 主な発見事項（3点以内）
 2. **詳細**: 具体的な指摘（優先度順）
@@ -281,7 +343,7 @@ Claudeの指摘は結論ではなく仮説として受け取り、採用前に�
 - モデル・effort の既定と昇格条件は「モデルと effort」セクションの定義に従う
 - モデルは既定 `claude-sonnet-5`。設計そのものが対象・高不確実性・拠り所の設計が無い場合だけ `claude-opus-5` へ昇格し、理由を一言添える。題材（認証・並行処理など）は昇格理由にならない
 - 既定モデルでの結果報告には、未検査範囲と「採用する／スコープを絞って `claude-opus-5` で再実行する」の選択を必ず添える
-- 再実行は新規プロセスで行い、`--resume` / `--continue` / `--fork-session` で1回目のセッションを引き継がない（独立性が失われるため）
+- 品質不足を補う独立再レビューは新規sessionで行う。割り込み・回収失敗のrecoveryと追加質問は、正確なsession UUIDを指定して`--resume`する
 - `claude-fable-5` はトークン消費・所要時間が著しく大きいためユーザー明示時のみ使用し、自動選択は絶対にしない
 - effort は既定 `high`（自動判定）。軽微な依頼や時間優先のときのみ `medium` / `low` に下げる
 - `xhigh` / `max` は使わない。精度が上がらないため、深さ不足はスコープの絞り込みや観点の具体化で解決する

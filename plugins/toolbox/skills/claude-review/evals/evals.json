@@ -22,7 +22,7 @@
     {
       "id": 4,
       "prompt": "詳細設計どおりに実装した差分がある。claude-review で実装者が気づいていない観点を見てほしい",
-      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定のまま --model claude-sonnet-5 を選び、Opus へ昇格しない。effort の指定が無いので自動判定で既定の high を選ぶ（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（問題がある前提で反証を試みる）、型・lint・テストで検出できるものより実装者の視野外の観点を優先する旨、網羅性要求（self-filter させない・scope statement を返させる）、BASIS ラベルと単純案の併記要求を含める。claude -p \"...\" --model claude-sonnet-5 --effort high --add-dir <dir> --permission-mode plan --disallowedTools 'Edit,Write,NotebookEdit' を Bash の run_in_background: true で起動し（ガードレール1により --permission-mode plan と --disallowedTools は両方必須）、起動直後に『バックグラウンドで開始した・数分〜数十分かかる場合がある・応答が無くてもハングではない・中断不要・完了時に報告する』と予告する。完了通知で出力ファイルを Read/BashOutput して結果を要約・詳細・推奨対応の形式で報告する",
+      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定のまま --model claude-sonnet-5、effort highを選ぶ。新しいrun UUIDとsession UUIDを採番し、永続state rootの専用run directoryを作ってlocatorを通知する。CLI payloadはdurable wrapper内で --output-format stream-json --verbose、read-only flags、引用済みのevent/stderr pathを指定して実行する。wrapperはrecord.jsonへprocess identityとprepared/running/exited・exit statusを原子的に記録する。初期eventのsession ID一致をsession成立根拠とし、result eventから最終本文を回収する。依頼文には懐疑的スタンス、scope statement、BASISラベルを含め、起動直後に所要時間と中断不要を予告する",
       "files": []
     },
     {
@@ -58,13 +58,37 @@
     {
       "id": 10,
       "prompt": "effort は high で claude-review にかけて。（実行したがホストのタイムアウトで kill された）",
-      "expected_output": "盲目的に同一条件で再実行しない。ユーザーが effort を明示指定しているためガードレール4が優先し、時間超過を理由に自動で降格してはならない。まず対象スコープの絞り込み（特定ファイル・ディレクトリ、複数回への分割）で対処し、それでも収まらなければ降格の可否をユーザーへ確認する。再実行は新規プロセスで行い、--resume / --continue / --fork-session でセッションを引き継がない。何が起きて次に何をするかをユーザーへ説明する",
+      "expected_output": "会話やホストのタイムアウトとレビュー失敗を同一視しない。通知済みrun UUIDからrecord.jsonを開き、lifecycle stateとprocess identityをホストハンドルより先に確認する。identity一致のprocessが生存中なら同じハンドルから待機し、終了済みならevent・stderr・exit statusを確認する。初期eventで成立を確認した正確なsession UUIDがある場合だけ、元のmodel・high effort・対象・read-only制約を維持して未完了部分をresumeする。resumeだけで同じtimeoutを再発させず、host-native非同期実行かscope縮小を組み合わせ、時間超過を理由に明示highを自動降格しない。調査済み範囲をゼロからやり直さず、--continueや推測IDは使わない。復旧不能なら新規レビューのコストと選択肢をユーザーへ説明する",
       "files": []
     },
     {
       "id": 11,
       "prompt": "claude-review を回している間に、別 worktree で次のタスクを実装しておきたい",
       "expected_output": "待ち時間に対象リポジトリを触るため references/review-snapshot.md のスナップショット起動を選ぶ。実ツリーと index に触れずに untracked を含む状態を固定し、依頼文では対象を HEAD~1..HEAD の差分と伝える。汚染チェックはスナップショット worktree 側で行う（メインツリーは並行作業で変化するため偽陽性になる）。スナップショットを取らない場合は対象ツリーと index・参照 ref（fetch/pull しない）・共有 .git/config と hooks の3つを凍結する。待ち時間に作ったブランチの merge はレビュー結果の処理後にする。委譲先にも同じ制約と再帰起動の禁止を伝える"
+    },
+    {
+      "id": 12,
+      "prompt": "claude-reviewの実行中に会話が割り込まれた。結果を回収できなかったので、もう一度レビューして。元processはまだ動いている。",
+      "expected_output": "会話の割り込みをレビュー失敗と見なさず、新規レビューもresumeも起動しない。元processが生存中なので、記録済みのホストハンドル・task・出力先を使って待機し、同じprocessから結果を回収する。同じsessionへ同時にresumeすると二重実行になるため禁止する",
+      "files": []
+    },
+    {
+      "id": 13,
+      "prompt": "claude-reviewは完了したはずだが出力ハンドルを失った。起動時のsession UUIDは分かっている。結果だけ回収して。",
+      "expected_output": "record.jsonで元processが終了済みであることと、記録済みevent logのresultから既存本文を回収できないことを確認した上で、新規レビューを起動せず、正確なUUIDを指定したclaude -p --resume <session_uuid>で同じsessionを再開する。調査済み範囲をゼロからやり直さず、中断後の継続生成であって逐語的再掲ではないと明示し、今回検査範囲と履歴継承範囲を分けたscope statementを要求する。元のmodel・effort・対象と--permission-mode plan・--disallowedToolsを維持する。--continueと--fork-sessionは使わない",
+      "files": []
+    },
+    {
+      "id": 14,
+      "prompt": "claude-reviewを起動したが、CLIがpromptを受理する前にフラグエラーで終了した。事前採番したsession UUIDだけはある。復旧して。",
+      "expected_output": "事前採番したUUIDだけではsession成立の証拠にしない。process・出力・session metadataのいずれからも成立を確認できず、prompt受理前のフラグエラーなので起動失敗として扱う。存在しないsessionへの--resumeや--continueは使わず、フラグを修正して新しいUUIDを採番した新規sessionを起動する。これはsession成立後のレビューをゼロからやり直すことではない",
+      "files": []
+    },
+    {
+      "id": 15,
+      "prompt": "さっきのclaude-reviewのFinding 2について、根拠をもっと詳しく聞きたい。",
+      "expected_output": "同じ結論の深掘り・根拠確認なので、品質不足を補う独立再レビューとは区別し、新規reviewを起動せず記録した正確なsession UUIDでclaude -p --resume <session_uuid>する。元processの終了確認と既存出力回収を先に行い、元のmodel・effort・対象・read-only制約を維持する。--continueと--fork-sessionは使わない",
+      "files": []
     }
   ]
 }
