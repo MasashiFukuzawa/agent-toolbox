@@ -11,6 +11,8 @@ from .github import (
     create_single_select_field,
     project_fields,
     project_structure,
+    repository,
+    repository_labels,
     require_project,
     resolve_field,
     resolve_option,
@@ -23,13 +25,15 @@ from .github import (
 from .planning import (
     find_config,
     load_config,
+    load_issue_manifest,
+    make_issue_manifest_plan,
     make_issue_plan,
     make_project_plan,
     observe_issue,
     observe_project,
     project_verification_errors,
 )
-from .safety import SafetyError, digest
+from .safety import PartialApplyError, SafetyError, digest
 from .state import (
     cleanup_old_journals,
     clear_stale_lock,
@@ -62,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     issue_plan.add_argument("--label", action="append", default=[])
     issue_plan.add_argument("--assignee")
     issue_plan.add_argument("--priority")
+    issue_plan.add_argument("--manifest")
 
     resume = subparsers.add_parser("resume")
     resume.add_argument("--plan-id", required=True)
@@ -73,6 +78,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _issue_request(args: argparse.Namespace) -> dict:
+    if args.manifest:
+        if any((args.repo, args.title, args.body, args.body_file, args.label, args.assignee, args.priority)):
+            raise SafetyError("--manifest cannot be combined with single-Issue options")
+        return {"manifest_path": args.manifest}
     if not args.repo or not args.title:
         raise SafetyError("issue plan requires --repo and --title")
     if args.body and args.body_file:
@@ -105,6 +114,43 @@ def _verify_identity(plan: dict, config: dict) -> None:
 
 
 def _verify_observed(plan: dict, config: dict) -> None:
+    if plan["domain"] == "issue" and isinstance(plan.get("request", {}).get("issues"), list):
+        project = require_project(run_gh, config["owner"], config["project"]["title"])
+        if project["id"] != plan["observed"]["project"]["id"]:
+            raise SafetyError("target Project identity changed after planning")
+        fields = project_fields(run_gh, config["owner"], int(project["number"]))
+        status = resolve_field(fields, config["project"].get("status_field", "Status"))
+        inbox = resolve_option(status, config["project"].get("inbox_option", "Inbox"))
+        expected = plan["observed"]["status"]
+        if (status["id"], inbox["id"], inbox["name"]) != (
+            expected["field"]["id"],
+            expected["option"]["id"],
+            expected["option"]["name"],
+        ):
+            raise SafetyError("Status field or option changed after planning")
+        priorities = {request.get("priority") for request in plan["request"]["issues"] if request.get("priority")}
+        if priorities:
+            priority = resolve_field(fields, config["project"].get("priority_field", "Priority"))
+            expected_priority = plan["observed"].get("priority_field")
+            if not expected_priority or priority["id"] != expected_priority["id"]:
+                raise SafetyError("Priority field changed after planning")
+            for name in priorities:
+                current = resolve_option(priority, name)
+                previous = resolve_option(expected_priority, name)
+                if (current["id"], current["name"]) != (previous["id"], previous["name"]):
+                    raise SafetyError(f"Priority option changed after planning: {name}")
+        requests_by_repo: dict[str, set[str]] = {}
+        for request in plan["request"]["issues"]:
+            requests_by_repo.setdefault(request["repo"], set()).update(request.get("labels", []))
+        for repo_name, selected in requests_by_repo.items():
+            current_repo = repository(run_gh, repo_name)
+            expected_repo = plan["observed"]["repositories"][repo_name]["repository"]
+            if current_repo["id"] != expected_repo["id"]:
+                raise SafetyError(f"repository identity changed after planning: {repo_name}")
+            missing = selected - set(repository_labels(run_gh, repo_name))
+            if missing:
+                raise SafetyError(f"labels no longer exist in {repo_name}: {', '.join(sorted(missing))}")
+        return
     current = (
         observe_project(run_gh, config)
         if plan["domain"] == "project"
@@ -289,9 +335,7 @@ def _apply_project(plan: dict, config: dict, journal: dict, *, allow_reconcile: 
         full_name = f"{owner}/{repo}"
         if full_name not in linked:
             try:
-                run_gh(
-                    ["project", "link", str(project["number"]), "--owner", owner, "--repo", full_name], retries=0
-                )
+                run_gh(["project", "link", str(project["number"]), "--owner", owner, "--repo", full_name], retries=0)
             except SafetyError:
                 linked = set(project_structure(run_gh, project["id"])["repositories"])
                 if full_name not in linked:
@@ -299,9 +343,7 @@ def _apply_project(plan: dict, config: dict, journal: dict, *, allow_reconcile: 
             journal["steps"].append(f"repository-linked:{full_name}")
             save_journal(plan["plan_id"], journal)
     current = (
-        observe_project(run_gh, config)
-        if not bootstrap
-        else observe_project(run_gh, config, include_browser=False)
+        observe_project(run_gh, config) if not bootstrap else observe_project(run_gh, config, include_browser=False)
     )
     verification_errors = (
         project_verification_errors(current, config)
@@ -486,6 +528,148 @@ def _edit_item(project_id: str, item_id: str, field_id: str, option_id: str) -> 
     )
 
 
+def _find_project_item_for_issue(project_id: str, issue_url: str) -> dict | None:
+    issue = json.loads(run_gh(["issue", "view", issue_url, "--json", "id,url"]))
+    query = """
+    query($id: ID!) {
+      node(id: $id) {
+        ... on Issue {
+          projectItems(first: 100) { nodes { id project { id } } pageInfo { hasNextPage } }
+        }
+      }
+    }
+    """
+    document = json.loads(run_gh(["api", "graphql", "-f", f"query={query}", "-F", f"id={issue['id']}"]))
+    errors = document.get("errors")
+    if errors:
+        raise SafetyError("GitHub GraphQL Issue Project lookup failed: " + "; ".join(str(error) for error in errors))
+    connection = document.get("data", {}).get("node", {}).get("projectItems")
+    if not connection:
+        raise SafetyError("GitHub did not return Issue Project items")
+    if connection.get("pageInfo", {}).get("hasNextPage"):
+        raise SafetyError("Issue belongs to more than 100 Project items; safe reconciliation is unsupported")
+    matches = [item for item in connection.get("nodes", []) if item.get("project", {}).get("id") == project_id]
+    if len(matches) > 1:
+        raise SafetyError("multiple Project items reference the same Issue")
+    return matches[0] if matches else None
+
+
+def _batch_result(plan: dict, journal: dict) -> dict:
+    entries = journal.get("entries", {})
+    return {
+        "plan_id": plan["plan_id"],
+        "target": plan["target"],
+        "completed": sum(value.get("state") == "verified" for value in entries.values()),
+        "total": len(plan["request"]["issues"]),
+        "entries": entries,
+    }
+
+
+def _apply_issue_manifest(plan: dict, config: dict, journal: dict) -> dict:
+    from datetime import UTC, datetime
+
+    journal.setdefault("entries", {})
+    journal.setdefault("started_at", datetime.now(UTC).isoformat())
+    save_journal(plan["plan_id"], journal)
+    observed = plan["observed"]
+    project = observed["project"]
+    status = observed["status"]
+    priority_field = observed.get("priority_field")
+    try:
+        for request in plan["request"]["issues"]:
+            key = request["key"]
+            entry = journal["entries"].setdefault(key, {"state": "pending"})
+            if entry.get("state") == "verified":
+                continue
+            repo_name = request["repo"]
+            recovered_issue = False
+            if not entry.get("issue_url"):
+                matches = _find_issue_by_fingerprint({"created_at": plan["created_at"], "request": request}, repo_name)
+                if len(matches) > 1:
+                    raise SafetyError(f"entry {key}: multiple existing Issues have the operation fingerprint")
+                if matches:
+                    entry["issue_url"] = matches[0]
+                    recovered_issue = True
+                else:
+                    entry.update(state="issue-create-attempted")
+                    save_journal(plan["plan_id"], journal)
+                    args = [
+                        "issue",
+                        "create",
+                        "--repo",
+                        repo_name,
+                        "--title",
+                        request["title"],
+                        "--body",
+                        request["body"],
+                    ]
+                    for label in request.get("labels", []):
+                        args.extend(("--label", label))
+                    if request.get("assignee"):
+                        args.extend(("--assignee", request["assignee"]))
+                    entry["issue_url"] = run_gh(args, retries=0).strip()
+                entry["state"] = "issue-created"
+                save_journal(plan["plan_id"], journal)
+            _verify_journal_issue({"request": request}, repo_name, entry["issue_url"])
+            saved_item_id = entry.get("item_id")
+            if saved_item_id:
+                current_item = _find_project_item_for_issue(project["id"], entry["issue_url"])
+                if current_item is None or current_item["id"] != saved_item_id:
+                    raise SafetyError(f"entry {key}: journal Project item does not match the planned Issue")
+            if not entry.get("item_id"):
+                reconcile_item = recovered_issue or entry.get("state") == "project-item-add-attempted"
+                existing = (
+                    _find_project_item_for_issue(project["id"], entry["issue_url"]) if reconcile_item else None
+                )
+                if existing:
+                    entry["item_id"] = existing["id"]
+                else:
+                    entry["state"] = "project-item-add-attempted"
+                    save_journal(plan["plan_id"], journal)
+                    try:
+                        output = json.loads(
+                            run_gh(
+                                [
+                                    "project",
+                                    "item-add",
+                                    str(project["number"]),
+                                    "--owner",
+                                    config["owner"],
+                                    "--url",
+                                    entry["issue_url"],
+                                    "--format",
+                                    "json",
+                                ],
+                                retries=0,
+                            )
+                        )
+                    except SafetyError:
+                        output = _find_project_item_for_issue(project["id"], entry["issue_url"])
+                        if output is None:
+                            raise
+                    entry["item_id"] = output["id"]
+                entry["state"] = "project-item-added"
+                save_journal(plan["plan_id"], journal)
+            _edit_item(project["id"], entry["item_id"], status["field"]["id"], status["option"]["id"])
+            entry["state"] = "status-set"
+            save_journal(plan["plan_id"], journal)
+            if request.get("priority"):
+                if not priority_field:
+                    raise SafetyError("Priority field was not found")
+                option = resolve_option(priority_field, request["priority"])
+                _edit_item(project["id"], entry["item_id"], priority_field["id"], option["id"])
+                entry["state"] = "priority-set"
+                save_journal(plan["plan_id"], journal)
+            entry["state"] = "verified"
+            save_journal(plan["plan_id"], journal)
+    except SafetyError as exc:
+        result = _batch_result(plan, journal)
+        if result["completed"] or any(value.get("state") != "pending" for value in journal["entries"].values()):
+            raise PartialApplyError(str(exc), result) from exc
+        raise
+    return _batch_result(plan, journal)
+
+
 def main(default_domain: str | None = None) -> int:
     argv = sys.argv[1:]
     if default_domain:
@@ -518,31 +702,44 @@ def main(default_domain: str | None = None) -> int:
                     return int(bool(errors))
                 print(json.dumps({"verified": True, "config": str(path)}, ensure_ascii=False, indent=2))
                 return 0
-            plan = (
-                make_project_plan(run_gh, path, config)
-                if args.domain == "project"
-                else make_issue_plan(run_gh, path, config, _issue_request(args))
-            )
+            if args.domain == "project":
+                plan = make_project_plan(run_gh, path, config)
+            else:
+                request = _issue_request(args)
+                plan = (
+                    make_issue_manifest_plan(run_gh, path, config, load_issue_manifest(Path(request["manifest_path"])))
+                    if "manifest_path" in request
+                    else make_issue_plan(run_gh, path, config, request)
+                )
             save_plan(plan)
             print(json.dumps(plan.to_dict(), ensure_ascii=False, indent=2))
             return 0
 
-        plan = load_plan(args.plan_id)
+        journal = load_journal(args.plan_id)
+        mutation_started = bool(journal.get("entries")) or bool(journal.get("steps"))
+        plan = load_plan(args.plan_id, allow_expired=args.command == "resume" and mutation_started)
         if args.confirm_target != plan["target"]:
             raise SafetyError(f"target confirmation mismatch; expected {plan['target']!r}")
         _, config = _load_current(plan)
         _verify_identity(plan, config)
-        journal = load_journal(plan["plan_id"])
-        if not (plan["domain"] == "project" and args.command == "resume"):
-            _verify_observed(plan, config)
         with exclusive_lock(plan["target"]):
+            if not (plan["domain"] == "project" and args.command == "resume"):
+                _verify_observed(plan, config)
             result = (
                 _apply_project(plan, config, journal, allow_reconcile=args.command == "resume")
                 if plan["domain"] == "project"
-                else _create_issue(plan, config, journal)
+                else (
+                    _apply_issue_manifest(plan, config, journal)
+                    if isinstance(plan.get("request", {}).get("issues"), list)
+                    else _create_issue(plan, config, journal)
+                )
             )
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
+    except PartialApplyError as exc:
+        print(json.dumps(exc.result, ensure_ascii=False, indent=2))
+        print(f"github-operations: partial apply: {exc}", file=sys.stderr)
+        return 1
     except SafetyError as exc:
         print(f"github-operations: {exc}", file=sys.stderr)
         return 2

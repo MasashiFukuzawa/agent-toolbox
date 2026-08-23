@@ -42,18 +42,34 @@ Resolve `scripts/run.py` against this skill directory before executing it.
 
    Omit label, assignee, or Priority when not explicitly justified.
 
+   For multiple Issues, create a version 1 JSON manifest using
+   [`references/manifest.md`](references/manifest.md), then plan once:
+
+   ```bash
+   python3 <skill-dir>/scripts/run.py plan \
+     --config <config> \
+     --manifest <manifest.json>
+   ```
+
+   Do not combine `--manifest` with single-Issue flags. Inspect the distinct repository list,
+   entry count, every operation, and the generated fingerprints before apply.
+
 3. Inspect all returned fields, operations, `plan_id`, target, authenticated identity, and expiry. If they match the authorized request and repository policy, apply in the same turn without another approval prompt. If the user requested a dry-run only, display the plan and stop.
 4. Apply the matching plan:
 
    ```bash
-   python3 <skill-dir>/scripts/run.py apply --plan-id <id> --confirm-target '<owner/repo>'
+   python3 <skill-dir>/scripts/run.py apply --plan-id <id> --confirm-target '<target-from-plan>'
    ```
 
 5. If creation succeeded but Project registration or field editing failed, show the existing Issue URL and remaining steps. Resume the same plan without recreating the Issue when the original request still authorizes the remaining operations:
 
    ```bash
-   python3 <skill-dir>/scripts/run.py resume --plan-id <id> --confirm-target '<owner/repo>'
+   python3 <skill-dir>/scripts/run.py resume --plan-id <id> --confirm-target '<target-from-plan>'
    ```
+
+   A manifest apply can return exit code `1` after partial success. Treat its stdout JSON as the
+   durable per-entry result, report completed entries, and resume the same plan. Exit code `2`
+   means the operation was rejected before it could be proven safe.
 
 If apply reports a stale lock, verify that its process is no longer running, then clear only the confirmed target with `run.py unlock --target '<owner/repo>' --confirm-target '<owner/repo>'`.
 
@@ -62,3 +78,5 @@ If apply reports a stale lock, verify that its process is no longer running, the
 - Requested dry-run: identity, repo, title, body, labels, assignee, Project, Status, Priority, and every mutation; do not apply.
 - Success: Issue URL, Project item ID, applied fields, and verification result.
 - Partial failure: existing Issue URL, completed steps, remaining steps, and safe resume command.
+- Manifest success: plan ID, target guard, total/completed counts, and per-entry Issue URL, Project item ID, and state.
+- Manifest partial failure: the same machine-readable summary on stdout plus an actionable error on stderr.
