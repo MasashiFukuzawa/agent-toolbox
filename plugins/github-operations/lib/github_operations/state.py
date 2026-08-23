@@ -28,7 +28,7 @@ def save_plan(plan: Plan) -> None:
     atomic_write_json(plan_path(plan.plan_id), plan.to_dict())
 
 
-def load_plan(plan_id: str) -> dict:
+def load_plan(plan_id: str, *, allow_expired: bool = False) -> dict:
     path = plan_path(plan_id)
     try:
         plan = json.loads(path.read_text())
@@ -57,13 +57,13 @@ def load_plan(plan_id: str) -> dict:
     if digest(content)[:32] != plan_id:
         raise SafetyError("plan content changed after approval; create and approve a new plan")
     expires_at = datetime.fromisoformat(plan["expires_at"])
-    if datetime.now(UTC) > expires_at:
+    if datetime.now(UTC) > expires_at and not allow_expired:
         raise SafetyError("plan expired; create and approve a new plan")
     return plan
 
 
 def save_journal(plan_id: str, value: dict) -> None:
-    value["schema_version"] = 1
+    value["schema_version"] = 2 if "entries" in value else 1
     value["plan_id"] = plan_id
     atomic_write_json(journal_path(plan_id), value)
 
@@ -76,6 +76,18 @@ def load_journal(plan_id: str) -> dict:
         journal = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError) as exc:
         raise SafetyError(f"journal is invalid: {plan_id}") from exc
+    version = journal.get("schema_version")
+    if version == 2:
+        allowed_v2 = {"schema_version", "plan_id", "entries", "started_at"}
+        if set(journal) - allowed_v2 or journal.get("plan_id") != plan_id:
+            raise SafetyError("journal schema or plan binding is invalid")
+        entries = journal.get("entries")
+        valid_entries = isinstance(entries, dict) and all(
+            isinstance(key, str) and isinstance(value, dict) for key, value in entries.items()
+        )
+        if not valid_entries:
+            raise SafetyError("journal entries are invalid")
+        return journal
     allowed = {
         "schema_version",
         "plan_id",
@@ -85,7 +97,7 @@ def load_journal(plan_id: str) -> dict:
         "project_id",
         "project_number",
     }
-    if set(journal) - allowed or journal.get("schema_version") != 1 or journal.get("plan_id") != plan_id:
+    if set(journal) - allowed or version != 1 or journal.get("plan_id") != plan_id:
         raise SafetyError("journal schema or plan binding is invalid")
     if not isinstance(journal.get("steps", []), list) or not all(
         isinstance(step, str) for step in journal.get("steps", [])

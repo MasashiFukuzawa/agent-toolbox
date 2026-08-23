@@ -17,12 +17,14 @@ sys.path.insert(0, str(LIB))
 from github_operations import cli  # noqa: E402
 from github_operations.planning import (  # noqa: E402
     load_config,
+    load_issue_manifest,
+    make_issue_manifest_plan,
     make_issue_plan,
     make_project_plan,
     project_verification_errors,
 )
 from github_operations.project_task import claim_project_task  # noqa: E402
-from github_operations.safety import SafetyError  # noqa: E402
+from github_operations.safety import PartialApplyError, SafetyError  # noqa: E402
 from github_operations.state import (  # noqa: E402
     exclusive_lock,
     load_journal,
@@ -47,7 +49,9 @@ def fake_runner(args: list[str]) -> str:
         return json.dumps({"projects": [{"id": "P_TARGET", "number": 8, "title": "Product Development"}]})
     if command.startswith("repo view target-owner/"):
         full_name = args[2]
-        return json.dumps({"id": f"R_{full_name}", "nameWithOwner": full_name, "url": f"https://github.com/{full_name}"})
+        return json.dumps(
+            {"id": f"R_{full_name}", "nameWithOwner": full_name, "url": f"https://github.com/{full_name}"}
+        )
     if command.startswith("project field-list 8 --owner target-owner"):
         return json.dumps(
             {
@@ -706,9 +710,7 @@ def test_item_add_unknown_result_is_reconciled_without_new_issue(
             item_reads += 1
             if item_reads == 1:
                 return '{"items": []}'
-            return json.dumps(
-                {"items": [{"id": "ITEM_1", "content": {"url": "https://github.com/o/r/issues/1"}}]}
-            )
+            return json.dumps({"items": [{"id": "ITEM_1", "content": {"url": "https://github.com/o/r/issues/1"}}]})
         if command.startswith("issue view"):
             return json.dumps(
                 {
@@ -720,11 +722,7 @@ def test_item_add_unknown_result_is_reconciled_without_new_issue(
             raise SafetyError("response lost")
         if command.startswith("project field-list"):
             return json.dumps(
-                {
-                    "fields": [
-                        {"id": "F_STATUS", "name": "Status", "options": [{"id": "O_INBOX", "name": "Inbox"}]}
-                    ]
-                }
+                {"fields": [{"id": "F_STATUS", "name": "Status", "options": [{"id": "O_INBOX", "name": "Inbox"}]}]}
             )
         if command.startswith("project item-edit"):
             return ""
@@ -784,9 +782,7 @@ def test_tampered_journal_item_is_rejected_before_edit(monkeypatch: pytest.Monke
                 }
             )
         if command.startswith("project item-list"):
-            return json.dumps(
-                {"items": [{"id": "ITEM_REAL", "content": {"url": "https://github.com/o/r/issues/1"}}]}
-            )
+            return json.dumps({"items": [{"id": "ITEM_REAL", "content": {"url": "https://github.com/o/r/issues/1"}}]})
         raise AssertionError(args)
 
     monkeypatch.setattr(cli, "run_gh", runner)
@@ -828,3 +824,288 @@ def test_journal_rejects_invalid_field_types(tmp_path: Path, monkeypatch: pytest
     path.write_text(json.dumps(stored))
     with pytest.raises(SafetyError, match="issue_url"):
         load_journal("PLAN_A")
+
+
+def test_manifest_plan_observes_shared_project_metadata_once(config_path: Path) -> None:
+    calls: list[list[str]] = []
+
+    def runner(args: list[str]) -> str:
+        calls.append(args)
+        return fake_runner(args)
+
+    manifest = {
+        "version": 1,
+        "issues": [
+            {
+                "key": "first",
+                "repo": "primary",
+                "title": "First",
+                "body": "Body",
+                "labels": ["bug"],
+                "assignee": None,
+                "priority": None,
+            },
+            {
+                "key": "second",
+                "repo": "primary",
+                "title": "Second",
+                "body": "Body",
+                "labels": ["feature"],
+                "assignee": None,
+                "priority": "P1: next",
+            },
+        ],
+    }
+    plan = make_issue_manifest_plan(runner, config_path, load_config(config_path), manifest)
+    commands = [" ".join(call) for call in calls]
+    assert sum(command.startswith("project list --owner target-owner") for command in commands) == 1
+    assert sum(command.startswith("project field-list 8 --owner target-owner") for command in commands) == 1
+    assert sum(command.startswith("repo view target-owner/primary") for command in commands) == 1
+    assert sum(command.startswith("label list --repo target-owner/primary") for command in commands) == 1
+    fingerprints = [issue["fingerprint"] for issue in plan.request["issues"]]
+    assert len(set(fingerprints)) == 2
+
+
+def test_manifest_rejects_unknown_and_parent_fields(tmp_path: Path) -> None:
+    path = tmp_path / "issues.json"
+    path.write_text(
+        json.dumps({"version": 1, "issues": [{"repo": "primary", "title": "Title", "parent": "other"}]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(SafetyError, match="unknown fields"):
+        load_issue_manifest(path)
+
+
+def test_manifest_rejects_null_body(tmp_path: Path) -> None:
+    path = tmp_path / "issues.json"
+    path.write_text(
+        json.dumps({"version": 1, "issues": [{"repo": "primary", "title": "Title", "body": None}]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(SafetyError, match="body must be a string"):
+        load_issue_manifest(path)
+
+
+def test_manifest_assignee_preflight_accepts_empty_success_response(config_path: Path) -> None:
+    def runner(args: list[str]) -> str:
+        if args[:2] == ["api", "repos/target-owner/primary/assignees/reviewer"]:
+            return ""
+        return fake_runner(args)
+
+    plan = make_issue_manifest_plan(
+        runner,
+        config_path,
+        load_config(config_path),
+        {
+            "version": 1,
+            "issues": [
+                {
+                    "key": "one",
+                    "repo": "primary",
+                    "title": "Title",
+                    "body": "Body",
+                    "labels": [],
+                    "assignee": "reviewer",
+                    "priority": None,
+                }
+            ],
+        },
+    )
+    assert plan.request["issues"][0]["assignee"] == "reviewer"
+
+
+def test_manifest_apply_uses_item_add_response_without_project_scan(
+    config_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path))
+    calls: list[list[str]] = []
+
+    def runner(args: list[str], *, retries: int = 2) -> str:
+        calls.append(args)
+        command = " ".join(args)
+        if command.startswith("api --paginate"):
+            return "[[]]"
+        if command.startswith("issue create"):
+            return "https://github.com/target-owner/primary/issues/1\n"
+        if command.startswith("issue view"):
+            return json.dumps(
+                {
+                    "id": "I_1",
+                    "url": "https://github.com/target-owner/primary/issues/1",
+                    "body": "<!-- github-operations:fingerprint=fp -->",
+                }
+            )
+        if command.startswith("project item-add"):
+            return json.dumps({"id": "ITEM_1"})
+        if command.startswith("project item-edit"):
+            return ""
+        raise AssertionError(args)
+
+    monkeypatch.setattr(cli, "run_gh", runner)
+    request = {
+        "key": "one",
+        "repo": "target-owner/primary",
+        "title": "Title",
+        "body": "Body\n<!-- github-operations:fingerprint=fp -->\n",
+        "labels": [],
+        "assignee": None,
+        "priority": None,
+        "fingerprint": "fp",
+    }
+    plan = {
+        "plan_id": "PLAN_BATCH",
+        "target": "target-owner/primary",
+        "created_at": "2026-08-23T00:00:00+00:00",
+        "request": {"issues": [request]},
+        "observed": {
+            "project": {"id": "P", "number": 1},
+            "status": {"field": {"id": "F_STATUS"}, "option": {"id": "O_INBOX"}},
+            "priority_field": None,
+        },
+    }
+    result = cli._apply_issue_manifest(plan, {"owner": "target-owner", "project": {}}, {})
+    assert result["completed"] == 1
+    assert result["entries"]["one"]["state"] == "verified"
+    assert not any(call[:2] == ["project", "item-list"] for call in calls)
+
+
+def test_manifest_journal_v2_is_bound_to_plan(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path))
+    save_journal("PLAN_A", {"entries": {"one": {"state": "issue-created"}}})
+    assert load_journal("PLAN_A")["entries"]["one"]["state"] == "issue-created"
+
+
+def test_manifest_resume_reconciles_unknown_item_add_before_retry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path))
+    calls: list[list[str]] = []
+
+    def runner(args: list[str], *, retries: int = 2) -> str:
+        calls.append(args)
+        command = " ".join(args)
+        if command.startswith("issue view") and "id,url" in command:
+            return json.dumps({"id": "I_1", "url": "https://github.com/o/r/issues/1"})
+        if command.startswith("issue view"):
+            return json.dumps(
+                {
+                    "url": "https://github.com/o/r/issues/1",
+                    "body": "<!-- github-operations:fingerprint=fp -->",
+                }
+            )
+        if command.startswith("api graphql"):
+            return json.dumps(
+                {
+                    "data": {
+                        "node": {
+                            "projectItems": {
+                                "nodes": [{"id": "ITEM_1", "project": {"id": "P"}}],
+                                "pageInfo": {"hasNextPage": False},
+                            }
+                        }
+                    }
+                }
+            )
+        if command.startswith("project item-edit"):
+            return ""
+        raise AssertionError(args)
+
+    monkeypatch.setattr(cli, "run_gh", runner)
+    request = {
+        "key": "one",
+        "repo": "o/r",
+        "title": "Title",
+        "body": "<!-- github-operations:fingerprint=fp -->",
+        "labels": [],
+        "assignee": None,
+        "priority": None,
+        "fingerprint": "fp",
+    }
+    plan = {
+        "plan_id": "PLAN_RESUME",
+        "target": "o/r",
+        "created_at": "2026-08-23T00:00:00+00:00",
+        "request": {"issues": [request]},
+        "observed": {
+            "project": {"id": "P", "number": 1},
+            "status": {"field": {"id": "F_STATUS"}, "option": {"id": "O_INBOX"}},
+            "priority_field": None,
+        },
+    }
+    journal = {
+        "entries": {
+            "one": {
+                "state": "project-item-add-attempted",
+                "issue_url": "https://github.com/o/r/issues/1",
+            }
+        }
+    }
+    result = cli._apply_issue_manifest(plan, {"owner": "o", "project": {}}, journal)
+    assert result["entries"]["one"]["item_id"] == "ITEM_1"
+    assert not any(call[:2] == ["project", "item-add"] for call in calls)
+
+
+def test_manifest_resume_rejects_saved_item_for_another_issue(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path))
+
+    def runner(args: list[str], *, retries: int = 2) -> str:
+        command = " ".join(args)
+        if command.startswith("issue view") and "id,url" in command:
+            return json.dumps({"id": "I_1", "url": "https://github.com/o/r/issues/1"})
+        if command.startswith("issue view"):
+            return json.dumps(
+                {
+                    "url": "https://github.com/o/r/issues/1",
+                    "body": "<!-- github-operations:fingerprint=fp -->",
+                }
+            )
+        if command.startswith("api graphql"):
+            return json.dumps(
+                {
+                    "data": {
+                        "node": {
+                            "projectItems": {
+                                "nodes": [{"id": "ITEM_REAL", "project": {"id": "P"}}],
+                                "pageInfo": {"hasNextPage": False},
+                            }
+                        }
+                    }
+                }
+            )
+        raise AssertionError(args)
+
+    monkeypatch.setattr(cli, "run_gh", runner)
+    request = {
+        "key": "one",
+        "repo": "o/r",
+        "title": "Title",
+        "body": "<!-- github-operations:fingerprint=fp -->",
+        "labels": [],
+        "assignee": None,
+        "priority": None,
+        "fingerprint": "fp",
+    }
+    plan = {
+        "plan_id": "PLAN_TAMPERED_V2",
+        "target": "o/r",
+        "created_at": "2026-08-23T00:00:00+00:00",
+        "request": {"issues": [request]},
+        "observed": {
+            "project": {"id": "P", "number": 1},
+            "status": {"field": {"id": "F_STATUS"}, "option": {"id": "O_INBOX"}},
+            "priority_field": None,
+        },
+    }
+    journal = {
+        "entries": {
+            "one": {
+                "state": "project-item-added",
+                "issue_url": "https://github.com/o/r/issues/1",
+                "item_id": "ITEM_OTHER",
+            }
+        }
+    }
+    with pytest.raises(PartialApplyError, match="does not match"):
+        cli._apply_issue_manifest(plan, {"owner": "o", "project": {}}, journal)

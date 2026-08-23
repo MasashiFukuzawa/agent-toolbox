@@ -13,7 +13,7 @@ from .safety import SafetyError, require_exactly_one
 Runner = Callable[[list[str]], str]
 
 
-def run_gh(args: list[str], *, retries: int = 2) -> str:
+def run_gh(args: list[str], *, retries: int = 0) -> str:
     command = ["gh", *args]
     environment = {**os.environ, "GH_HOST": "github.com"}
     for attempt in range(retries + 1):
@@ -303,6 +303,10 @@ def repository(runner: Runner, full_name: str) -> dict[str, Any]:
 def repository_labels(runner: Runner, full_name: str) -> list[str]:
     data = json_gh(runner, ["label", "list", "--repo", full_name, "--limit", "1000", "--json", "name"])
     return [item["name"] for item in data]
+
+
+def require_repository_assignee(runner: Runner, full_name: str, login: str) -> None:
+    runner(["api", f"repos/{full_name}/assignees/{login}"])
 
 
 def project_structure(runner: Runner, project_id: str) -> dict[str, Any]:

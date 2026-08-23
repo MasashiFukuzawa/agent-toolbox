@@ -13,6 +13,7 @@ from .github import (
     project_structure,
     repository,
     repository_labels,
+    require_repository_assignee,
     resolve_field,
     resolve_option,
     resolve_project,
@@ -200,9 +201,7 @@ def contract_drift(
     return drift
 
 
-def project_verification_errors(
-    observed: dict[str, Any], config: dict, *, include_browser: bool = True
-) -> list[str]:
+def project_verification_errors(observed: dict[str, Any], config: dict, *, include_browser: bool = True) -> list[str]:
     errors = list(observed.get("drift", []))
     if not include_browser:
         errors = [
@@ -336,7 +335,9 @@ def observe_issue(runner: Runner, config: dict, request: dict) -> dict[str, Any]
 
 def make_issue_plan(runner: Runner, path: Path, config: dict, request: dict) -> Plan:
     request = dict(request)
-    fingerprint = request.get("fingerprint") or digest(
+    if "fingerprint" in request:
+        raise SafetyError("Issue fingerprints are generated internally")
+    fingerprint = digest(
         {"owner": config["owner"], "repo": request["repo"], "title": request["title"], "body": request["body"]}
     )[:24]
     marker = f"<!-- github-operations:fingerprint={fingerprint} -->"
@@ -360,5 +361,131 @@ def make_issue_plan(runner: Runner, path: Path, config: dict, request: dict) -> 
         config,
         observed,
         request,
+        operations,
+    )
+
+
+_MANIFEST_KEYS = {"version", "issues"}
+_ISSUE_KEYS = {"repo", "title", "body", "labels", "assignee", "priority", "key"}
+
+
+def load_issue_manifest(path: Path) -> dict[str, Any]:
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SafetyError(f"invalid Issue manifest: {path}") from exc
+    if not isinstance(manifest, dict) or set(manifest) != _MANIFEST_KEYS or manifest.get("version") != 1:
+        raise SafetyError("Issue manifest requires exactly version=1 and issues")
+    issues = manifest.get("issues")
+    if not isinstance(issues, list) or not issues:
+        raise SafetyError("Issue manifest issues must be a non-empty list")
+    if len(issues) > 100:
+        raise SafetyError("Issue manifest supports at most 100 entries per plan")
+    normalized = []
+    keys: set[str] = set()
+    for index, issue in enumerate(issues):
+        if not isinstance(issue, dict) or not set(issue) <= _ISSUE_KEYS:
+            raise SafetyError(f"Issue manifest entry {index} contains unknown fields")
+        if set(issue) & {"fingerprint", "parent", "sub_issues", "sub-issues"}:
+            raise SafetyError(f"Issue manifest entry {index} contains unsupported fields")
+        if not isinstance(issue.get("repo"), str) or not issue["repo"]:
+            raise SafetyError(f"Issue manifest entry {index} requires repo")
+        if not isinstance(issue.get("title"), str) or not issue["title"].strip():
+            raise SafetyError(f"Issue manifest entry {index} requires a non-empty title")
+        if "body" in issue and not isinstance(issue["body"], str):
+            raise SafetyError(f"Issue manifest entry {index} field body must be a string")
+        for name in ("assignee", "priority", "key"):
+            if name in issue and issue[name] is not None and not isinstance(issue[name], str):
+                raise SafetyError(f"Issue manifest entry {index} field {name} must be a string")
+        labels = issue.get("labels", [])
+        if not isinstance(labels, list) or not all(isinstance(label, str) and label for label in labels):
+            raise SafetyError(f"Issue manifest entry {index} labels must be non-empty strings")
+        key = issue.get("key") or str(index + 1)
+        if key in keys:
+            raise SafetyError(f"Issue manifest entry key is duplicated: {key}")
+        keys.add(key)
+        normalized.append(
+            {
+                "key": key,
+                "repo": issue["repo"],
+                "title": issue["title"],
+                "body": issue.get("body", ""),
+                "labels": labels,
+                "assignee": issue.get("assignee"),
+                "priority": issue.get("priority"),
+            }
+        )
+    return {"version": 1, "issues": normalized}
+
+
+def make_issue_manifest_plan(runner: Runner, path: Path, config: dict, manifest: dict[str, Any]) -> Plan:
+    owner = config["owner"]
+    actor = identity(runner, config.get("host", "github.com"))
+    project = resolve_project(runner, owner, config["project"]["title"])
+    if project is None:
+        raise SafetyError("target project was not found")
+    fields = project_fields(runner, owner, int(project["number"]))
+    status = resolve_field(fields, config["project"].get("status_field", "Status"))
+    inbox = resolve_option(status, config["project"].get("inbox_option", "Inbox"))
+    priority_field = next(
+        (field for field in fields if field.get("name") == config["project"].get("priority_field", "Priority")),
+        None,
+    )
+    repositories: dict[str, dict[str, Any]] = {}
+    requests = []
+    operations = []
+    manifest_identity = digest(manifest)
+    for issue in manifest["issues"]:
+        repo_name = issue["repo"] if "/" in issue["repo"] else f"{owner}/{issue['repo']}"
+        repo_owner, short_name = repo_name.split("/", 1)
+        allowed = config.get("repositories", [])
+        if repo_owner != owner or not allowed or short_name not in allowed:
+            raise SafetyError(f"repository is outside the configured owner/allowlist: {repo_name}")
+        if repo_name not in repositories:
+            repo = repository(runner, repo_name)
+            labels = repository_labels(runner, repo_name)
+            repositories[repo_name] = {"repository": repo, "labels": labels}
+        missing = sorted(set(issue["labels"]) - set(repositories[repo_name]["labels"]))
+        if missing:
+            raise SafetyError(f"labels do not exist in {repo_name}: {', '.join(missing)}")
+        if issue.get("assignee"):
+            require_repository_assignee(runner, repo_name, issue["assignee"])
+        if issue.get("priority"):
+            if priority_field is None:
+                raise SafetyError("Priority field was not found")
+            resolve_option(priority_field, issue["priority"])
+        request = dict(issue)
+        request["repo"] = repo_name
+        fingerprint = digest({"manifest": manifest_identity, "key": issue["key"]})[:24]
+        marker = f"<!-- github-operations:fingerprint={fingerprint} -->"
+        if marker not in request["body"]:
+            request["body"] = f"{request['body'].rstrip()}\n\n{marker}\n"
+        request["fingerprint"] = fingerprint
+        requests.append(request)
+        operations.extend(
+            [
+                {"entry": issue["key"], "type": "create-issue", "repository": repo_name, "title": issue["title"]},
+                {"entry": issue["key"], "type": "add-project-item", "project": config["project"]["title"]},
+                {"entry": issue["key"], "type": "set-status", "value": inbox["name"]},
+            ]
+        )
+        if issue.get("priority"):
+            operations.append({"entry": issue["key"], "type": "set-priority", "value": issue["priority"]})
+    observed = {
+        "project": project,
+        "status": {"field": status, "option": inbox},
+        "priority_field": priority_field,
+        "repositories": repositories,
+    }
+    repos = sorted(repositories)
+    target = repos[0] if len(repos) == 1 and len(requests) == 1 else f"{','.join(repos)}#{len(requests)}"
+    return _new_plan(
+        "issue",
+        actor.__dict__,
+        target,
+        path,
+        config,
+        observed,
+        {"version": 1, "manifest_digest": manifest_identity, "issues": requests},
         operations,
     )

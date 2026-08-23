@@ -12,6 +12,14 @@ class SafetyError(RuntimeError):
     """Raised when an operation cannot be proven safe."""
 
 
+class PartialApplyError(SafetyError):
+    """Raised when an operation stopped after one or more durable mutations."""
+
+    def __init__(self, message: str, result: dict[str, Any]) -> None:
+        super().__init__(message)
+        self.result = result
+
+
 def canonical_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -32,6 +40,11 @@ def atomic_write_json(path: Path, value: Any) -> None:
             os.fsync(handle.fileno())
         os.chmod(temporary, 0o600)
         os.replace(temporary, path)
+        directory_fd = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
