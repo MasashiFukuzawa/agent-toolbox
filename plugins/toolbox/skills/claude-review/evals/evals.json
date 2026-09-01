@@ -89,6 +89,24 @@
       "prompt": "さっきのclaude-reviewのFinding 2について、根拠をもっと詳しく聞きたい。",
       "expected_output": "同じ結論の深掘り・根拠確認なので、品質不足を補う独立再レビューとは区別し、新規reviewを起動せず記録した正確なsession UUIDでclaude -p --resume <session_uuid>する。元processの終了確認と既存出力回収を先に行い、元のmodel・effort・対象・read-only制約を維持する。--continueと--fork-sessionは使わない",
       "files": []
+    },
+    {
+      "id": 16,
+      "prompt": "fableに相談して、この設計の見落としを洗い出して。",
+      "expected_output": "Fable の明示指定として claude-review を適用し、現行の固定 ID --model claude-fable-5-1 を選ぶ。Fable は自動選択しないが、この依頼ではユーザーのモデル指定を尊重する。effort は未指定なので既定の high とし、read-only 制約とレビュー用prompt contractを維持して実行する",
+      "files": []
+    },
+    {
+      "id": 17,
+      "prompt": "sonnetに見てもらって、この実装差分に設計上の抜けがないか確認して。",
+      "expected_output": "Sonnet family の明示指定として claude-review を適用し、版なし family 名を現行の固定 ID --model claude-sonnet-5 へ解決する。設計上の観点が含まれていてもユーザーの明示モデルを自動判定で上書きせず、effort は未指定なので既定の high とする",
+      "files": []
+    },
+    {
+      "id": 18,
+      "prompt": "opusに相談して、詳細設計どおりの実装か確認して。",
+      "expected_output": "Opus family の明示指定として claude-review を適用し、版なし family 名を現行の固定 ID --model claude-opus-5 へ解決する。詳細設計済みの実装レビューでもユーザーの明示モデルを Sonnet へ自動変更せず、effort は未指定なので既定の high とする",
+      "files": []
     }
   ]
 }
