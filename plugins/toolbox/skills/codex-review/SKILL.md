@@ -1,13 +1,13 @@
 ---
 name: codex-review
 description: >-
-  Codex CLI の独立インスタンスでコードや差分を read-only レビューする。Codex・OpenAI を明示した第三者レビューに使う。一般的なレビューや Claude 指定には使わない。「Codexに見てもらって」を正のトリガーとし、provider未指定の第三者レビューでは勝手に選ばず、ユーザーへ確認する。
+  Codex CLI の独立インスタンスでコードや差分を read-only レビューする。Codex・OpenAI・luna・sol・astra を明示した第三者レビューに使う。一般的なレビューや Claude 指定には使わない。「Codexに見てもらって」「lunaに見てもらって」「solに相談して」「astraに相談して」を正のトリガーとし、provider未指定の第三者レビューでは勝手に選ばず、ユーザーへ確認する。
 ---
 # Codex Review スキル
 
 このスキルは Claude Code / Codex / Cursor のどのホスト（エージェント）からも呼ばれる前提で書かれている。ホスト固有の起動と合流は「非同期実行と合流」の型分岐に従う。
 
-**用途境界:** 本スキルは第三者レビュー専用で、`read-only` + 既定 `high`（`xhigh` 以上は使わない）。実装ワーカーとして Codex を委譲する場合は別のオーケストレーター手順を使い、`workspace-write` + 通常 `medium` とする。同じCLIでも権限とeffortが逆なので混用しない。
+**用途境界:** 本スキルは第三者レビュー専用で、`read-only` + モデルごとの既定 effort（`xhigh` 以上は使わない）。実装ワーカーとして Codex を委譲する場合は別のオーケストレーター手順を使い、`workspace-write` + 通常 `medium` とする。同じCLIでも権限とeffortが逆なので混用しない。
 
 <!-- MIRROR:review-common BEGIN -->
 ## レビューの目的
@@ -32,62 +32,69 @@ description: >-
 1. **read-only 厳守**: 必ず `-s read-only` で起動する。レビュー用 Codex が作業ツリーへ変更を加えることは許されない（実行後に `git status` で汚染がないか確認し、汚染があれば即報告する）
 2. **ネスト起動禁止**: レビュー用 Codex に別の `codex exec` / `claude -p` / review 系 skill を起動させない（依頼文に再帰防止文を必ず含める。後述）
 3. **書き込み系操作の禁止**: commit / push / PR 作成 / GitHub コメント / Issue 作成・更新をレビュー用 Codex に行わせない。結果はテキストで返させ、扱いは呼び出し元が判断する
-4. **明示指定の尊重**: ユーザーが effort / model を明示した場合、自動判定で上書きしない（上げるのも下げるのも禁止）。**明示指定とはモデルIDまたは effort レベル名（`low`/`medium`/`high` 等）を挙げたものを指す。** 「しっかり」「念のため」「軽く」のようなレベル名を伴わない強調表現は明示指定として扱わず、自動判定の入力（依頼内容の複雑度の手がかり）として扱う
-5. **長時間未完了時のフォールバック**: 開始時に想定所要時間を伝える（既定の `gpt-5.6-terra` + `high` なら数分程度、`gpt-5.6-sol` へ昇格した場合や大規模対象では数十分）。実時刻の計測で40分たっても完了していなければ、状況を報告して「継続 or 中断して `claude-review` へ切替」をユーザーに提示する（勝手に放置も勝手に中断もしない。中断時は結果の部分回収を試みる）。**判定基準は「無出力」ではなく「未完了」である** — 推論中に本文が出ないのは常態であり、それ自体を失敗の根拠にしない
+4. **明示指定の尊重**: ユーザーが effort / model を明示した場合、自動判定で上書きしない（上げるのも下げるのも禁止）。**明示指定とは、モデルのティア名（`sol` / `astra` / `luna`。モデルIDや版付き名も含む）または effort レベル名（`low`/`medium`/`high` 等）を挙げたものを指す。** モデル名の解決は「モデル」の規則に従う。 「しっかり」「念のため」「軽く」のようなレベル名を伴わない強調表現は明示指定として扱わず、自動判定の入力（依頼内容の複雑度の手がかり）として扱う
+5. **長時間未完了時のフォールバック**: 開始時に想定所要時間を伝える（既定の `gpt-6-luna` + `high` なら数分程度、`gpt-6-sol` / `gpt-6-astra` を選んだ場合や大規模対象では数十分）。実時刻の計測で40分たっても完了していなければ、状況を報告して「継続 or 中断して `claude-review` へ切替」をユーザーに提示する（勝手に放置も勝手に中断もしない。中断時は結果の部分回収を試みる）。**判定基準は「無出力」ではなく「未完了」である** — 推論中に本文が出ないのは常態であり、それ自体を失敗の根拠にしない
 
 Codex CLI を read-only サンドボックスで実行し、コードベースを分析する。
 `approval: never` で動作するため、ユーザーの承認プロンプトは発生しない。
 
-## モデルと effort（2026-07 時点）
+## モデルと effort（2026-09 時点）
 
 **このセクションが本スキル内のモデル ID・effort・既定値の唯一の定義元。** 以降のコマンド例に埋まっているモデル名・effort はここの既定値の写しであり、モデル状況が変わったら本セクション・コマンド例・`evals/evals.json` の `expected_output` をあわせて更新する。
 
-### モデル（GPT-5.6 系・3ティア構成）
+### モデル（GPT-6 系・3ティア構成）
 
 | モデル | 位置づけ |
 |--------|---------|
-| `gpt-5.6-terra` | **既定**。品質/コストのバランス型。実装済みコードのレビューに十分 |
-| `gpt-5.6-sol`   | 昇格先。設計そのものが対象・不確実性が高い場合に限って選ぶ |
-| `gpt-5.6-luna`  | 高速・低コスト。クイックチェック向け |
+| `gpt-6-luna`  | **既定**。高速・低コスト。実装済みコードのレビューに使う |
+| `gpt-6-sol`   | 昇格先。コーディングと日常作業の主力モデル。設計そのものが対象・不確実性が高い場合に限って選ぶ |
+| `gpt-6-astra` | **ユーザー明示時のみ**。最上位モデル。最も難しい作業向けで、通常レビューでは自動選択しない |
 
 `~/.codex/config.toml` の既定に依存せず、必ず `-m` でモデルを明示固定する（自己文書化のため）。
 
-**既定は `gpt-5.6-terra` + `high`。** 本スキルの目的は独立した観点の持ち込みであって、モデルの推論力で欠陥を掘り出すことではない（「レビューの目的」参照）。**詳細設計が済んでいて実装内容に一定の信頼がある対象**——設計どおりに実装されたコード、既知パターンの適用、レビュー目的が「実装者に無い観点の提案」であるもの——は既定のままで扱う。上位モデルは所要時間が伸び、多くのレビューではその追加時間に見合う質の差が出ない。
+**モデルの版は常にこの表の最新版を使う。** ユーザー指定から読み取るのはティア名（`sol` / `astra` / `luna`）だけで、版は無視する。`sol`・`gpt-5.6-sol` は `gpt-6-sol`、`luna`・`gpt-5.6-luna` は `gpt-6-luna`、`astra` は `gpt-6-astra` へ解決する。最新版に無いティア（`terra`）は既定の `gpt-6-luna` へ解決する。指定された版・ティアと異なるモデルを使う場合は、置き換えたことを起動前に一言伝える。
 
-**次のいずれかに当てはまるときのみ `gpt-5.6-sol` へ昇格する。** 依頼を受けた時点で判断できる条件に限る。
+**既定は `gpt-6-luna` + `high`。** 本スキルの目的は独立した観点の持ち込みであって、モデルの推論力で欠陥を掘り出すことではない（「レビューの目的」参照）。**詳細設計が済んでいて実装内容に一定の信頼がある対象**——設計どおりに実装されたコード、既知パターンの適用、レビュー目的が「実装者に無い観点の提案」であるもの——は既定のままで扱う。上位モデルは所要時間が伸び、多くのレビューではその追加時間に見合う質の差が出ない。
+
+**次のいずれかに当てはまるときのみ `gpt-6-sol` へ昇格する。** 依頼を受けた時点で判断できる条件に限る。
 
 - **プランニング段階**のレビュー（設計方針・アーキテクチャ選定・ADR・提案書など、実装前の判断そのものが対象）
 - 詳細設計は済んでいるが**不確実性が高い**（前例の無い方式、外部仕様への依存が大きい、想定外の失敗モードが読めない）
 - **拠り所となる詳細設計が無い**まま複雑な実装が積み上がっている（レビューが実装の検証ではなく、設計の再構築から始まる）
 
-**判断軸は対象の題材ではなく、難所が設計で片付いているかどうか。** 認証・並行処理・データ整合性といった領域に触れること自体は昇格理由にならない。詳細設計どおりに実装された認証コードのレビューは既定の `gpt-5.6-terra` で扱う。
+**判断軸は対象の題材ではなく、難所が設計で片付いているかどうか。** 認証・並行処理・データ整合性といった領域に触れること自体は昇格理由にならない。詳細設計どおりに実装された認証コードのレビューは既定の `gpt-6-luna` で扱う。
 
 **昇格するときは、その理由を一言添えてから起動する**（所要時間が伸びるため）。複数の条件に該当する場合は該当したものを全て挙げる。上記に当てはまらない限り既定を維持し、「念のため強いモデルで」という理由で昇格しない。
 
-**事後の昇格（重要）。** 深さが足りるかどうかは起動時には判定できないため、**判断は結果を見た呼び出し元に渡す**。`terra` の結果が一般論に留まる・`path:line` の裏付けが薄い・懸念していた論点に触れていない場合は、その結果をそのまま採用しない。**effort を上げるのではなく、対象スコープを絞り、観点を具体化した上で `gpt-5.6-sol` で再実行する。** 再実行したことと、`terra` の結果との差分を呼び出し元へ報告する。
+**事後の昇格（重要）。** 深さが足りるかどうかは起動時には判定できないため、**判断は結果を見た呼び出し元に渡す**。既定モデルの結果が一般論に留まる・`path:line` の裏付けが薄い・懸念していた論点に触れていない場合は、その結果をそのまま採用しない。**luna の effort を上げるのではなく、対象スコープを絞り、観点を具体化した上で `gpt-6-sol` + `medium` で再実行する。** sol の結果も浅い場合は、同じ手順で sol の effort を一段上げる（「Effort レベル」参照）。再実行したことと、既定モデルの結果との差分を呼び出し元へ報告する。
 
-**既定モデルでの結果を報告するときは、判断材料と選択肢を添える（必須）。** 報告の最後に、(1) scope statement のうち未検査のまま残った範囲に重要なものがあるか、(2) 「このまま採用する」か「スコープを絞って `gpt-5.6-sol` で再実行する」かの選択、を明示して呼び出し元に問う。黙って結果だけ返すと、浅い1回で打ち切られたのか十分だったのかが呼び出し元から区別できない。
+**既定モデルでの結果を報告するときは、判断材料と選択肢を添える（必須）。** 報告の最後に、(1) scope statement のうち未検査のまま残った範囲に重要なものがあるか、(2) 「このまま採用する」か「スコープを絞って `gpt-6-sol` + `medium` で再実行する」かの選択、を明示して呼び出し元に問う。黙って結果だけ返すと、浅い1回で打ち切られたのか十分だったのかが呼び出し元から区別できない。
 
 **昇格のための独立再レビューでは `codex exec resume` を使わない（新規 session で起動する）。** resume は元 session の結論・探索経路・見落としをそのまま引き継ぐため、「1回目が見落とした観点」を拾う目的には最も効かない。resume が適切なのは、**割り込みから同じレビューを完了させるrecovery、同じ結論の深掘り、根拠の確認、反論の提示**である。
+
+**`gpt-6-astra` はユーザーが「astra で」「astraに相談して」のように astra を明示した場合のみ使用する。** 自動選択は絶対にしない。
 
 **ユーザーがモデルを明示した場合はガードレール4が優先する。** 上記の自動判定で上書きしない。
 
 ### Effort レベル
 
-**effort が明示されない場合は、依頼内容の複雑度から自動判定する。既定は `high`。** 通常のコードレビューもアーキテクチャ分析もこの既定 `high` で行う。クイックチェックなど明らかに軽微な依頼に限り `medium` / `low` に下げてよい。effort が明示された場合は必ずそれに従う。
+**effort が明示されない場合は、モデルごとの既定値を使う。** effort が明示された場合は必ずそれに従う。
 
-**`xhigh` 以上（`xhigh` / `max` / `ultra`）は使わない。** effort を上げるほど精度が上がるわけではなく、過剰な探索と推論でレビュー結論の質が落ちる場合がある。自動判定でも既定でも選ばない。深さが足りないと感じたときは effort を上げるのではなく、**対象スコープを絞る・観点を具体化する・複数回に分ける**方向で対処する。
+| モデル | 既定 | 調整 |
+|--------|------|------|
+| `gpt-6-luna`  | `high` | 明らかに軽微なクイックチェックだけ `medium` に下げてよい。`low` は極端に精度が落ちるため使わない。`xhigh` には上げず、深さが足りなければ `gpt-6-sol` `medium` へ切り替える |
+| `gpt-6-sol`   | `medium` | `low` は `gpt-6-luna` `high` を下回るため使わない。`medium` の結果が浅かった再実行では `high`。`high` は相当難度・重要度の高い対象に限り、理由を一言添えて使う |
+| `gpt-6-astra` | `low` | 同じモデルの `low` の結果が浅かった再実行では `medium`。`high` は誤りの手戻りが極めて大きく、かつ `medium` でも足りない相当難度・重要度の高い対象に限る |
 
-下表は各レベルの「深さの目安」であって、タスク種別から機械的にレベルを引くための対応表ではない。**未指定時は上のルール（既定 `high`）が優先**し、下表は「既定からどこまで降格してよいか」の判断材料として使う。
+**深さが足りないときは、同じモデルの effort を上げる前に上位モデルへ切り替える。** 自動で進める段階は `gpt-6-luna` `high` → `gpt-6-sol` `medium` →（限定的に）`gpt-6-sol` `high` とする。どの段でも、対象スコープの絞り込みと観点の具体化を併用する。
 
-| レベル | オプション | 目安（既定 `high` 基準） |
-|--------|-----------|------|
-| `low`    | `-c model_reasoning_effort="low"`    | ごく軽微・クイックな確認のみ（最速） |
-| `medium` | `-c model_reasoning_effort="medium"` | 小さな差分・限定スコープの軽いレビュー |
-| `high`   | `-c model_reasoning_effort="high"`   | 通常のコードレビュー〜複雑な設計判断・アーキテクチャ分析・難解なバグ（**既定・自動判定の上限**） |
-| `xhigh` / `max` / `ultra` | （使わない） | **選択しない。** 精度向上に結び付かず、時間とコストだけが増える。`ultra` はサブエージェント並列で使用量が急増する警告もある |
+| レベル | オプション |
+|--------|-----------|
+| `low`    | `-c model_reasoning_effort="low"`    |
+| `medium` | `-c model_reasoning_effort="medium"` |
+| `high`   | `-c model_reasoning_effort="high"`   |
 
-**自動判定の上限は `high`。** ユーザーが `xhigh` 以上を明示的に要求した場合のみ、ガードレール4に従って尊重する（その際は精度が上がらない可能性を一度添える）。指定してエラーになったら `high` へフォールバックしてその旨を報告する。
+**`xhigh` 以上（`xhigh` / `max` / `ultra`）は使わない。** effort を上げるほど精度が上がるわけではなく、過剰な探索と推論でレビュー結論の質が落ちる場合がある。自動判定でも既定でも選ばない。`ultra` はサブエージェント並列で使用量が急増する警告もある。ユーザーが `xhigh` 以上を明示的に要求した場合のみ、ガードレール4に従って尊重する（その際は精度が上がらない可能性を一度添える）。指定してエラーになったら `high` へフォールバックしてその旨を報告する。
 
 ## 実行前の確認
 
@@ -97,8 +104,8 @@ Codex CLI を read-only サンドボックスで実行し、コードベース�
 |------|-----------|
 | 依頼内容 | 必須。何をレビュー・調査してほしいか。 |
 | 対象ディレクトリ | カレントディレクトリ (`pwd`) |
-| モデル | `gpt-5.6-terra`。設計そのものが対象・高不確実性・拠り所の設計が無い場合のみ `gpt-5.6-sol` へ昇格。明示指定があればそれを優先 |
-| Effort レベル | 自動判定（既定 `high`、軽微な依頼のみ `medium`/`low`。`xhigh` 以上は使わない） |
+| モデル | `gpt-6-luna`。設計そのものが対象・高不確実性・拠り所の設計が無い場合のみ `gpt-6-sol` へ昇格。`gpt-6-astra` は明示時のみ。明示指定があればそれを優先 |
+| Effort レベル | モデルごとの既定（luna は `high`、sol は `medium`、astra は `low`）。`xhigh` 以上は使わない |
 
 `<依頼内容>` には、ユーザーの依頼をその意図を保ったまま、レビュー対象スコープ（全体／特定ファイル・ディレクトリ／差分の範囲）と観点を含む簡潔な指示へ整形して埋める。差分レビューでは対象（未コミット／ブランチ差分／コミット）を明示し、未指定なら作業ツリーの差分（ステージ済み・未ステージ・untracked を含む）を既定とする。docsレビューでは`git diff --name-only`でREADME等を含む実対象を列挙してpromptへ入れる。
 
@@ -123,7 +130,7 @@ codex exec \
   --json \
   -o "<final_output>" \
   -s read-only \
-  -m gpt-5.6-terra \
+  -m gpt-6-luna \
   -C /path/to/project \
   -c model_reasoning_effort="<level>" \
   "$(cat <<'CODEX_REVIEW_PROMPT'
@@ -137,16 +144,16 @@ CODEX_REVIEW_PROMPT
 ```
 
 - `-s read-only`: ファイル変更・危険なコマンドをサンドボックスで禁止
-- `-m gpt-5.6-terra`: 品質優先の既定modelを明示固定（config既定に依存しない）
+- `-m gpt-6-luna`: 既定modelを明示固定（config既定に依存しない）
 - `-C <project_dir>`: 分析対象の作業ルートを指定
-- `-c model_reasoning_effort`: 推論深度の指定（既定 `high`、自動判定。`xhigh` 以上は使わない）
+- `-c model_reasoning_effort`: 推論深度の指定（モデルごとの既定。`xhigh` 以上は使わない）
 - `< /dev/null`: **必須**。明示promptに加えて端末stdinを待つハングを防ぐ。`Reading additional input from stdin...` が表示されても、redirect済みなら正常に先へ進む
 - `--json > <event_log>`: リポジトリ外の既知pathへevent streamを永続化し、最初の`thread.started`からsession IDを回収可能にする
 - `-o <final_output>`: リポジトリ外の既知pathへ最終本文を保存し、完了済みreviewではresumeせず回収できるようにする
 
 **重要**: プロンプト本文（heredoc 内）に `$HOME` などの変数を書かない。single-quoted heredoc では展開されず、リテラル文字列 `$HOME` のままレビュー先へ渡る。対象パスは heredoc の外にある `-C` で渡し、本文では「`-C` で指定した作業ルート」と参照するか、展開済みの絶対パスを書く。
 **重要**: heredoc delimiter は必ず引用する（例: `<<'CODEX_REVIEW_PROMPT'`）。引用しない `<<EOF` は shell 展開を許すため使わない。プロンプト内に delimiter と同じ行が含まれる場合だけ、別の一意な delimiter 名に変える。
-**重要**: このコマンドは**呼び出し元を解放する形で起動する**（起動と合流の型は後述の「非同期実行と合流」を参照）。既定 `high` でも対象が大きければ処理は数分〜数十分かかりうるが、背景実行なら Bash の10分上限で kill されず、呼び出し元もブロックしない。
+**重要**: このコマンドは**呼び出し元を解放する形で起動する**（起動と合流の型は後述の「非同期実行と合流」を参照）。既定の effort でも対象が大きければ処理は数分〜数十分かかりうるが、背景実行なら Bash の10分上限で kill されず、呼び出し元もブロックしない。
 **重要**: `--ephemeral`は付けない。`event_log`の最初の`thread.started.thread_id`をsession IDとして、最初に取得可能になった時点で読む。通知型では通常完了前に本文を覗かないが、割り込み復旧では記録済みevent logのmetadataを読んでよい。下記「durable recovery record」に従い、session専用run directory・event log・final output・stderr log・lifecycle recordをCLI起動前に作る。すべてのpathを引用し、既存fileを再利用しない。
 
 ### diff / commit / ブランチの差分レビュー
@@ -167,18 +174,18 @@ CODEX_REVIEW_PROMPT
 
 ```bash
 # 未コミットの変更をレビュー
-codex exec review --json -o "<final_output>" -m gpt-5.6-terra -c model_reasoning_effort="high" --uncommitted < /dev/null > "<event_log>" 2> "<stderr_log>"
+codex exec review --json -o "<final_output>" -m gpt-6-luna -c model_reasoning_effort="high" --uncommitted < /dev/null > "<event_log>" 2> "<stderr_log>"
 
 # 特定のブランチとの差分をレビュー
-codex exec review --json -o "<final_output>" -m gpt-5.6-terra -c model_reasoning_effort="high" --base main < /dev/null > "<event_log>" 2> "<stderr_log>"
+codex exec review --json -o "<final_output>" -m gpt-6-luna -c model_reasoning_effort="high" --base main < /dev/null > "<event_log>" 2> "<stderr_log>"
 
 # 特定コミットをレビュー
-codex exec review --json -o "<final_output>" -m gpt-5.6-terra -c model_reasoning_effort="high" --commit COMMIT_SHA < /dev/null > "<event_log>" 2> "<stderr_log>"
+codex exec review --json -o "<final_output>" -m gpt-6-luna -c model_reasoning_effort="high" --commit COMMIT_SHA < /dev/null > "<event_log>" 2> "<stderr_log>"
 ```
 
 上の各コマンドにもstdin redirect・event log・final outputを付ける。`exec review`はscope statementを要求できないため、完了判定はprocessの正常終了とfinal outputの存在で行う。汎用`exec`と`exec review`のどちらもmodelとeffortを必ず明示し、config既定へ委ねない。
 
-**重要**: `codex exec review` は `-c model_reasoning_effort` を省くと `~/.codex/config.toml` の既定（通常 `medium`）で動き、**既定 `high` が効かない**。自動判定した effort（未指定なら既定 `high`）を確実に反映するため、`-c model_reasoning_effort="<level>"` を必ず明示すること。diff レビューも長時間化しうるため、Claude Code 上では同様に `run_in_background: true` で起動する。
+**重要**: `codex exec review` は `-c model_reasoning_effort` を省くと `~/.codex/config.toml` の既定（通常 `medium`）で動き、**モデルごとの既定 effort が効かない**。選んだ effort（未指定ならモデルごとの既定）を確実に反映するため、`-c model_reasoning_effort="<level>"` を必ず明示すること。diff レビューも長時間化しうるため、Claude Code 上では同様に `run_in_background: true` で起動する。
 
 **重要**: `[PROMPT]` と `--uncommitted`/`--base`/`--commit` は相互排他。`--help` では同時指定可能に見えるが、実際に実行すると `error: the argument '[PROMPT]' cannot be used with '--uncommitted'` で失敗する（v0.144.1 でも継続）。diff レビューにカスタム指示を組み合わせることはできない。カスタム指示が必要な場合は汎用の `codex exec` コマンドを使うこと。
 
@@ -190,7 +197,7 @@ codex exec \
   --json \
   -o "<final_output>" \
   -s read-only \
-  -m gpt-5.6-terra \
+  -m gpt-6-luna \
   -C $HOME/my-project \
   -c model_reasoning_effort="high" \
   "$(cat <<'CODEX_REVIEW_PROMPT'
@@ -203,7 +210,7 @@ CODEX_REVIEW_PROMPT
 )" < /dev/null > "<event_log>" 2> "<stderr_log>"
 
 # 未コミット変更のレビュー（カスタム指示なし、既定 high）
-codex exec review --json -o "<final_output>" -m gpt-5.6-terra -c model_reasoning_effort="high" --uncommitted < /dev/null > "<event_log>" 2> "<stderr_log>"
+codex exec review --json -o "<final_output>" -m gpt-6-luna -c model_reasoning_effort="high" --uncommitted < /dev/null > "<event_log>" 2> "<stderr_log>"
 ```
 
 ### 複数repo横断レビュー
@@ -211,7 +218,7 @@ codex exec review --json -o "<final_output>" -m gpt-5.6-terra -c model_reasoning
 `-C` を対象repo群の共通親へ向け、`--skip-git-repo-check` を付ける。promptには共通親からの相対pathで対象を明示列挙し、対象外repoを探索させない。
 
 ```bash
-codex exec --json -o "<final_output>" -s read-only -m gpt-5.6-terra \
+codex exec --json -o "<final_output>" -s read-only -m gpt-6-luna \
   -c model_reasoning_effort="high" \
   -C /path/to/common-parent --skip-git-repo-check \
   "$(cat <<'CODEX_REVIEW_PROMPT'
@@ -231,7 +238,7 @@ findingの深掘りや反論確認は新規レビューを起動せず、記録�
 codex exec resume SESSION_ID \
   --json \
   -o "<followup_output>" \
-  -m gpt-5.6-terra \
+  -m gpt-6-luna \
   -c model_reasoning_effort="high" \
   -c sandbox_mode="read-only" \
   "$(cat <<'CODEX_REVIEW_FOLLOWUP'
@@ -368,8 +375,10 @@ recoveryはrecovery recordの`-C`作業rootから実行し、元のmodel・effor
 - `codex exec review` は既定でサンドボックス（read-only 相当）で動作する。`-s`/`--sandbox` フラグは持たないため付けない（汎用 `codex exec` のみ `-s read-only` を明示）
 - 適用対象は「やり直しコストが高い成果物」に絞る。型・lint・テストで検出できる欠陥や、実行すれば分かる動作確認には使わない
 - モデル・effort の既定と昇格条件は「モデルと effort」セクションの定義に従う（config 既定に依存せず必ず明示する）
-- モデルは既定 `gpt-5.6-terra`。設計そのものが対象・高不確実性・拠り所の設計が無い場合だけ `gpt-5.6-sol` へ昇格し、理由を一言添える。題材（認証・並行処理など）は昇格理由にならない
-- 既定モデルでの結果報告には、未検査範囲と「採用する／スコープを絞って `gpt-5.6-sol` で再実行する」の選択を必ず添える
+- モデルは既定 `gpt-6-luna`。設計そのものが対象・高不確実性・拠り所の設計が無い場合だけ `gpt-6-sol` へ昇格し、理由を一言添える。題材（認証・並行処理など）は昇格理由にならない
+- 既定モデルでの結果報告には、未検査範囲と「採用する／スコープを絞って `gpt-6-sol` + `medium` で再実行する」の選択を必ず添える
+- `gpt-6-astra` は最上位モデルのため、astra をユーザーが明示した場合のみ使用し、自動選択は絶対にしない
+- effort の既定は luna が `high`、sol が `medium`、astra が `low`。深さ不足は luna の effort ではなくモデルを上げて補い、`high` は相当難度・重要度の高い対象に限る
 - 昇格のための独立再レビューは新規sessionで行う。割り込み・回収失敗のrecoveryと追加質問は、正確なsession IDを指定して`codex exec resume`する
 - 差分レビューも既定は汎用 `codex exec`。`codex exec review` は prompt contract を注入できないため、ユーザー明示時のみ使う
 - `xhigh` / `max` / `ultra` は使わない。精度が上がらないため、深さ不足はスコープの絞り込みや観点の具体化で解決する
