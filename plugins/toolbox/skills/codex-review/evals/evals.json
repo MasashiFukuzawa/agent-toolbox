@@ -4,49 +4,49 @@
     {
       "id": 1,
       "prompt": "codex-reviewで $HOME/project のコードを高精度でレビューして（effort: high）",
-      "expected_output": "effort が明示されているので high を尊重し、codex exec -s read-only -m gpt-5.6-terra -C <dir> -c model_reasoning_effort='high' を実行して、対象のレビュー結果を要約・詳細・推奨対応の形式で報告する",
+      "expected_output": "effort が明示されているので high を尊重し、codex exec -s read-only -m gpt-6-luna -C <dir> -c model_reasoning_effort='high' を実行して、対象のレビュー結果を要約・詳細・推奨対応の形式で報告する",
       "files": []
     },
     {
       "id": 2,
       "prompt": "OpenAIのモデルでセカンドオピニオンを。カレントディレクトリ、effort はデフォルトで。設計上の問題があれば指摘してほしい。",
-      "expected_output": "effort 未指定（デフォルト）なので自動判定で既定の high を選び（xhigh 以上は選ばない）、codex exec -s read-only -m gpt-5.6-terra -c model_reasoning_effort='high' を実行して、設計面の分析を構造化して報告する",
+      "expected_output": "effort 未指定（デフォルト）なのでgpt-6-luna の既定 high を選び（xhigh 以上は選ばない）、codex exec -s read-only -m gpt-6-luna -c model_reasoning_effort='high' を実行して、設計面の分析を構造化して報告する",
       "files": []
     },
     {
       "id": 3,
       "prompt": "codex-reviewを使って今のuncommittedの変更を確認してほしい",
-      "expected_output": "差分レビューでも既定は汎用 codex exec を使う（codex exec review は prompt contract を注入できないため、ユーザー明示時のみ）。依頼文に『対象は作業ツリーの未コミット差分』と明記し、懐疑的スタンスと scope statement 要求を含める。effort 未指定なので自動判定で既定の high、モデルは既定の gpt-5.6-terra。run_in_background:true で起動し、起動直後に予告を出してから差分レビュー結果を報告する",
+      "expected_output": "差分レビューでも既定は汎用 codex exec を使う（codex exec review は prompt contract を注入できないため、ユーザー明示時のみ）。依頼文に『対象は作業ツリーの未コミット差分』と明記し、懐疑的スタンスと scope statement 要求を含める。effort 未指定なので自動判定で既定の high、モデルは既定の gpt-6-luna。run_in_background:true で起動し、起動直後に予告を出してから差分レビュー結果を報告する",
       "files": []
     },
     {
       "id": 4,
       "prompt": "詳細設計どおりに実装した差分がある。codex-review で実装者が気づいていない観点を見てほしい",
-      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定の -m gpt-5.6-terra、effort highを選ぶ。新しいrun UUIDを採番し、永続state rootの専用run directoryを作ってlocatorを通知する。codex exec --json -oをdurable wrapper内でread-only実行し、event/final/stderrは引用済みの新規専用pathへ保存する。wrapperはrecord.jsonへprocess identityとprepared/running/exited・exit statusを原子的に記録する。thread.startedの正確なsession IDをrecordへ保存する。依頼文には懐疑的スタンス、scope statement、BASISラベルを含め、起動直後に所要時間と中断不要を予告する",
+      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定の -m gpt-6-luna、effort highを選ぶ。新しいrun UUIDを採番し、永続state rootの専用run directoryを作ってlocatorを通知する。codex exec --json -oをdurable wrapper内でread-only実行し、event/final/stderrは引用済みの新規専用pathへ保存する。wrapperはrecord.jsonへprocess identityとprepared/running/exited・exit statusを原子的に記録する。thread.startedの正確なsession IDをrecordへ保存する。依頼文には懐疑的スタンス、scope statement、BASISラベルを含め、起動直後に所要時間と中断不要を予告する",
       "files": []
     },
     {
       "id": 5,
       "prompt": "（run_in_background もホスト独自の背景実行機構も持たないホストで）codex-review でこのプロジェクトをレビューして",
-      "expected_output": "起動と合流の型は「非同期実行と合流」で判定する。run_in_background もホストの背景実行機構も無いため同期型にルートし、foreground で実行する。発話窓は実行直前のみなので、そこで所要時間とハングではない旨を予告する。モデルは昇格条件に該当しないため既定の gpt-5.6-terra、effort は自動判定で既定 high（xhigh 以上は選ばない）。結果は標準出力（戻り値）から取得し、メタヘッダを除いて要約・詳細・推奨対応の形式で報告する。同期型では待ち時間が存在しないため「レビュー中の並行作業」は適用外。シェルレベルの detach（nohup / setsid）で背景化しようとしない",
+      "expected_output": "起動と合流の型は「非同期実行と合流」で判定する。run_in_background もホストの背景実行機構も無いため同期型にルートし、foreground で実行する。発話窓は実行直前のみなので、そこで所要時間とハングではない旨を予告する。モデルは昇格条件に該当しないため既定の gpt-6-luna、effort は gpt-6-luna の既定 high（xhigh 以上は選ばない）。結果は標準出力（戻り値）から取得し、メタヘッダを除いて要約・詳細・推奨対応の形式で報告する。同期型では待ち時間が存在しないため「レビュー中の並行作業」は適用外。シェルレベルの detach（nohup / setsid）で背景化しようとしない",
       "files": []
     },
     {
       "id": 6,
       "prompt": "まだ実装していない新しい配信基盤のアーキテクチャ方針をまとめた。前例が無い方式なので codex-review で見てほしい",
-      "expected_output": "プランニング段階かつ不確実性が高い対象なので昇格条件に該当し、-m gpt-5.6-sol を選ぶ。該当する昇格条件が複数あるため両方を挙げ、所要時間が伸びる旨とあわせて一言添えてから起動する。effort は自動判定で既定 high（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（設計に穴がある前提で反証を試みる）と scope statement 要求を含め、-s read-only を付けて実行し、結果を構造化して報告する",
+      "expected_output": "プランニング段階かつ不確実性が高い対象なので昇格条件に該当し、-m gpt-6-sol を選ぶ。該当する昇格条件が複数あるため両方を挙げ、所要時間が伸びる旨とあわせて一言添えてから起動する。effort は gpt-6-sol の既定 medium（sol low は luna high を下回るため選ばず、xhigh 以上も選ばない）。依頼文には懐疑的スタンス（設計に穴がある前提で反証を試みる）と scope statement 要求を含め、-s read-only を付けて実行し、結果を構造化して報告する",
       "files": []
     },
     {
       "id": 7,
       "prompt": "実装差分を codex-review に掛けたが、返ってきたのは一般論ばかりで path:line の裏付けも薄い。どうする？",
-      "expected_output": "terra の結果が薄いケースなので、その結果をそのまま採用しない。effort を xhigh へ上げるのではなく、対象スコープを絞り観点を具体化した上で -m gpt-5.6-sol で再実行する。再実行は新規 session で行い、codex exec resume で引き継がない（引き継ぐと1回目の見落としを継承し独立性が失われるため）。再実行したことと、terra の結果との差分を報告する",
+      "expected_output": "既定モデル（gpt-6-luna）の結果が薄いケースなので、その結果をそのまま採用しない。luna の effort を xhigh へ上げるのではなく、対象スコープを絞り観点を具体化した上で -m gpt-6-sol -c model_reasoning_effort='medium' で再実行する。再実行は新規 session で行い、codex exec resume で引き継がない（引き継ぐと1回目の見落としを継承し独立性が失われるため）。再実行したことと、既定モデルの結果との差分を報告する",
       "files": []
     },
     {
       "id": 8,
       "prompt": "codex-review が終わったみたい。結果を教えて",
-      "expected_output": "既定モデル（gpt-5.6-terra）での結果報告なので、メタヘッダを除いた要約・詳細・推奨対応に加えて判断材料と選択肢を必ず添える。scope statement のうち未検査のまま残った範囲に重要なものがあるかを示し、『このまま採用する』か『スコープを絞って gpt-5.6-sol で再実行する』かを呼び出し元に明示的に問う。指摘は結論ではなく仮説として扱い、path:line の実在を確認する必要があること、BASIS: SPECULATIVE の提案は既定で採用しないことを踏まえて報告する",
+      "expected_output": "既定モデル（gpt-6-luna）での結果報告なので、メタヘッダを除いた要約・詳細・推奨対応に加えて判断材料と選択肢を必ず添える。scope statement のうち未検査のまま残った範囲に重要なものがあるかを示し、『このまま採用する』か『スコープを絞って gpt-6-sol で再実行する』かを呼び出し元に明示的に問う。指摘は結論ではなく仮説として扱い、path:line の実在を確認する必要があること、BASIS: SPECULATIVE の提案は既定で採用しないことを踏まえて報告する",
       "files": []
     },
     {
@@ -82,6 +82,18 @@
       "id": 14,
       "prompt": "codex-reviewを起動したが、CLIがpromptを受理する前に-Cのパスエラーで終了し、session IDも出なかった。復旧して。",
       "expected_output": "process・出力・session metadataのいずれからもsession成立を確認できず、prompt受理前のパスエラーなので起動失敗として扱う。推測ID、--last、resumeは使わず、パスを修正して新規sessionを起動する。これはsession成立後のレビューをゼロからやり直すことではない",
+      "files": []
+    },
+    {
+      "id": 15,
+      "prompt": "gpt-5.6-solで、この実装差分を見てほしい。",
+      "expected_output": "ティア名 sol の明示指定として codex-review を適用し、版指定は無視して最新版 -m gpt-6-sol へ解決する。gpt-5.6-sol は使わず、GPT-6 へ置き換えたことを起動前に一言伝える。既定の luna へ下げず、astra へも上げない。effort は未指定なので gpt-6-sol の既定 medium とし、-s read-only とレビュー用prompt contractを維持して実行する",
+      "files": []
+    },
+    {
+      "id": 16,
+      "prompt": "astraに相談して、この設計の見落としを洗い出して。",
+      "expected_output": "astra の明示指定として codex-review を適用し、-m gpt-6-astra を選ぶ。astra は自動選択しないが、この依頼ではユーザーのモデル指定を尊重する。effort は未指定なので gpt-6-astra の既定 low とし、-s read-only とレビュー用prompt contractを維持して実行する",
       "files": []
     }
   ]
