@@ -34,19 +34,19 @@
     {
       "id": 6,
       "prompt": "まだ実装していない新しい配信基盤のアーキテクチャ方針をまとめた。前例が無い方式なので claude-review で見てほしい",
-      "expected_output": "プランニング段階かつ不確実性が高い対象なので昇格条件に該当し、--model claude-opus-5 を選ぶ。所要時間が伸びるため昇格理由を一言添えてから起動する。effort は自動判定で既定 high（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（設計に穴がある前提で反証を試みる）と網羅性要求（self-filter させない・scope statement を返させる）を含め、--permission-mode plan と --disallowedTools 'Edit,Write,NotebookEdit' を両方付けて実行し、結果を構造化して報告する",
+      "expected_output": "プランニング段階かつ不確実性が高い対象なので昇格条件に該当し、--model claude-opus-5-5 を選ぶ。所要時間が伸びるため昇格理由を一言添えてから起動する。effort は自動判定で既定 high（xhigh 以上は選ばない）。依頼文には懐疑的スタンス（設計に穴がある前提で反証を試みる）と網羅性要求（self-filter させない・scope statement を返させる）を含め、--permission-mode plan と --disallowedTools 'Edit,Write,NotebookEdit' を両方付けて実行し、結果を構造化して報告する",
       "files": []
     },
     {
       "id": 7,
       "prompt": "実装差分を claude-review に掛けたが、返ってきたのは一般論ばかりで path:line の裏付けも薄い。どうする？",
-      "expected_output": "Sonnet の結果が薄いケースなので、その結果をそのまま採用しない。effort を xhigh へ上げるのではなく、対象スコープを絞り観点を具体化した上で --model claude-opus-5 で再実行する。再実行は新規プロセスで行い、--resume / --continue / --fork-session で1回目のセッションを引き継がない（独立性が失われるため）。再実行したことと、Sonnet の結果との差分を報告する",
+      "expected_output": "Sonnet の結果が薄いケースなので、その結果をそのまま採用しない。effort を xhigh へ上げるのではなく、対象スコープを絞り観点を具体化した上で --model claude-opus-5-5 で再実行する。再実行は新規プロセスで行い、--resume / --continue / --fork-session で1回目のセッションを引き継がない（独立性が失われるため）。再実行したことと、Sonnet の結果との差分を報告する",
       "files": []
     },
     {
       "id": 8,
       "prompt": "claude-review が終わったみたい。結果を教えて",
-      "expected_output": "既定モデル（claude-sonnet-5）での結果報告なので、要約・詳細・推奨対応に加えて判断材料と選択肢を必ず添える。具体的には、レビュー結果の scope statement のうち未検査のまま残った範囲に重要なものがあるかを示し、『このまま採用する』か『スコープを絞って claude-opus-5 で再実行する』かを呼び出し元に明示的に問う。指摘は結論ではなく仮説として扱い、path:line の実在を確認する必要があること、BASIS: SPECULATIVE の提案は既定で採用しないことを踏まえて報告する",
+      "expected_output": "既定モデル（claude-sonnet-5）での結果報告なので、要約・詳細・推奨対応に加えて判断材料と選択肢を必ず添える。具体的には、レビュー結果の scope statement のうち未検査のまま残った範囲に重要なものがあるかを示し、『このまま採用する』か『スコープを絞って claude-opus-5-5 で再実行する』かを呼び出し元に明示的に問う。指摘は結論ではなく仮説として扱い、path:line の実在を確認する必要があること、BASIS: SPECULATIVE の提案は既定で採用しないことを踏まえて報告する",
       "files": []
     },
     {
@@ -105,7 +105,13 @@
     {
       "id": 18,
       "prompt": "opusに相談して、詳細設計どおりの実装か確認して。",
-      "expected_output": "Opus family の明示指定として claude-review を適用し、版なし family 名を現行の固定 ID --model claude-opus-5 へ解決する。詳細設計済みの実装レビューでもユーザーの明示モデルを Sonnet へ自動変更せず、effort は未指定なので既定の high とする",
+      "expected_output": "Opus family の明示指定として claude-review を適用し、版なし family 名を現行の固定 ID --model claude-opus-5-5 へ解決する。詳細設計済みの実装レビューでもユーザーの明示モデルを Sonnet へ自動変更せず、effort は未指定なので既定の high とする",
+      "files": []
+    },
+    {
+      "id": 19,
+      "prompt": "opus-5で、この設計の見落としを洗い出して。",
+      "expected_output": "Opus family の明示指定として claude-review を適用し、版指定は無視して最新版 --model claude-opus-5-5 へ解決する。claude-opus-5 は使わず、Opus 5.5 へ置き換えたことを起動前に一言伝える。effort は未指定なので既定の high とし、read-only 制約とレビュー用prompt contractを維持して実行する",
       "files": []
     }
   ]

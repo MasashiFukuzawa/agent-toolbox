@@ -303,7 +303,7 @@ REVIEW_COMMON_BEGIN = "<!-- MIRROR:review-common BEGIN -->"
 REVIEW_COMMON_END = "<!-- MIRROR:review-common END -->"
 # Provider-specific tokens replaced by placeholders before comparing
 # MIRROR:review-common blocks. Longest-first application keeps overlapping
-# tokens (e.g. "claude-opus-5" vs "claude") from corrupting each other.
+# tokens (e.g. "claude-opus-5-5" vs "claude") from corrupting each other.
 REVIEW_COMMON_TOKENS: dict[str, tuple[tuple[str, str], ...]] = {
     "codex-review": (
         ("gpt-5.6-sol", "⟪STRONG⟫"),
@@ -313,7 +313,7 @@ REVIEW_COMMON_TOKENS: dict[str, tuple[tuple[str, str], ...]] = {
         ("codex", "⟪provider⟫"),
     ),
     "claude-review": (
-        ("claude-opus-5", "⟪STRONG⟫"),
+        ("claude-opus-5-5", "⟪STRONG⟫"),
         ("claude-sonnet-5", "⟪DEFAULT⟫"),
         ("claude -p", "⟪CLI⟫"),
         ("Claude", "⟪PROVIDER⟫"),
