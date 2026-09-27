@@ -10,6 +10,8 @@ durableな書込面がある場合の作業journal、対応可能な状態遷移
 - `review`: 実装が独立reviewまたはPR reviewへ進める状態になった。
 - `complete`: 設定された受入条件を満たした。
 
+全体計画が指定された場合、計画を優先順位・依存の正本、task sourceを詳細・journal・状態遷移の正本として対応付ける。実行候補との不整合は先に整合する。ローカルrun索引は所有者・handle・待ち条件の復旧用であり、第二のbacklogではない。
+
 Escalationは第4の状態ではなくjournal entryである。task source固有のqueue状態は持てるが、
 orchestratorはそれを別sourceへ再現しない。
 
@@ -38,6 +40,8 @@ PlanやReviewだけでは明確にならない重要な選択に限って使う�
 残す。複数タスクへ影響するdurableなarchitecture判断は、repoにADR運用があればそちらにも記録する。
 
 ### `## Progress`
+
+claim直後は`controller-run: <run_id>`、task identity、担当worktree、開始時刻を必ず記録する。再開時は元run IDと照合する。claim成功/記録失敗は再claimせず照合して補完し、記録前は委任・編集しない。交代時は旧所有者の停止/引継ぎ根拠と新run IDを追記する。
 
 重要な観測、前提の変更、外部から確認可能なcheckpointに使う。日常的なcommand logは転記しない。
 
@@ -72,7 +76,7 @@ synthetic statusを作らない。
 
 - `next-task`は候補をread-onlyで選ぶ。共通collaboration preflight後は`github-operations`のguarded claimを
   呼ぶ。GitHub固有のidentity再確認、self-assignment、`start`遷移、部分失敗contractをautopilotへ重複実装
-  しない。既にin-progressのタスクを再開するだけならclaimを呼ばず、assigneeを書き換えない。
+  しない。既にin-progressでもjournalのsession所有者を確認し、自分の担当と確認できる場合だけ再開する。assigneeの一致だけではsession所有権を証明しない。別担当や未解消の待ち条件はexcludeし、理由と再評価条件を残す。
 - adapterは単一repositoryのqueueだけを扱う。共有Projectではcanonical Issue URLから別repositoryと確認できる
   itemを候補選択前に除外し、選択したIssueのowner/repo/numberはclaim前にconfigと完全一致しなければ
   fail loudlyとする。repositoryを安全に判定できないdraft・不正URLは除外で隠さない。
@@ -86,7 +90,7 @@ synthetic statusを作らない。
 
 ## `plan-doc` adapter
 
-tracked checklistのcheck更新は、実装変更と同じtask PRに含める。feature branch上では先にcheck済みに
+PR mergeで必須受入が成立するタスクでは、tracked checklistのcheck更新を実装変更と同じtask PRに含める。merge後の配備・実機受入が必須なら先にcheckせず、承認されたtracking方法を決める。このadapterだけで未対応の完了管理を捏造しない。feature branch上では先にcheck済みに
 見えてもbase branchは未完了のままであり、merge時に初めて実際の完了状態が反映される。check更新後の
 treeをdoneで検証し、未検証のtracking-only変更を出荷しない。
 

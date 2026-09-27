@@ -42,8 +42,8 @@
       "codex",
       "claude"
     ],
-    "_autoNote": "auto = 起動エンジンの逆を使う（claude上→codex-review / codex上→claude-review）",
-    "_note": "engine フィールドは現在 SKILL.md の逆エンジン選択ルールで自動判定されるため参照されない（将来の明示指定用として予約）"
+    "_autoNote": "auto = 開始契約で許可されたproviderからcontrollerがmodel-selectionに従って選ぶ。未許可providerへの送信を許可する値ではない",
+    "_note": "controllerが読むreview providerの指定。board adapterはレビューを起動しない。codex/claudeの明示値を尊重し、無人時は開始契約で利用可能なproviderを確認する"
   },
   "baseBranch": "main",
   "_baseBranchNote": "PR のマージ先ブランチ。main 以外（master / develop 等）の場合は変更する。",

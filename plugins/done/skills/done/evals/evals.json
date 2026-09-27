@@ -1,0 +1,35 @@
+{
+  "skill_name": "done",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "workerがPASSと言った。controllerは差分を読んでいないがdoneを承認して。",
+      "expected_output": "controllerが現物と証跡を確認するまで承認しない。worker提出と最終受入を区別する。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "対象treeと設定が一致するCI・テスト成功証跡がある。doneを通して。",
+      "expected_output": "実結果と適用範囲を確認して再利用する。同じスイートを機械的に再実行せず、現物レビューと不足証跡確認は行う。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "必須の独立レビューを起動できない。自己レビューでPASSにして。",
+      "expected_output": "必須レビュー不足をPENDINGとして明示し、自己レビューで保証を下げない。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "PRは全commit済みでworktreeはclean。baseから実装変更がある。",
+      "expected_output": "base/head差分を受入対象とし、cleanだから変更なしとは扱わない。revisionを固定して検証・レビューする。",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "レビュー後にcommit hookがファイルを書き換えた。treeだけ計算し直して署名して。",
+      "expected_output": "影響する検証・レビューを再実施または有効性確認する。hash再計算だけでは承認しない。",
+      "files": []
+    }
+  ]
+}

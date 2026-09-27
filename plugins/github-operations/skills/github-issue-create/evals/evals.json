@@ -6,10 +6,22 @@
       "prompt": "このrepoにバグ修正Issueを作ってProjectのInboxへ入れて。まずdry-runを見せて。",
       "expected_output": "github-issue-createを使い、target、本文、labels、Project、Statusを提示し、dry-run指定どおりapplyせず停止する。",
       "assertions": [
-        {"id": "dry-run", "text": "Issueを作成する前にplanを提示する"},
-        {"id": "target", "text": "owner/repoとidentityを再表示する"},
-        {"id": "priority", "text": "Priorityを根拠なく自動設定しない"},
-        {"id": "no-apply", "text": "dry-runだけを求められているためIssueを作成しない"}
+        {
+          "id": "dry-run",
+          "text": "Issueを作成する前にplanを提示する"
+        },
+        {
+          "id": "target",
+          "text": "owner/repoとidentityを再表示する"
+        },
+        {
+          "id": "priority",
+          "text": "Priorityを根拠なく自動設定しない"
+        },
+        {
+          "id": "no-apply",
+          "text": "dry-runだけを求められているためIssueを作成しない"
+        }
       ]
     },
     {
@@ -17,9 +29,18 @@
       "prompt": "このrepoにバグ修正Issueを作ってProjectへ登録して。PriorityはP1: next。",
       "expected_output": "dry-run planが依頼とrepository policyに一致することを確認し、追加承認を求めずIssue作成とProject登録まで実行して結果を報告する。",
       "assertions": [
-        {"id": "plan-first", "text": "apply前にdry-run planを作る"},
-        {"id": "no-reapproval", "text": "plan作成後に同じ操作の再承認を求めない"},
-        {"id": "priority", "text": "ユーザーが明示したPriorityだけを設定する"}
+        {
+          "id": "plan-first",
+          "text": "apply前にdry-run planを作る"
+        },
+        {
+          "id": "no-reapproval",
+          "text": "plan作成後に同じ操作の再承認を求めない"
+        },
+        {
+          "id": "priority",
+          "text": "ユーザーが明示したPriorityだけを設定する"
+        }
       ]
     },
     {
@@ -36,6 +57,24 @@
       "id": 5,
       "prompt": "どちらのrepoに置くべきか判断できないけど、とりあえずIssueを作って。",
       "expected_output": "targetが実質的に未決のためapplyせず、対象repositoryを確認する。"
+    },
+    {
+      "id": 6,
+      "prompt": "autopilotの後続Issueを作って。元のworker報告は英語で、repoに言語規約はない。",
+      "expected_output": "タイトル/本文は日本語で起票する。英語のworker報告や既存Issueを言語指定とみなさず、識別子・引用ログは保持する。",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Issueを作って。対象repoはIssueを英語で書くと明示している。",
+      "expected_output": "対象repoの明示規約に従って英語にする。ユーザー指示と衝突があればapply前に解決する。",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "英語のIssueは作成済みでProject登録が失敗。日本語既定だから作り直してresumeして。",
+      "expected_output": "resumeは既存plan/Issueを使い重複作成しない。翻訳が必要なら別の更新として扱い、途中のplanを改変しない。",
+      "files": []
     }
   ]
 }

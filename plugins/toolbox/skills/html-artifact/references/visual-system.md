@@ -1,6 +1,6 @@
 # Field Review visual system
 
-Use this visual language by default. It is an editorial information system, not a fixed page layout: preserve its tokens and hierarchy while choosing structures that fit the question.
+This is an optional visual starting point, not a required palette or layout. Adapt or omit its components to serve the reader. SKILL.md and references/accessibility.md take precedence over these examples.
 
 ## Design intent
 
@@ -59,7 +59,7 @@ Google Fonts are optional Tier 2 enhancement. Default templates must remain legi
 Use this order when the content supports it; omit irrelevant regions rather than filling placeholders:
 
 1. **Mast:** metadata eyebrow, decisive serif title, short deck, and a recommendation/answer card.
-2. **Thesis band:** a full-width dark-ink strip for 2–4 decisive facts, criteria, or KPIs. This is not mandatory when there are no meaningful summary facts. **It also loses to the primary figure when both cannot fit the first view** — drop the band and absorb its facts as rows of the recommendation card rather than pushing the main visual below the fold (SKILL.md key question契約 holds the full priority order). Never state the same fact in both the band and the card.
+2. **Thesis band:** a full-width dark-ink strip for 2–4 decisive facts, criteria, or KPIs. This is not mandatory when there are no meaningful summary facts. **It also loses to the primary figure when both cannot fit the first view** — drop the band and absorb its facts as rows of the recommendation card rather than pushing the main visual below the fold (see SKILL.md, 情報設計: lead with the conclusion and decision). Never state the same fact in both the band and the card.
 3. **Evidence sections:** figures, tables, comparisons, or diagrams on paper/surface cards.
 4. **Progressive detail:** supporting evidence and raw material in `<details>`.
 
@@ -74,13 +74,13 @@ The first viewport must answer the key question. The title states the issue; the
 - **Tables:** surface background, separate borders when rounded corners matter, mono column headings, generous horizontal padding.
 - **Diagrams:** paper/surface nodes with semantic accents; dark ink edges; arrowheads; explicit labels. Keep decorative grid behind, never inside, the data layer.
 - **Details:** serif or strong sans summary, clear focus style, compact body. Collapsed detail must not contain the only statement of the conclusion.
-- **Term chip / glossary:** first occurrence of a term gets a chip carrying a short gloss and an anchor to the glossary; the canonical definition lives once in a bottom `<dl>`. See below for the copy-paste implementation.
+- **Term chip / glossary (optional):** use only when a short inline explanation is insufficient and a glossary helps the reader. The example below is not a requirement for first occurrences.
 
-## Term chip and 用語集 (required by default)
+## Optional terminology links
 
-Copy this block as-is. The chip is an `<a>`, so it works with keyboard, touch, and print; never substitute a bare `<abbr title>`.
+Prefer an inline explanation. If a glossary link helps, use a normal anchor and visible explanation; the example below uses a visible inline explanation rather than a hover-only popup.
 
-Scope (SKILL.md 基本原則8 is canonical): rephrase insider abbreviations instead of glossing them; leave terms a general software engineer already knows plain; chip and define everything beyond that at first use. Chips and `<dt>` entries stay 1:1 — no dangling links, no unreferenced definitions.
+Only explain terms the reader needs. No chip/glossary count invariant is required; resolve every link that is actually used.
 
 ```css
 /* inline term chip — first occurrence only */
@@ -88,12 +88,9 @@ Scope (SKILL.md 基本原則8 is canonical): rephrase insider abbreviations inst
   border-bottom:1px dashed var(--green); cursor:help; font-weight:600; }
 .term:hover, .term:focus-visible { background:var(--green-bg); }
 .term:focus-visible { outline:3px solid var(--green); outline-offset:2px; }
-.term-gloss { position:absolute; left:0; top:calc(100% + 6px); z-index:20; width:max-content;
-  max-width:20rem; padding:.4rem .6rem; background:var(--ink); color:#f6f2e9;
-  font-family:'Public Sans',-apple-system,'Hiragino Sans','Yu Gothic',sans-serif;
-  font-size:.8rem; font-weight:400; line-height:1.5; border-radius:8px;
-  box-shadow:0 6px 18px rgba(40,30,12,.18); opacity:0; visibility:hidden; transition:opacity .12s; }
-.term:hover .term-gloss, .term:focus-visible .term-gloss { opacity:1; visibility:visible; }
+.term-gloss { display:inline; color:inherit; font:inherit; }
+.term-gloss::before { content:'（'; }
+.term-gloss::after { content:'）'; }
 
 /* glossary — canonical definitions */
 .glossary { margin:0; }
@@ -142,14 +139,14 @@ if (location.hash) openAncestorDetails(location.hash);
 ```
 
 Rules:
-- The chip's `.term-gloss` is a hover/focus layer, so it is clipped inside any ancestor with `overflow` other than `visible`, and it cannot be used inside `<svg>`. In those positions use the anchor link alone (no `.term-gloss` child), or explain the term in a legend or caption directly below the figure.
-- Keep the glossary inside `<details>` so the existing `beforeprint` handler expands it for print.
+- The example keeps explanations inline so they do not require hover. In SVG, use an adjacent caption or text alternative.
+- If a glossary is useful, choose inline or collapsible presentation for the reader. Add print handling only when printing is required.
 - `dt:target` highlighting confirms to the reader that the anchor jump landed on the right entry.
-- The chip is an `<a>`, so it is reachable by Tab and `:focus-visible` reveals the gloss. `cursor: help` signals it is an explanation, not navigation away from the page.
+- The anchor is reachable by Tab; the explanation is visible without interacting.
 
 ## Desktop scope, interaction, and print
 
-- Mobile support is outside the default scope. Do not add breakpoint-specific layouts or run mobile viewport QA unless the user explicitly requests it.
+- Even desktop artifacts must remain readable when enlarged or narrowed. Adapt layouts as needed for reflow; a separate mobile app design is not required.
 - Keep body text at 16px where practical, secondary text at least 12–14px, and interactive text at least 14px.
 - Add visible `:focus-visible` styles. Honor `prefers-reduced-motion`; motion is optional and must not carry meaning.
 - Tables use `<caption>` when context is not otherwise explicit and `scope` on row/column headers.
@@ -158,10 +155,10 @@ Rules:
 
 ## Controlled variation
 
-Keep tokens, typography roles, spacing rhythm, and semantic colors stable. Vary composition by content:
+These compositions are optional. Keep a coherent hierarchy while adapting palette, typography and layout to the question:
 
 - **Plan/comparison:** recommendation mast + criteria band + side-by-side options + dependency path.
-- **Report:** verdict/status mast + KPI band + evidence table/timeline.
+- **Report:** verdict/status mast + evidence table/timeline. Add a KPI band only when meaningful measures clarify the decision without duplicating other content.
 - **Review:** verdict mast + severity band + findings grouped by file or theme.
 - **Diagram/explainer:** thesis mast + large primary figure + legend + annotations.
 - **Compact explainer:** omit the thesis band and texture when there are fewer than three meaningful summary facts. Keep the same typography and surfaces; simplicity is a content-driven variant, not a separate visual style.

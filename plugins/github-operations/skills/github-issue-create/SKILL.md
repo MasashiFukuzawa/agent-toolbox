@@ -16,7 +16,15 @@ description: >-
 - Apply repository-specific Issue policy when one exists. This skill must not invent routing or labels.
 - `--confirm-target` prevents repository mix-ups; it is not an authorization mechanism. Authorization comes from the user's mutation request, while the content-derived `plan_id` rejects edits between plan and apply.
 
-## Prerequisites
+## Issueの出力言語
+
+- Issueのタイトル・本文・見出し・受入条件は**原則日本語**で書く。autopilotが起票する子Issue・後続課題、manifest内の各Issueにも適用する。毎回言語を確認する必要はない。
+- ユーザーが別言語を明示した場合、または対象repoに英語必須などの明示的なIssue言語規約がある場合はそれに従う。両者が衝突する場合はapply前に解決する。
+- スキルの説明、コード、エラーログ、雛形が英語であることだけを理由に、説明文まで英語へ切り替えない。既存Issueが英語という事実だけでは日本語の既定を上書きしない。
+- API名、コード識別子、コマンド、引用ログ、URL、labels、Projectの選択肢名は原文のまま保持する。機械的に参照するテンプレート見出し・キーも保持し、記入する説明を日本語にする。
+- 作成済みIssueの言語を揃えるためだけの再起票・無断翻訳はしない。resumeは保存済みplanとIssueを使い、本文変更が必要なら別の更新操作として扱う。
+
+## 実行前提
 
 - Install the complete `github-operations` plugin. A copied skill directory is intentionally unsupported.
 - Require Python 3.11+, `gh`, and an explicit config or `.agents/github-operations.json`.
@@ -26,7 +34,7 @@ description: >-
 
 Resolve `scripts/run.py` against this skill directory before executing it.
 
-1. Draft the Issue using the target repository's `AGENTS.md`, templates, language, and available labels.
+1. Draft the Issue using the target repository's `AGENTS.md`, templates, and available labels. Apply the output-language policy above before creating the plan; verify title and body language during dry-run inspection.
 2. Write a long body to a temporary file outside the repository, then plan:
 
    ```bash
