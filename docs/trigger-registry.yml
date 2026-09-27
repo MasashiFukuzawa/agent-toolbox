@@ -7,6 +7,14 @@ defaults: &defaults
   negative_triggers: []
   ambiguous_precedence: "明示された対象と目的を優先"
 skills:
+  model-selection:
+    <<: *defaults
+    canonical_name: model-selection
+    category: orchestration
+    positive_triggers: ["workerのモデルを選んで", "タスクに適したモデルとeffortを決めて"]
+    nearest_neighbors: [autopilot, codex-review, claude-review]
+    negative_triggers: ["レビューを実行して", "バックログを全部処理して"]
+    ambiguous_precedence: "モデル選択だけならmodel-selection、実行はreview skill、自律進行はautopilot"
   technical-research:
     canonical_name: technical-research
     category: research
@@ -46,7 +54,7 @@ skills:
     positive_triggers: ["Claudeでレビューして", "Anthropicの別視点が欲しい", "claude-reviewで", "Claudeに見てもらって", "sonnetに見てもらって", "opusに相談して", "fableに相談して"]
     nearest_neighbors: [codex-review]
     negative_triggers: ["Codexでレビューして", "第三者レビューして"]
-    ambiguous_precedence: "provider未指定なら選択を確認"
+    ambiguous_precedence: "provider未指定で選択権限も未委任なら確認、委任済みならmodel-selectionで選択"
   codex-review:
     canonical_name: codex-review
     category: review
@@ -56,7 +64,7 @@ skills:
     positive_triggers: ["Codexでレビューして", "OpenAIの別視点が欲しい", "codex-reviewで", "Codexに見てもらって", "lunaに見てもらって", "solに相談して", "astraに相談して"]
     nearest_neighbors: [claude-review]
     negative_triggers: ["Claudeでレビューして", "第三者レビューして"]
-    ambiguous_precedence: "provider未指定なら選択を確認"
+    ambiguous_precedence: "provider未指定で選択権限も未委任なら確認、委任済みならmodel-selectionで選択"
   adr: {<<: *defaults, canonical_name: adr, category: architecture, side_effect_level: workspace-write, positive_triggers: ["ADRにして"], nearest_neighbors: [codebase-audit], negative_triggers: ["コードベース全体の監査"]}
   ascii-diagram: {<<: *defaults, canonical_name: ascii-diagram, category: visualization, positive_triggers: ["ASCII図で"], nearest_neighbors: [html-artifact], negative_triggers: ["保存する一枚物"]}
   autopilot: {<<: *defaults, canonical_name: autopilot, category: orchestration, side_effect_level: external-write, positive_triggers: ["バックログを自律で処理して"], nearest_neighbors: [git-worktrees], negative_triggers: ["単発タスク"]}

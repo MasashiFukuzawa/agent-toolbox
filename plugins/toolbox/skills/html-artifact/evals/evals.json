@@ -1,0 +1,42 @@
+{
+  "skill_name": "html-artifact",
+  "evaluation_status": "Scenarios specified; live model behavior has not been evaluated.",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "3案を比べる意思決定用HTMLを作って。短い文章と図表中心、色やレイアウトは任せる。",
+      "expected_output": "同じ軸の比較と推奨理由を示す。固定配色や全sectionのdetails/chipを強制せず、重大な条件は表層に残す。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "期間・担当・件数の違いをHTMLで説明して。箱と線の図ばかりは避けたい。",
+      "expected_output": "時間はtimeline/レーン、量は棒等、比較は表など関係に適した表現を選ぶ。図種の数だけを目標にしない。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "キーボード操作と画面拡大にも配慮した、工程説明のHTMLを作って。",
+      "expected_output": "native要素、focus、色以外の意味、図の代替説明、拡大/reflowを確認する。ブラウザ未確認なら明示し、WCAG準拠と断定しない。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "まず結論だけ分かればよいが、提案の重大なデメリットもある。全部detailsに入れて。",
+      "expected_output": "重要なデメリットは見える場所に短く残す。不要な文章は削り、補足だけdetailsへ分ける。",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "短い説明HTMLを作って。初出の専門語は一つ。",
+      "expected_output": "平易な言い換えや短いinline説明を優先し、用語chip/用語集を機械的に追加しない。",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "ブラウザを使えない環境でHTMLを生成して。",
+      "expected_output": "静的確認を行い表示・keyboard等の未検証を明記する。open成功やDOM構造だけで視覚検証済みとは主張しない。",
+      "files": []
+    }
+  ]
+}

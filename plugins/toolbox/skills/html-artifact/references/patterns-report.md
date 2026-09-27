@@ -1,160 +1,17 @@
-# Report & Research Summary Patterns
+# Report composition options
 
-## Overall structure for a status / incident report
+These are options, not a required sequence. Progress-report owns the reporting scope; this reference helps present it.
 
-```
-[Title + metadata: date, author, severity/status]
-[TL;DR — 2–3 bullet executive summary]
-[KPI cards row]
-[Main body sections — prose + tables]
-[Timeline (for incidents)]
-[Risk / open issues table]
-[Next steps / action items]
-```
+| Reader question | Useful structure |
+|---|---|
+| Where are we relative to the goal? | Milestone/state table with acceptance stage and remaining condition |
+| Can we meet the date? | Timeline or lanes showing dependencies, external waits, uncertainty and buffer |
+| What should I decide? | Options table with recommendation, trade-offs, deadline and consequence of waiting |
+| What changed? | Before/now comparison with impact; identify the comparison date |
+| What is happening in this task? | Local status and next action, plus a brief material dependency on the larger goal |
 
----
+Avoid automatically filling a row of KPI cards. Counts do not show delivery readiness unless the denominator and completion meaning are clear. Keep important risks and decisions visible. An incident timeline may be the main visual rather than collapsed history.
 
-## Pattern 1: KPI cards row
+Use native details/summary for optional evidence. For navigation, prefer visible anchor links to sections. Do not hide radio inputs with display:none to implement tabs: that removes keyboard access. Custom tabs require complete keyboard/focus behavior and are rarely necessary for a report.
 
-Show 3–6 metrics at a glance. Use color to signal status (green/yellow/red).
-
-```css
-.kpi-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
-.kpi { flex: 1; min-width: 140px; padding: 1rem; border-radius: 8px; text-align: center; }
-.kpi-value { font-size: 2rem; font-weight: 700; line-height: 1; }
-.kpi-label { font-size: .8rem; color: var(--muted); margin-top: .25rem; }
-.kpi-green  { background: var(--green-bg); border: 1px solid var(--green); }
-.kpi-yellow { background: var(--amber-bg); border: 1px solid var(--amber); }
-.kpi-red    { background: var(--red-bg); border: 1px solid var(--red); }
-```
-
-```html
-<div class="kpi-row">
-  <div class="kpi kpi-green">
-    <div class="kpi-value">99.7%</div>
-    <div class="kpi-label">Uptime (30d)</div>
-  </div>
-  <div class="kpi kpi-yellow">
-    <div class="kpi-value">412ms</div>
-    <div class="kpi-label">P95 Latency</div>
-  </div>
-  <div class="kpi kpi-red">
-    <div class="kpi-value">3</div>
-    <div class="kpi-label">Open P1 Bugs</div>
-  </div>
-</div>
-```
-
----
-
-## Pattern 2: Incident timeline
-
-Use `<details>` so the timeline is collapsed by default (executive readers skip it; responders expand it).
-
-```html
-<details>
-  <summary>Incident timeline (8 events)</summary>
-  <ol class="timeline">
-    <li>
-      <time>14:02 UTC</time>
-      <span class="event-type alert">Alert</span>
-      Error rate exceeded 5% threshold. PagerDuty fired.
-    </li>
-    <li>
-      <time>14:08 UTC</time>
-      <span class="event-type action">Action</span>
-      On-call acknowledged. Started investigation.
-    </li>
-    <li>
-      <time>14:31 UTC</time>
-      <span class="event-type resolved">Resolved</span>
-      Rolled back deployment v2.3.1 → v2.2.9. Error rate returned to baseline.
-    </li>
-  </ol>
-</details>
-```
-
-```css
-.timeline { list-style: none; padding: 0; border-left: 2px solid var(--line); margin-left: 1rem; }
-.timeline li { padding: .5rem 0 .5rem 1rem; position: relative; }
-.timeline li::before { content: '●'; position: absolute; left: -1.1rem; color: var(--muted); }
-time { font-weight: 700; font-size: .875rem; margin-right: .5rem; }
-.event-type { font-size: .7rem; font-weight: 700; border-radius: 3px; padding: .1em .4em; margin-right: .5rem; text-transform: uppercase; }
-.event-type.alert    { background: var(--red-bg); color: var(--red); }
-.event-type.action   { background: var(--amber-bg); color: #79500f; }
-.event-type.resolved { background: var(--green-bg); color: var(--green-dark); }
-```
-
----
-
-## Pattern 3: Risk / action items table
-
-Use a `<table>` with: Item / Owner / Due / Status / Priority columns. Color-code the Status cell.
-
-```css
-.risk-table td.status-open   { color: var(--red); font-weight: 600; }
-.risk-table td.status-done   { color: var(--green); }
-.risk-table td.status-in-prog{ color: var(--amber); }
-.risk-table td.prio-p1 { font-weight: 700; }
-```
-
----
-
-## Pattern 4: Research summary with tabs
-
-Use the CSS radio-button trick for zero-JS tabs (JS version is fine if SKILL.md interaction patterns apply).
-
-```html
-<style>
-  .tab-radio { display: none; }
-  .tab-label { cursor: pointer; padding: .4rem 1rem; border-bottom: 2px solid transparent; }
-  #t1:checked ~ .tabs label[for="t1"],
-  #t2:checked ~ .tabs label[for="t2"] { border-color: var(--green); font-weight: 600; }
-  #t1:checked ~ .content #panel1 { display: block; }
-  #t2:checked ~ .content #panel2 { display: block; }
-  .tab-panel { display: none; padding: 1rem 0; }
-</style>
-<input class="tab-radio" type="radio" id="t1" name="tabs" checked>
-<input class="tab-radio" type="radio" id="t2" name="tabs">
-<div class="tabs">
-  <label class="tab-label" for="t1">Source A</label>
-  <label class="tab-label" for="t2">Source B</label>
-</div>
-<div class="content">
-  <div class="tab-panel" id="panel1">Content for Source A...</div>
-  <div class="tab-panel" id="panel2">Content for Source B...</div>
-</div>
-```
-
----
-
-## Pattern 5: Citation / reference block
-
-```html
-<blockquote class="citation">
-  <p>"The root cause was a missing index on the events table, causing full scans under load."</p>
-  <footer>— Post-mortem, 2025-03-14, authored by Site Reliability team</footer>
-</blockquote>
-```
-
-```css
-blockquote.citation {
-  border-left: 4px solid var(--green);
-  margin: 1rem 0;
-  padding: .75rem 1rem;
-  background: var(--green-bg);
-  border-radius: 0 6px 6px 0;
-}
-blockquote.citation footer { font-size: .8rem; color: var(--muted); margin-top: .5rem; }
-```
-
----
-
-## Dos and don'ts for reports
-
-- **Do** put the TL;DR at the very top — busy readers decide in 10 seconds whether to read on
-- **Do** use KPI cards instead of prose like "uptime was 99.7%"
-- **Do** collapse incident timelines — they're reference, not narrative
-- **Don't** use a pie chart for a single metric — a KPI card with a number is cleaner
-- **Don't** end with "next steps" buried in the last paragraph — use an action table with owners
-- **Don't** include raw log dumps — paste only the 3–5 relevant lines with timestamps
+Tables need meaningful headers and status text, not color alone. Diagrams need an adjacent takeaway and accessible alternatives for relationships or data. Link to supporting sources without dumping raw logs or exposing sensitive data.
