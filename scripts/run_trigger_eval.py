@@ -63,9 +63,17 @@ def _evaluate(host: str, env: str, case: dict, command: str | None) -> dict:
         check=False,
     )
     try:
-        actual = json.loads(process.stdout)["selected_skill"]
-    except (json.JSONDecodeError, KeyError) as exc:
+        response = json.loads(process.stdout)
+    except json.JSONDecodeError as exc:
         return {**base, "status": "failed", "actual": None, "error": f"{exc}; stderr={process.stderr}"}
+    if not isinstance(response, dict) or "selected_skill" not in response:
+        return {
+            **base,
+            "status": "failed",
+            "actual": None,
+            "error": f"evaluator response must be an object with selected_skill; stderr={process.stderr}",
+        }
+    actual = response["selected_skill"]
     if not isinstance(actual, str):
         return {
             **base,
