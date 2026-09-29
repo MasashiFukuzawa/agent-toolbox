@@ -1,9 +1,11 @@
+import json
 import shutil
 from pathlib import Path
 
 from scripts.validate import (
     REVIEW_COMMON_BEGIN,
     REVIEW_COMMON_END,
+    SEMVER,
     _validate_review_common_mirror,
     _validate_review_mirror,
     validate,
@@ -39,6 +41,22 @@ def test_done_documentation_is_inside_plugin_distribution() -> None:
     assert "references/done.example.yml" in skill
     assert "references/done.schema.json" in skill
     assert "../../" not in skill
+
+
+def test_plugin_release_is_only_published_in_the_codex_marketplace() -> None:
+    assert (ROOT / "plugins/plugin-release/.codex-plugin/plugin.json").is_file()
+    assert not (ROOT / "plugins/plugin-release/.claude-plugin/plugin.json").exists()
+    codex = json.loads((ROOT / ".agents/plugins/marketplace.json").read_text())
+    claude = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text())
+    assert "plugin-release" in {plugin["name"] for plugin in codex["plugins"]}
+    assert "plugin-release" not in {plugin["name"] for plugin in claude["plugins"]}
+
+
+def test_codex_plugin_versions_follow_semver() -> None:
+    assert SEMVER.fullmatch("0.2.0+codex.20260823102630")
+    assert not SEMVER.fullmatch("next")
+    assert not SEMVER.fullmatch("1.2.3-01")
+    assert not SEMVER.fullmatch("1١.2.3")
 
 
 def test_trigger_baseline_covers_every_registered_case() -> None:

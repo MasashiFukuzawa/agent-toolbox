@@ -16,10 +16,7 @@ from scripts.trigger_eval import ROOT
 
 def main() -> int:
     payload = json.load(sys.stdin)
-    skills = {}
-    for path in sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")):
-        metadata = yaml.safe_load(path.read_text().split("---", 2)[1])
-        skills[metadata["name"]] = metadata["description"]
+    skills = load_skill_catalog(payload["host"])
     catalog = "\n".join(f"- {name}: {description}" for name, description in skills.items())
     if payload["environment"] == "superset":
         catalog += "\n- generic-writing: 一般文章を編集する。専門的な開発workflowには使わない。"
@@ -55,6 +52,18 @@ def main() -> int:
         selected = selected.split(":", 1)[1]
     print(json.dumps({"selected_skill": selected}))
     return 0
+
+
+def load_skill_catalog(host: str) -> dict[str, str]:
+    registry = yaml.safe_load((ROOT / "docs/trigger-registry.yml").read_text())["skills"]
+    skills = {}
+    for path in sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")):
+        metadata = yaml.safe_load(path.read_text().split("---", 2)[1])
+        name = metadata["name"]
+        supported_hosts = registry.get(name, {}).get("supported_hosts", ["claude-code", "codex"])
+        if host in supported_hosts:
+            skills[name] = metadata["description"]
+    return skills
 
 
 if __name__ == "__main__":

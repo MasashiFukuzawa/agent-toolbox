@@ -17,6 +17,18 @@
       "category": "Productivity"
     },
     {
+      "name": "plugin-release",
+      "source": {
+        "source": "local",
+        "path": "./plugins/plugin-release"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "done",
       "source": {
         "source": "local",

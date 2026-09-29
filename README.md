@@ -1,12 +1,13 @@
 # Agent Toolbox
 
-Agent Toolbox is a public collection of reusable engineering skills for Claude Code and Codex. It ships four independently installable plugins and keeps host-neutral skill instructions in one source tree.
+Agent Toolbox is a public collection of reusable engineering skills for Claude Code and Codex. It ships independently installable plugins for each host and shares host-neutral skill instructions where possible; host-specific skills document their supported hosts.
 
 ## Plugins
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 21 | Research, review, model selection, testing, delivery, browser operations, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 20 | Research, review, model selection, testing, browser operations, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `plugin-release` | 1 | Codex Git marketplace release workflow | Git, GitHub CLI (`gh`), Codex CLI, Python 3.11+, `uv` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
@@ -14,6 +15,8 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 ### Skill catalog
 
 `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `plugin-release`, `progress-report`, `structured-text-parsing`, `technical-research`, `typescript-project-foundation`, `done`, `gog-calendar`, `gog-chat-readonly`, `github-project-provisioning`, and `github-issue-create`.
+
+`plugin-release` is Codex-only and is distributed as a separate plugin. Claude Code marketplace entries do not include it.
 
 Autopilot delegates bounded work while the controller retains artifact review and shipping-quality responsibility. Model selection is shared by autopilot and both review skills; install the complete toolbox plugin rather than copying a review skill alone. Done accepts revision-bound evidence rather than repeating worker checks. Runtime servicing uses actual host task state, not a separate snapshot checker. No daemon or automatic host restart is installed; see the [runtime contract](plugins/toolbox/skills/autopilot/references/controller-runtime.md) for these limits.
 
@@ -42,7 +45,7 @@ Use `/plugin` to update or uninstall a plugin. Claude Code discovers the marketp
 
 ### Codex
 
-Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release.
+Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `plugin-release`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release.
 
 The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill before reporting repository changes complete.
 

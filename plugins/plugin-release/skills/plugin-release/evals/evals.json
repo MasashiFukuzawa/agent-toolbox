@@ -10,7 +10,7 @@
     {
       "id": 2,
       "prompt": "ローカルで作っている個人用プラグインのcachebusterを更新して再インストールして。",
-      "expected_output": "Gitマーケットプレイス向けplugin-releaseの対象外と判断し、plugin-creatorのローカル更新手順へ案内する。",
+      "expected_output": "Gitマーケットプレイス向けplugin-releaseの対象外と判断する。Codexのplugin-creatorスキルが使えれば案内し、なければ公式のlocal marketplace手順を確認するよう伝える。",
       "files": []
     },
     {
