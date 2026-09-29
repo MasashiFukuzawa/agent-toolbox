@@ -1,0 +1,23 @@
+{
+  "skill_name": "plugin-release",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "このリポジトリのCodexプラグインをリリースして、インストール環境に反映されたか確認して。",
+      "expected_output": "対象manifestとmarketplace sourceを確認し、plugin listのmarketplaceSource.sourceTypeとsource.sourceを区別する。検証・PR・CI・マージ・Codex marketplace同期・plugin listでの確認を別工程として扱う。マージや同期が未承認または未実施なら完了扱いにしない。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "ローカルで作っている個人用プラグインのcachebusterを更新して再インストールして。",
+      "expected_output": "Gitマーケットプレイス向けplugin-releaseの対象外と判断し、plugin-creatorのローカル更新手順へ案内する。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "PRのCIは通った。まだmainに入っていない変更がインストール済みか教えて。",
+      "expected_output": "PRのCI成功と配布元refへのマージ、marketplace同期を区別し、現在のインストール版とsourceを確認するまで反映済みと断定しない。",
+      "files": []
+    }
+  ]
+}

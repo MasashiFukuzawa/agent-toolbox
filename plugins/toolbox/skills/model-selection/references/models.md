@@ -17,7 +17,7 @@ providerのみ指定された通常レビューは、そのproviderの表の先�
 
 Anthropicのリリース発表（2026-09-28）でSonnet 5.5のAPI ID `claude-sonnet-5-5` と提供開始を確認: <https://www.anthropic.com/claude-sonnet-5-5>.
 
-Sonnet 5.5でthinkingを無効にして使う設定がある場合は、Sonnet 5の`disabled`ではなく`between_tools`への移行が必要。利用ホスト側の設定に該当するか確認する: <https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide>.
+Sonnet 5.5でthinkingを無効にして使う設定がある場合は、Sonnet 5の`disabled`ではなく`between_tools`への移行が必要。`between_tools`は`low`/`medium`/`high`で使え、`xhigh`/`max`ではエラーになるため、該当設定とeffortを利用ホスト側で確認する: <https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide>.
 
 初期値で浅い場合、対象を絞ったうえで上位候補を検討する。上位モデルでは必要に応じてeffortを一段上げる。`high`は難度・影響に見合う理由がある場合、`xhigh`以上は明示指定または明示的な選択権限がある場合に限る。対応しないeffortは黙って降格しない。
 
