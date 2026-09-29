@@ -147,10 +147,16 @@ def test_trigger_result_documents_are_checked_against_published_schema(tmp_path:
     invalid["results"][0]["skill"] = {}
     invalid_documents.append(invalid)
     invalid = copy.deepcopy(valid_document)
+    invalid["results"][0]["skill"] = ""
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
     invalid["results"][0]["type"] = "unregistered"
     invalid_documents.append(invalid)
     invalid = copy.deepcopy(valid_document)
     invalid["results"][0]["case_id"] = {}
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
+    invalid["results"][0]["case_id"] = 0
     invalid_documents.append(invalid)
     invalid = copy.deepcopy(valid_document)
     invalid["results"][0]["unexpected"] = True
