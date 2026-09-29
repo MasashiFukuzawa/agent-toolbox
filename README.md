@@ -45,9 +45,11 @@ progress-report --html Focus on the release outlook
 
 Use `/plugin` to update or uninstall a plugin. Claude Code discovers the marketplace from `.claude-plugin/marketplace.json`.
 
+`plugin-release` is Codex-only. It was present in the shared toolbox package through 0.7.0 and is not available in Claude Code from 0.7.1 onward; there is no Claude Code replacement in this marketplace.
+
 ### Codex
 
-Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `plugin-release`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release. Since toolbox 0.7.1, `plugin-release` has been a separate Codex-only plugin and is not included in toolbox. If you upgraded from toolbox 0.7.0 or earlier and relied on its bundled skill, install `plugin-release` separately from the `agent-toolbox` marketplace. In the CLI, check `codex plugin --help`; the current command is `codex plugin add plugin-release@agent-toolbox`.
+Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `plugin-release`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release. Since toolbox 0.7.1, `plugin-release` has been a separate Codex-only plugin and is not included in toolbox. Moving the skill out of toolbox was a breaking package change that shipped in 0.7.1 as a patch; 0.8.0 establishes the corrected minor-version policy for future breaking skill removals or moves. If you upgraded from toolbox 0.7.0 or earlier and relied on its bundled skill, install `plugin-release` separately from the `agent-toolbox` marketplace. In CLI versions whose `codex plugin --help` lists `add`, use `codex plugin add plugin-release@agent-toolbox`.
 
 The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill before reporting repository changes complete.
 

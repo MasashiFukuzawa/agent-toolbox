@@ -280,6 +280,8 @@ def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:
         for neighbor in entry.get("nearest_neighbors", []):
             if neighbor not in skills:
                 errors.append(f"unknown nearest neighbor {neighbor} from {name}")
+            elif neighbor not in registry:
+                errors.append(f"nearest neighbor {neighbor} from {name} is missing from the trigger registry")
             elif not declared_hosts <= set(registry[neighbor].get("supported_hosts", [])):
                 errors.append(f"nearest neighbor {neighbor} from {name} lacks required hosts {sorted(declared_hosts)}")
 

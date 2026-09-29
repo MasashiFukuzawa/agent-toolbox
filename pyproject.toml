@@ -5,6 +5,7 @@ requires-python = ">=3.11"
 dependencies = [
     "jsonschema>=4.23,<5",
     "PyYAML>=6.0.2,<7",
+    "rfc3339-validator>=0.1.4,<0.2",
 ]
 
 [dependency-groups]

@@ -6,12 +6,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from functools import lru_cache
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 KNOWN_HOSTS = ("claude-code", "codex")
+REQUIRED_MATRIX_FIELDS = {"supported_hosts", "positive_triggers", "nearest_neighbors", "negative_triggers"}
 REQUIRED_COUNTS = {
     "positive": 3,
     "explicit": 1,
@@ -21,11 +23,13 @@ NEUTRAL_DECISIONS = {"none", "disambiguate", "ask-provider"}
 
 
 def build_matrix() -> dict:
-    registry = yaml.safe_load((ROOT / "docs/trigger-registry.yml").read_text())["skills"]
+    registry = _load_registry(ROOT / "docs/trigger-registry.yml")
     cases: list[dict] = []
     for name, entry in registry.items():
+        if missing := REQUIRED_MATRIX_FIELDS - set(entry):
+            raise ValueError(f"{name}: trigger registry fields missing: {', '.join(sorted(missing))}")
         supported_hosts = entry["supported_hosts"]
-        triggers = entry.get("positive_triggers", [])
+        triggers = entry["positive_triggers"]
         base = triggers[0] if triggers else f"{name} を使って"
         positives = [base, f"{base}。判断理由も示して", f"{base}。安全条件を確認して進めて"]
         for index, prompt in enumerate(positives, 1):
@@ -103,13 +107,18 @@ def is_valid_selection(host: str, selected: str) -> bool:
         return False
     if selected in NEUTRAL_DECISIONS:
         return True
-    registry = yaml.safe_load((ROOT / "docs/trigger-registry.yml").read_text())["skills"]
+    registry = _load_registry(ROOT / "docs/trigger-registry.yml")
     return selected in registry and host in registry[selected]["supported_hosts"]
+
+
+@lru_cache(maxsize=4)
+def _load_registry(path: Path) -> dict:
+    return yaml.safe_load(path.read_text())["skills"]
 
 
 def check_matrix(matrix: dict) -> list[str]:
     errors = []
-    skills = yaml.safe_load((ROOT / "docs/trigger-registry.yml").read_text())["skills"]
+    skills = _load_registry(ROOT / "docs/trigger-registry.yml")
     for skill, entry in skills.items():
         supported_hosts = set(entry["supported_hosts"])
         if not supported_hosts or not supported_hosts <= set(KNOWN_HOSTS):
@@ -141,7 +150,10 @@ def main() -> int:
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
-    matrix = build_matrix()
+    try:
+        matrix = build_matrix()
+    except ValueError as exc:
+        parser.error(str(exc))
     errors = check_matrix(matrix)
     if errors:
         parser.error("\n".join(errors))

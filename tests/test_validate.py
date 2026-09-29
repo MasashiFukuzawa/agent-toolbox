@@ -62,7 +62,7 @@ def test_codex_plugin_versions_follow_semver() -> None:
     assert not SEMVER.fullmatch("1١.2.3")
 
 
-def test_every_published_host_manifest_has_semver_without_requiring_equal_versions() -> None:
+def test_every_published_host_manifest_uses_semver() -> None:
     versions = []
     for path in (ROOT / "plugins").glob("*/.*-plugin/plugin.json"):
         version = json.loads(path.read_text())["version"]
@@ -118,6 +118,18 @@ def test_nearest_neighbor_must_support_every_host_of_the_skill(tmp_path: Path, m
     assert any("nearest neighbor neighbor from sample lacks required hosts" in error for error in errors)
 
 
+def test_registry_reports_neighbor_missing_from_registry_without_crashing(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/trigger-registry.yml").write_text(
+        "skills:\n  source:\n    canonical_name: source\n"
+        "    supported_hosts: [codex]\n    nearest_neighbors: [neighbor]\n"
+    )
+    errors: list[str] = []
+    _validate_registry({"source": "", "neighbor": ""}, errors)
+    assert any("neighbor neighbor from source is missing from the trigger registry" in error for error in errors)
+
+
 def test_trigger_result_documents_are_checked_against_published_schema(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
     (tmp_path / "evals/results").mkdir(parents=True)
@@ -169,6 +181,12 @@ def test_trigger_result_documents_are_checked_against_published_schema(tmp_path:
     invalid_documents.append(invalid)
     invalid = copy.deepcopy(valid_document)
     invalid["matrix_sha256"] = "not-a-digest"
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
+    invalid["generated_at"] = "yesterday"
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
+    invalid["summary"]["total"] = -1
     invalid_documents.append(invalid)
 
     for document in invalid_documents:
