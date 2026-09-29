@@ -128,10 +128,11 @@ def test_trigger_result_documents_are_checked_against_published_schema(tmp_path:
             {
                 "host": "codex",
                 "environment": "isolated",
-                "skill": "sample",
-                "type": "positive",
-                "case_id": 1,
+                "skill": {},
+                "type": [],
+                "case_id": {},
                 "status": "unknown",
+                "unexpected": True,
             }
         ],
     }
