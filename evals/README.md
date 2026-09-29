@@ -1,6 +1,8 @@
 # Trigger evaluation
 
-`uv run python -m scripts.trigger_eval --check` verifies only that every skill has the required host-neutral evaluation matrix. It is a completeness check, not evidence that a model or host discovered the correct skill. `--json` emits the cases.
+`uv run python -m scripts.trigger_eval --check` verifies that every skill has the required evaluation cases and that cases are limited to each skill's `supported_hosts` in `docs/trigger-registry.yml`. It is a completeness check, not evidence that a model or host discovered the correct skill. `--json` emits the cases and their supported hosts.
+
+`evals/results/baseline.json` stores a fingerprint of the generated matrix. Regenerate it with `uv run python -m scripts.run_trigger_eval --output evals/results/baseline.json` after changing prompts, expected selections, or supported hosts.
 
 Each skill has three positive, two nearest-neighbor negative, two ambiguous, one explicit, and one no-skill-negative case. Evaluate them in both an isolated environment containing only this marketplace and a superset environment containing commonly installed plugins. A generic third-party-review prompt must return `ask-provider`, not choose a provider implicitly.
 

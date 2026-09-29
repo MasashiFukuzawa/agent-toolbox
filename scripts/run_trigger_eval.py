@@ -9,7 +9,7 @@ import shlex
 import subprocess
 from datetime import UTC, datetime
 
-from scripts.trigger_eval import ROOT, build_matrix
+from scripts.trigger_eval import ROOT, build_matrix, matrix_sha256
 
 
 def main() -> int:
@@ -20,7 +20,13 @@ def main() -> int:
     parser.add_argument("--command")
     args = parser.parse_args()
     matrix = build_matrix()
-    work = [(h, e, c) for h in matrix["hosts"] for e in matrix["environments"] for c in matrix["cases"]]
+    work = [
+        (host, environment, case)
+        for host in matrix["hosts"]
+        for environment in matrix["environments"]
+        for case in matrix["cases"]
+        if host in case["supported_hosts"]
+    ]
     if args.limit is not None:
         work = work[: args.limit]
     if args.sample is not None and args.sample < len(work):
@@ -30,6 +36,7 @@ def main() -> int:
     document = {
         "schema_version": 1,
         "generated_at": datetime.now(UTC).isoformat(),
+        "matrix_sha256": matrix_sha256(matrix),
         "summary": {"total": len(results), **counts},
         "results": results,
     }

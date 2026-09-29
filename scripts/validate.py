@@ -15,6 +15,12 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_PATHS = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md"))
 FRONTMATTER = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+SEMVER_IDENTIFIER = r"(?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)"
+SEMVER = re.compile(
+    r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
+    rf"(?:-{SEMVER_IDENTIFIER}(?:\.{SEMVER_IDENTIFIER})*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\Z"
+)
 REQUIRED_REGISTRY_FIELDS = {
     "canonical_name",
     "category",
@@ -85,22 +91,65 @@ def validate() -> tuple[list[str], list[str]]:
 
 
 def _validate_manifests(errors: list[str]) -> None:
-    plugin_names = sorted(path.name for path in (ROOT / "plugins").iterdir() if path.is_dir())
-    for name in plugin_names:
-        for host in (".codex-plugin", ".claude-plugin"):
-            path = ROOT / "plugins" / name / host / "plugin.json"
+    plugin_dirs = sorted(path for path in (ROOT / "plugins").iterdir() if path.is_dir())
+    host_names = {"Codex": [], "Claude": []}
+    for plugin_dir in plugin_dirs:
+        found_manifest = False
+        for host, directory in (("Codex", ".codex-plugin"), ("Claude", ".claude-plugin")):
+            path = plugin_dir / directory / "plugin.json"
+            if not path.is_file():
+                continue
+            found_manifest = True
             try:
                 manifest = json.loads(path.read_text())
-                if manifest.get("name") != name:
+                if manifest.get("name") != plugin_dir.name:
                     errors.append(f"manifest name mismatch: {path.relative_to(ROOT)}")
+                if host == "Codex":
+                    version = manifest.get("version")
+                    if not isinstance(version, str) or not SEMVER.fullmatch(version):
+                        errors.append(f"Codex manifest has invalid SemVer version: {path.relative_to(ROOT)}")
+                    skill_paths = manifest.get("skills")
+                    if isinstance(skill_paths, str):
+                        skill_paths = [skill_paths]
+                    if not isinstance(skill_paths, list) or not skill_paths or not all(
+                        isinstance(skill_path, str) and skill_path.startswith("./") for skill_path in skill_paths
+                    ):
+                        errors.append(f"Codex manifest has invalid skills path: {path.relative_to(ROOT)}")
+                    else:
+                        for skill_path in skill_paths:
+                            target = (plugin_dir / skill_path).resolve()
+                            try:
+                                target.relative_to(plugin_dir.resolve())
+                            except ValueError:
+                                errors.append(f"Codex skills path escapes plugin: {path.relative_to(ROOT)}")
+                                continue
+                            if not target.is_dir() or not list(target.glob("*/SKILL.md")):
+                                errors.append(f"Codex skills path has no skills: {path.relative_to(ROOT)}")
+                host_names[host].append(plugin_dir.name)
             except (OSError, json.JSONDecodeError) as exc:
                 errors.append(f"invalid or missing manifest {path.relative_to(ROOT)}: {exc}")
-    pairs = ((ROOT / ".agents/plugins/marketplace.json", "Codex"), (ROOT / ".claude-plugin/marketplace.json", "Claude"))
+        if not found_manifest:
+            errors.append(f"plugin has no host manifest: {plugin_dir.relative_to(ROOT)}")
+    pairs = (
+        (ROOT / ".agents/plugins/marketplace.json", "Codex"),
+        (ROOT / ".claude-plugin/marketplace.json", "Claude"),
+    )
     for path, host in pairs:
         try:
-            names = sorted(item["name"] for item in json.loads(path.read_text())["plugins"])
-            if names != plugin_names:
+            entries = json.loads(path.read_text())["plugins"]
+            names = sorted(item["name"] for item in entries)
+            if names != sorted(host_names[host]):
                 errors.append(f"{host} marketplace/plugin drift")
+            if host == "Codex":
+                source_paths = {
+                    item["name"]: _marketplace_source_path(item, host)
+                    for item in entries
+                }
+            else:
+                source_paths = {item["name"]: _marketplace_source_path(item, host) for item in entries}
+            expected_paths = {name: f"./plugins/{name}" for name in host_names[host]}
+            if source_paths != expected_paths:
+                errors.append(f"{host} marketplace source path drift")
         except (OSError, KeyError, json.JSONDecodeError) as exc:
             errors.append(f"invalid {host} marketplace manifest: {exc}")
 
@@ -110,6 +159,16 @@ def _validate_manifests(errors: list[str]) -> None:
             errors.append(f"done plugin distribution is missing: {relative}")
     if list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml")):
         errors.append("skill-local agents/openai.yaml is not adopted in this repository")
+
+
+def _marketplace_source_path(entry: dict, host: str) -> str | None:
+    source = entry.get("source")
+    if host == "Codex" and isinstance(source, dict) and source.get("source") == "local":
+        path = source.get("path")
+        return path if isinstance(path, str) else None
+    if host == "Claude" and isinstance(source, str):
+        return source
+    return None
 
 
 def _validate_results(errors: list[str]) -> None:
@@ -126,17 +185,22 @@ def _validate_results(errors: list[str]) -> None:
                 from scripts.trigger_eval import build_matrix
 
                 matrix = build_matrix()
+                from scripts.trigger_eval import matrix_sha256
+
+                if result.get("matrix_sha256") != matrix_sha256(matrix):
+                    errors.append("baseline trigger result is stale or incomplete")
                 expected = {
                     (host, environment, case["skill"], case["type"], case["id"])
                     for host in matrix["hosts"]
                     for environment in matrix["environments"]
                     for case in matrix["cases"]
+                    if host in case["supported_hosts"]
                 }
                 actual = {
                     (row["host"], row["environment"], row["skill"], row["type"], row["case_id"])
                     for row in rows
                 }
-                if actual != expected:
+                if actual != expected or len(rows) != len(expected):
                     errors.append("baseline trigger result is stale or incomplete")
         except (OSError, KeyError, json.JSONDecodeError) as exc:
             errors.append(f"invalid trigger result {path.relative_to(ROOT)}: {exc}")

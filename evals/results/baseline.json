@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-29T01:04:27.323570+00:00",
+  "generated_at": "2026-09-29T01:44:41.455141+00:00",
+  "matrix_sha256": "38678b6e1bdc0e9bca48af7c2d15593150f777adcfd01e219a0b7481dc25be3e",
   "summary": {
-    "total": 936,
+    "total": 918,
     "passed": 0,
     "failed": 0,
-    "not_run": 936
+    "not_run": 918
   },
   "results": [
     {
@@ -2260,96 +2261,6 @@
     },
     {
       "host": "claude-code",
-      "environment": "isolated",
-      "skill": "plugin-release",
-      "type": "positive",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "isolated",
-      "skill": "plugin-release",
-      "type": "positive",
-      "case_id": 2,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "isolated",
-      "skill": "plugin-release",
-      "type": "positive",
-      "case_id": 3,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "isolated",
-      "skill": "plugin-release",
-      "type": "nearest_negative",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "isolated",
-      "skill": "plugin-release",
-      "type": "nearest_negative",
-      "case_id": 2,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "isolated",
-      "skill": "plugin-release",
-      "type": "ambiguous",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "isolated",
-      "skill": "plugin-release",
-      "type": "ambiguous",
-      "case_id": 2,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "isolated",
-      "skill": "plugin-release",
-      "type": "explicit",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "isolated",
-      "skill": "plugin-release",
-      "type": "no_skill_negative",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
       "environment": "superset",
       "skill": "model-selection",
       "type": "positive",
@@ -4592,96 +4503,6 @@
       "host": "claude-code",
       "environment": "superset",
       "skill": "github-issue-create",
-      "type": "no_skill_negative",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "superset",
-      "skill": "plugin-release",
-      "type": "positive",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "superset",
-      "skill": "plugin-release",
-      "type": "positive",
-      "case_id": 2,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "superset",
-      "skill": "plugin-release",
-      "type": "positive",
-      "case_id": 3,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "superset",
-      "skill": "plugin-release",
-      "type": "nearest_negative",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "superset",
-      "skill": "plugin-release",
-      "type": "nearest_negative",
-      "case_id": 2,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "superset",
-      "skill": "plugin-release",
-      "type": "ambiguous",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "superset",
-      "skill": "plugin-release",
-      "type": "ambiguous",
-      "case_id": 2,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "superset",
-      "skill": "plugin-release",
-      "type": "explicit",
-      "case_id": 1,
-      "status": "not_run",
-      "actual": null,
-      "error": "no evaluator command supplied"
-    },
-    {
-      "host": "claude-code",
-      "environment": "superset",
-      "skill": "plugin-release",
       "type": "no_skill_negative",
       "case_id": 1,
       "status": "not_run",
