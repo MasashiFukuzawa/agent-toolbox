@@ -99,6 +99,8 @@ def matrix_sha256(matrix: dict) -> str:
 
 
 def is_valid_selection(host: str, selected: str) -> bool:
+    if not isinstance(selected, str):
+        return False
     if selected in NEUTRAL_DECISIONS:
         return True
     registry = yaml.safe_load((ROOT / "docs/trigger-registry.yml").read_text())["skills"]

@@ -249,10 +249,10 @@ def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:
         if entry.get("canonical_name") != name:
             errors.append(f"registry canonical_name mismatch: {name}")
         declared_hosts = set(entry.get("supported_hosts", []))
-        plugin_dirs = {path.parents[2] for path in ROOT.glob(f"plugins/*/skills/{name}/SKILL.md")}
         actual_hosts = {
-            host for host, manifest_dir in HOST_MANIFEST_DIRS.items()
-            if any((plugin_dir / manifest_dir / "plugin.json").is_file() for plugin_dir in plugin_dirs)
+            host
+            for host in HOST_MANIFEST_DIRS
+            if any(_host_publishes_skill(path, host) for path in ROOT.glob(f"plugins/*/skills/{name}/SKILL.md"))
         }
         if declared_hosts != actual_hosts:
             errors.append(
@@ -262,6 +262,38 @@ def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:
         for neighbor in entry.get("nearest_neighbors", []):
             if neighbor not in skills:
                 errors.append(f"unknown nearest neighbor {neighbor} from {name}")
+
+
+def _host_publishes_skill(skill_path: Path, host: str) -> bool:
+    plugin_dir = skill_path.parents[2]
+    manifest_path = plugin_dir / HOST_MANIFEST_DIRS[host] / "plugin.json"
+    if not manifest_path.is_file():
+        return False
+    if host == "claude-code":
+        try:
+            skill_path.resolve().relative_to((plugin_dir / "skills").resolve())
+            return True
+        except ValueError:
+            return False
+    try:
+        manifest = json.loads(manifest_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return False
+    paths = manifest.get("skills", [])
+    if isinstance(paths, str):
+        paths = [paths]
+    if not isinstance(paths, list):
+        return False
+    for relative in paths:
+        if not isinstance(relative, str) or not relative.startswith("./"):
+            continue
+        target = (plugin_dir / relative).resolve()
+        try:
+            skill_path.resolve().relative_to(target)
+            return True
+        except ValueError:
+            continue
+    return False
 
 
 def _scan_public_content(errors: list[str]) -> None:

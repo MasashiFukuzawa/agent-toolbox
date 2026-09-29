@@ -75,8 +75,13 @@ def test_registry_supported_hosts_must_match_host_manifests(tmp_path: Path, monk
     (tmp_path / "docs/trigger-registry.yml").write_text(
         "skills:\n  sample:\n    canonical_name: sample\n    supported_hosts: [codex]\n    nearest_neighbors: []\n"
     )
-    (tmp_path / "plugins/sample/.claude-plugin").mkdir(parents=True)
-    (tmp_path / "plugins/sample/.claude-plugin/plugin.json").write_text("{}")
+    plugin_dir = tmp_path / "plugins/sample"
+    (plugin_dir / ".codex-plugin").mkdir(parents=True)
+    (plugin_dir / ".codex-plugin/plugin.json").write_text('{"skills":"./skills/published/"}')
+    (plugin_dir / "skills/sample").mkdir(parents=True)
+    (plugin_dir / "skills/sample/SKILL.md").write_text("---\nname: sample\n---\n")
+    (plugin_dir / "skills/published/other").mkdir(parents=True)
+    (plugin_dir / "skills/published/other/SKILL.md").write_text("---\nname: other\n---\n")
     errors: list[str] = []
     _validate_registry({"sample": "description"}, errors)
     assert any("supported_hosts" in error and "plugin manifests" in error for error in errors)

@@ -78,6 +78,9 @@ def test_negative_trigger_expectation_rejects_only_the_named_skill(monkeypatch) 
     assert _evaluate("codex", "isolated", case, "fake")["status"] == "failed"
     Process.stdout = '{"selected_skill":"garbage"}'
     assert _evaluate("codex", "isolated", case, "fake")["status"] == "failed"
+    for invalid in ("[]", "{}"):
+        Process.stdout = json.dumps({"selected_skill": json.loads(invalid)})
+        assert _evaluate("codex", "isolated", case, "fake")["status"] == "failed"
 
 
 def test_valid_selection_accepts_only_known_host_skills_or_neutral_decisions() -> None:

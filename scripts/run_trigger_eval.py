@@ -66,6 +66,13 @@ def _evaluate(host: str, env: str, case: dict, command: str | None) -> dict:
         actual = json.loads(process.stdout)["selected_skill"]
     except (json.JSONDecodeError, KeyError) as exc:
         return {**base, "status": "failed", "actual": None, "error": f"{exc}; stderr={process.stderr}"}
+    if not isinstance(actual, str):
+        return {
+            **base,
+            "status": "failed",
+            "actual": None,
+            "error": f"selected_skill must be a string, got {type(actual).__name__}",
+        }
     expected = case["expected"]
     passed = process.returncode == 0 and is_valid_selection(host, actual) and (
         actual != expected.removeprefix("not:") if expected.startswith("not:") else actual == expected
