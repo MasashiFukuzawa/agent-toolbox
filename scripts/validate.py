@@ -314,7 +314,7 @@ REVIEW_COMMON_TOKENS: dict[str, tuple[tuple[str, str], ...]] = {
     ),
     "claude-review": (
         ("claude-opus-5-5", "⟪STRONG⟫"),
-        ("claude-sonnet-5", "⟪DEFAULT⟫"),
+        ("claude-sonnet-5-5", "⟪DEFAULT⟫"),
         ("claude -p", "⟪CLI⟫"),
         ("Claude", "⟪PROVIDER⟫"),
         ("claude", "⟪provider⟫"),
