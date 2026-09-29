@@ -32,6 +32,7 @@ REQUIRED_REGISTRY_FIELDS = {
     "negative_triggers",
     "ambiguous_precedence",
 }
+HOST_MANIFEST_DIRS = {"codex": ".codex-plugin", "claude-code": ".claude-plugin"}
 
 
 def validate() -> tuple[list[str], list[str]]:
@@ -104,10 +105,10 @@ def _validate_manifests(errors: list[str]) -> None:
                 manifest = json.loads(path.read_text())
                 if manifest.get("name") != plugin_dir.name:
                     errors.append(f"manifest name mismatch: {path.relative_to(ROOT)}")
+                version = manifest.get("version")
+                if not isinstance(version, str) or not SEMVER.fullmatch(version):
+                    errors.append(f"{host} manifest has invalid SemVer version: {path.relative_to(ROOT)}")
                 if host == "Codex":
-                    version = manifest.get("version")
-                    if not isinstance(version, str) or not SEMVER.fullmatch(version):
-                        errors.append(f"Codex manifest has invalid SemVer version: {path.relative_to(ROOT)}")
                     skill_paths = manifest.get("skills")
                     if isinstance(skill_paths, str):
                         skill_paths = [skill_paths]
@@ -140,13 +141,7 @@ def _validate_manifests(errors: list[str]) -> None:
             names = sorted(item["name"] for item in entries)
             if names != sorted(host_names[host]):
                 errors.append(f"{host} marketplace/plugin drift")
-            if host == "Codex":
-                source_paths = {
-                    item["name"]: _marketplace_source_path(item, host)
-                    for item in entries
-                }
-            else:
-                source_paths = {item["name"]: _marketplace_source_path(item, host) for item in entries}
+            source_paths = {item["name"]: _marketplace_source_path(item, host) for item in entries}
             expected_paths = {name: f"./plugins/{name}" for name in host_names[host]}
             if source_paths != expected_paths:
                 errors.append(f"{host} marketplace source path drift")
@@ -253,6 +248,17 @@ def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:
             errors.append(f"registry fields missing for {name}: {', '.join(sorted(missing))}")
         if entry.get("canonical_name") != name:
             errors.append(f"registry canonical_name mismatch: {name}")
+        declared_hosts = set(entry.get("supported_hosts", []))
+        plugin_dirs = {path.parents[2] for path in ROOT.glob(f"plugins/*/skills/{name}/SKILL.md")}
+        actual_hosts = {
+            host for host, manifest_dir in HOST_MANIFEST_DIRS.items()
+            if any((plugin_dir / manifest_dir / "plugin.json").is_file() for plugin_dir in plugin_dirs)
+        }
+        if declared_hosts != actual_hosts:
+            errors.append(
+                f"{name}: registry supported_hosts {sorted(declared_hosts)} "
+                f"do not match plugin manifests {sorted(actual_hosts)}"
+            )
         for neighbor in entry.get("nearest_neighbors", []):
             if neighbor not in skills:
                 errors.append(f"unknown nearest neighbor {neighbor} from {name}")

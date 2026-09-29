@@ -60,7 +60,7 @@ def load_skill_catalog(host: str) -> dict[str, str]:
     for path in sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")):
         metadata = yaml.safe_load(path.read_text().split("---", 2)[1])
         name = metadata["name"]
-        supported_hosts = registry.get(name, {}).get("supported_hosts", ["claude-code", "codex"])
+        supported_hosts = registry[name]["supported_hosts"]
         if host in supported_hosts:
             skills[name] = metadata["description"]
     return skills

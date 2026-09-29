@@ -9,7 +9,7 @@ import shlex
 import subprocess
 from datetime import UTC, datetime
 
-from scripts.trigger_eval import ROOT, build_matrix, matrix_sha256
+from scripts.trigger_eval import ROOT, build_matrix, is_valid_selection, matrix_sha256
 
 
 def main() -> int:
@@ -62,7 +62,10 @@ def _evaluate(host: str, env: str, case: dict, command: str | None) -> dict:
         actual = json.loads(process.stdout)["selected_skill"]
     except (json.JSONDecodeError, KeyError) as exc:
         return {**base, "status": "failed", "actual": None, "error": f"{exc}; stderr={process.stderr}"}
-    passed = process.returncode == 0 and actual == case["expected"]
+    expected = case["expected"]
+    passed = process.returncode == 0 and is_valid_selection(host, actual) and (
+        actual != expected.removeprefix("not:") if expected.startswith("not:") else actual == expected
+    )
     return {**base, "status": "passed" if passed else "failed", "actual": actual, "error": process.stderr or None}
 
 
