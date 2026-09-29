@@ -9,7 +9,7 @@ import shlex
 import subprocess
 from datetime import UTC, datetime
 
-from scripts.trigger_eval import ROOT, build_matrix, matrix_sha256
+from scripts.trigger_eval import ROOT, build_matrix, is_valid_selection, matrix_sha256
 
 
 def main() -> int:
@@ -18,6 +18,9 @@ def main() -> int:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--sample", type=int)
     parser.add_argument("--command")
+    parser.add_argument(
+        "--deterministic", action="store_true", help="omit the run timestamp for reproducible baseline files"
+    )
     args = parser.parse_args()
     matrix = build_matrix()
     work = [
@@ -35,11 +38,12 @@ def main() -> int:
     counts = {status: sum(row["status"] == status for row in results) for status in ("passed", "failed", "not_run")}
     document = {
         "schema_version": 1,
-        "generated_at": datetime.now(UTC).isoformat(),
         "matrix_sha256": matrix_sha256(matrix),
         "summary": {"total": len(results), **counts},
         "results": results,
     }
+    if not args.deterministic:
+        document["generated_at"] = datetime.now(UTC).isoformat()
     output = (ROOT / args.output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n")
@@ -59,10 +63,28 @@ def _evaluate(host: str, env: str, case: dict, command: str | None) -> dict:
         check=False,
     )
     try:
-        actual = json.loads(process.stdout)["selected_skill"]
-    except (json.JSONDecodeError, KeyError) as exc:
+        response = json.loads(process.stdout)
+    except json.JSONDecodeError as exc:
         return {**base, "status": "failed", "actual": None, "error": f"{exc}; stderr={process.stderr}"}
-    passed = process.returncode == 0 and actual == case["expected"]
+    if not isinstance(response, dict) or "selected_skill" not in response:
+        return {
+            **base,
+            "status": "failed",
+            "actual": None,
+            "error": f"evaluator response must be an object with selected_skill; stderr={process.stderr}",
+        }
+    actual = response["selected_skill"]
+    if not isinstance(actual, str):
+        return {
+            **base,
+            "status": "failed",
+            "actual": None,
+            "error": f"selected_skill must be a string, got {type(actual).__name__}",
+        }
+    expected = case["expected"]
+    passed = process.returncode == 0 and is_valid_selection(host, actual) and (
+        actual != expected.removeprefix("not:") if expected.startswith("not:") else actual == expected
+    )
     return {**base, "status": "passed" if passed else "failed", "actual": actual, "error": process.stderr or None}
 
 

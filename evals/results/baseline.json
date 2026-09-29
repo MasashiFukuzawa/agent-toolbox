@@ -1,12 +1,11 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-29T01:44:41.455141+00:00",
-  "matrix_sha256": "38678b6e1bdc0e9bca48af7c2d15593150f777adcfd01e219a0b7481dc25be3e",
+  "matrix_sha256": "dd27c0a3257fde4853f30a389ed2354840faf019ef620e483cb55d483f52fd95",
   "summary": {
-    "total": 918,
+    "total": 1138,
     "passed": 0,
     "failed": 0,
-    "not_run": 918
+    "not_run": 1138
   },
   "results": [
     {
@@ -63,6 +62,46 @@
       "host": "claude-code",
       "environment": "isolated",
       "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "model-selection",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -83,6 +122,46 @@
       "host": "claude-code",
       "environment": "isolated",
       "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "model-selection",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -102,6 +181,26 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "model-selection",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "technical-research",
       "type": "positive",
       "case_id": 1,
@@ -192,6 +291,26 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "technical-research",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "technical-research",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "git-worktrees",
       "type": "positive",
       "case_id": 1,
@@ -274,6 +393,16 @@
       "environment": "isolated",
       "skill": "git-worktrees",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "git-worktrees",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -372,6 +501,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "behavioral-testing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "claude-review",
       "type": "positive",
       "case_id": 1,
@@ -462,6 +601,26 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "claude-review",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "claude-review",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "codex-review",
       "type": "positive",
       "case_id": 1,
@@ -552,6 +711,26 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "codex-review",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "codex-review",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "adr",
       "type": "positive",
       "case_id": 1,
@@ -634,6 +813,16 @@
       "environment": "isolated",
       "skill": "adr",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "adr",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -732,6 +921,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "ascii-diagram",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "autopilot",
       "type": "positive",
       "case_id": 1,
@@ -814,6 +1013,16 @@
       "environment": "isolated",
       "skill": "autopilot",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "autopilot",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -912,6 +1121,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "browser-operations",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "cloudflare-data-pipeline",
       "type": "positive",
       "case_id": 1,
@@ -994,6 +1213,16 @@
       "environment": "isolated",
       "skill": "cloudflare-data-pipeline",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "cloudflare-data-pipeline",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -1092,6 +1321,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "cloudflare-worker-cd",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "codebase-audit",
       "type": "positive",
       "case_id": 1,
@@ -1174,6 +1413,16 @@
       "environment": "isolated",
       "skill": "codebase-audit",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "codebase-audit",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -1272,6 +1521,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "context-handoff",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "e2e-capability-verification",
       "type": "positive",
       "case_id": 1,
@@ -1354,6 +1613,16 @@
       "environment": "isolated",
       "skill": "e2e-capability-verification",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "e2e-capability-verification",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -1452,6 +1721,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "html-artifact",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "progress-report",
       "type": "positive",
       "case_id": 1,
@@ -1542,6 +1821,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "progress-report",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "ai-native-engineering",
       "type": "positive",
       "case_id": 1,
@@ -1593,6 +1882,46 @@
       "host": "claude-code",
       "environment": "isolated",
       "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -1613,6 +1942,46 @@
       "host": "claude-code",
       "environment": "isolated",
       "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -1625,6 +1994,36 @@
       "skill": "ai-native-engineering",
       "type": "no_skill_negative",
       "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 3,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -1722,6 +2121,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "structured-text-parsing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "typescript-project-foundation",
       "type": "positive",
       "case_id": 1,
@@ -1773,6 +2182,26 @@
       "host": "claude-code",
       "environment": "isolated",
       "skill": "typescript-project-foundation",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -1785,6 +2214,26 @@
       "skill": "typescript-project-foundation",
       "type": "ambiguous",
       "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "ambiguous",
+      "case_id": 4,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -1812,6 +2261,26 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "done",
       "type": "positive",
       "case_id": 1,
@@ -1894,6 +2363,16 @@
       "environment": "isolated",
       "skill": "done",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "done",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -1992,6 +2471,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "gog-calendar",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "gog-chat-readonly",
       "type": "positive",
       "case_id": 1,
@@ -2082,6 +2571,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "gog-chat-readonly",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "github-project-provisioning",
       "type": "positive",
       "case_id": 1,
@@ -2172,6 +2671,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "github-issue-create",
       "type": "positive",
       "case_id": 1,
@@ -2254,6 +2763,16 @@
       "environment": "isolated",
       "skill": "github-issue-create",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -2313,6 +2832,46 @@
       "host": "claude-code",
       "environment": "superset",
       "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "model-selection",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -2333,6 +2892,46 @@
       "host": "claude-code",
       "environment": "superset",
       "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "model-selection",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -2352,6 +2951,26 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "model-selection",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "technical-research",
       "type": "positive",
       "case_id": 1,
@@ -2442,6 +3061,26 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "technical-research",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "technical-research",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "git-worktrees",
       "type": "positive",
       "case_id": 1,
@@ -2524,6 +3163,16 @@
       "environment": "superset",
       "skill": "git-worktrees",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "git-worktrees",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -2622,6 +3271,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "behavioral-testing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "claude-review",
       "type": "positive",
       "case_id": 1,
@@ -2712,6 +3371,26 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "claude-review",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "claude-review",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "codex-review",
       "type": "positive",
       "case_id": 1,
@@ -2802,6 +3481,26 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "codex-review",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "codex-review",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "adr",
       "type": "positive",
       "case_id": 1,
@@ -2884,6 +3583,16 @@
       "environment": "superset",
       "skill": "adr",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "adr",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -2982,6 +3691,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "ascii-diagram",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "autopilot",
       "type": "positive",
       "case_id": 1,
@@ -3064,6 +3783,16 @@
       "environment": "superset",
       "skill": "autopilot",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "autopilot",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -3162,6 +3891,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "browser-operations",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "cloudflare-data-pipeline",
       "type": "positive",
       "case_id": 1,
@@ -3244,6 +3983,16 @@
       "environment": "superset",
       "skill": "cloudflare-data-pipeline",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "cloudflare-data-pipeline",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -3342,6 +4091,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "cloudflare-worker-cd",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "codebase-audit",
       "type": "positive",
       "case_id": 1,
@@ -3424,6 +4183,16 @@
       "environment": "superset",
       "skill": "codebase-audit",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "codebase-audit",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -3522,6 +4291,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "context-handoff",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "e2e-capability-verification",
       "type": "positive",
       "case_id": 1,
@@ -3604,6 +4383,16 @@
       "environment": "superset",
       "skill": "e2e-capability-verification",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "e2e-capability-verification",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -3702,6 +4491,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "html-artifact",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "progress-report",
       "type": "positive",
       "case_id": 1,
@@ -3792,6 +4591,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "progress-report",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "ai-native-engineering",
       "type": "positive",
       "case_id": 1,
@@ -3843,6 +4652,46 @@
       "host": "claude-code",
       "environment": "superset",
       "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -3863,6 +4712,46 @@
       "host": "claude-code",
       "environment": "superset",
       "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -3875,6 +4764,36 @@
       "skill": "ai-native-engineering",
       "type": "no_skill_negative",
       "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 3,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -3972,6 +4891,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "structured-text-parsing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "typescript-project-foundation",
       "type": "positive",
       "case_id": 1,
@@ -4023,6 +4952,26 @@
       "host": "claude-code",
       "environment": "superset",
       "skill": "typescript-project-foundation",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -4035,6 +4984,26 @@
       "skill": "typescript-project-foundation",
       "type": "ambiguous",
       "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "ambiguous",
+      "case_id": 4,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -4062,6 +5031,26 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "done",
       "type": "positive",
       "case_id": 1,
@@ -4144,6 +5133,16 @@
       "environment": "superset",
       "skill": "done",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "done",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -4242,6 +5241,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "gog-calendar",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "gog-chat-readonly",
       "type": "positive",
       "case_id": 1,
@@ -4332,6 +5341,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "gog-chat-readonly",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "github-project-provisioning",
       "type": "positive",
       "case_id": 1,
@@ -4422,6 +5441,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "github-issue-create",
       "type": "positive",
       "case_id": 1,
@@ -4504,6 +5533,16 @@
       "environment": "superset",
       "skill": "github-issue-create",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -4563,6 +5602,46 @@
       "host": "codex",
       "environment": "isolated",
       "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "model-selection",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -4583,6 +5662,46 @@
       "host": "codex",
       "environment": "isolated",
       "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "model-selection",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -4602,6 +5721,26 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "model-selection",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "model-selection",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "technical-research",
       "type": "positive",
       "case_id": 1,
@@ -4692,6 +5831,26 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "technical-research",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "technical-research",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "git-worktrees",
       "type": "positive",
       "case_id": 1,
@@ -4774,6 +5933,16 @@
       "environment": "isolated",
       "skill": "git-worktrees",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "git-worktrees",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -4872,6 +6041,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "behavioral-testing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "claude-review",
       "type": "positive",
       "case_id": 1,
@@ -4962,6 +6141,26 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "claude-review",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "claude-review",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "codex-review",
       "type": "positive",
       "case_id": 1,
@@ -5052,6 +6251,26 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "codex-review",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "codex-review",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "adr",
       "type": "positive",
       "case_id": 1,
@@ -5134,6 +6353,16 @@
       "environment": "isolated",
       "skill": "adr",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "adr",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -5232,6 +6461,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "ascii-diagram",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "autopilot",
       "type": "positive",
       "case_id": 1,
@@ -5314,6 +6553,16 @@
       "environment": "isolated",
       "skill": "autopilot",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "autopilot",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -5412,6 +6661,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "browser-operations",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "cloudflare-data-pipeline",
       "type": "positive",
       "case_id": 1,
@@ -5494,6 +6753,16 @@
       "environment": "isolated",
       "skill": "cloudflare-data-pipeline",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "cloudflare-data-pipeline",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -5592,6 +6861,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "cloudflare-worker-cd",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "codebase-audit",
       "type": "positive",
       "case_id": 1,
@@ -5674,6 +6953,16 @@
       "environment": "isolated",
       "skill": "codebase-audit",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "codebase-audit",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -5772,6 +7061,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "context-handoff",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "e2e-capability-verification",
       "type": "positive",
       "case_id": 1,
@@ -5854,6 +7153,16 @@
       "environment": "isolated",
       "skill": "e2e-capability-verification",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "e2e-capability-verification",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -5952,6 +7261,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "html-artifact",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "progress-report",
       "type": "positive",
       "case_id": 1,
@@ -6042,6 +7361,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "progress-report",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "ai-native-engineering",
       "type": "positive",
       "case_id": 1,
@@ -6093,6 +7422,46 @@
       "host": "codex",
       "environment": "isolated",
       "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -6113,6 +7482,46 @@
       "host": "codex",
       "environment": "isolated",
       "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -6125,6 +7534,36 @@
       "skill": "ai-native-engineering",
       "type": "no_skill_negative",
       "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 3,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -6222,6 +7661,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "structured-text-parsing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "typescript-project-foundation",
       "type": "positive",
       "case_id": 1,
@@ -6273,6 +7722,26 @@
       "host": "codex",
       "environment": "isolated",
       "skill": "typescript-project-foundation",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -6285,6 +7754,26 @@
       "skill": "typescript-project-foundation",
       "type": "ambiguous",
       "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "ambiguous",
+      "case_id": 4,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -6312,6 +7801,26 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "typescript-project-foundation",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "done",
       "type": "positive",
       "case_id": 1,
@@ -6394,6 +7903,16 @@
       "environment": "isolated",
       "skill": "done",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "done",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -6492,6 +8011,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "gog-calendar",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "gog-chat-readonly",
       "type": "positive",
       "case_id": 1,
@@ -6582,6 +8111,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "gog-chat-readonly",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "github-project-provisioning",
       "type": "positive",
       "case_id": 1,
@@ -6672,6 +8211,16 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "github-project-provisioning",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "github-issue-create",
       "type": "positive",
       "case_id": 1,
@@ -6754,6 +8303,16 @@
       "environment": "isolated",
       "skill": "github-issue-create",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "github-issue-create",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -6813,6 +8372,26 @@
       "host": "codex",
       "environment": "isolated",
       "skill": "plugin-release",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "plugin-release",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "plugin-release",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -6833,6 +8412,26 @@
       "host": "codex",
       "environment": "isolated",
       "skill": "plugin-release",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "plugin-release",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "plugin-release",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -6851,6 +8450,26 @@
     },
     {
       "host": "codex",
+      "environment": "isolated",
+      "skill": "plugin-release",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "plugin-release",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
       "environment": "superset",
       "skill": "model-selection",
       "type": "positive",
@@ -6903,6 +8522,46 @@
       "host": "codex",
       "environment": "superset",
       "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -6923,6 +8582,46 @@
       "host": "codex",
       "environment": "superset",
       "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -6935,6 +8634,26 @@
       "skill": "model-selection",
       "type": "no_skill_negative",
       "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "model-selection",
+      "type": "negative_trigger",
+      "case_id": 2,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -7032,6 +8751,26 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "technical-research",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "technical-research",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "git-worktrees",
       "type": "positive",
       "case_id": 1,
@@ -7114,6 +8853,16 @@
       "environment": "superset",
       "skill": "git-worktrees",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "git-worktrees",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -7212,6 +8961,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "behavioral-testing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "claude-review",
       "type": "positive",
       "case_id": 1,
@@ -7302,6 +9061,26 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "claude-review",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "claude-review",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "codex-review",
       "type": "positive",
       "case_id": 1,
@@ -7392,6 +9171,26 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "codex-review",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "codex-review",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "adr",
       "type": "positive",
       "case_id": 1,
@@ -7474,6 +9273,16 @@
       "environment": "superset",
       "skill": "adr",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "adr",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -7572,6 +9381,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "ascii-diagram",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "autopilot",
       "type": "positive",
       "case_id": 1,
@@ -7654,6 +9473,16 @@
       "environment": "superset",
       "skill": "autopilot",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "autopilot",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -7752,6 +9581,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "browser-operations",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "cloudflare-data-pipeline",
       "type": "positive",
       "case_id": 1,
@@ -7834,6 +9673,16 @@
       "environment": "superset",
       "skill": "cloudflare-data-pipeline",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "cloudflare-data-pipeline",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -7932,6 +9781,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "cloudflare-worker-cd",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "codebase-audit",
       "type": "positive",
       "case_id": 1,
@@ -8014,6 +9873,16 @@
       "environment": "superset",
       "skill": "codebase-audit",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "codebase-audit",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -8112,6 +9981,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "context-handoff",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "e2e-capability-verification",
       "type": "positive",
       "case_id": 1,
@@ -8194,6 +10073,16 @@
       "environment": "superset",
       "skill": "e2e-capability-verification",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "e2e-capability-verification",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -8292,6 +10181,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "html-artifact",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "progress-report",
       "type": "positive",
       "case_id": 1,
@@ -8382,6 +10281,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "progress-report",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "ai-native-engineering",
       "type": "positive",
       "case_id": 1,
@@ -8433,6 +10342,46 @@
       "host": "codex",
       "environment": "superset",
       "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -8453,6 +10402,46 @@
       "host": "codex",
       "environment": "superset",
       "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -8465,6 +10454,36 @@
       "skill": "ai-native-engineering",
       "type": "no_skill_negative",
       "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "ai-native-engineering",
+      "type": "negative_trigger",
+      "case_id": 3,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -8562,6 +10581,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "structured-text-parsing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "typescript-project-foundation",
       "type": "positive",
       "case_id": 1,
@@ -8613,6 +10642,26 @@
       "host": "codex",
       "environment": "superset",
       "skill": "typescript-project-foundation",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -8625,6 +10674,26 @@
       "skill": "typescript-project-foundation",
       "type": "ambiguous",
       "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "ambiguous",
+      "case_id": 4,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -8652,6 +10721,26 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "typescript-project-foundation",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "done",
       "type": "positive",
       "case_id": 1,
@@ -8734,6 +10823,16 @@
       "environment": "superset",
       "skill": "done",
       "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "done",
+      "type": "negative_trigger",
       "case_id": 1,
       "status": "not_run",
       "actual": null,
@@ -8832,6 +10931,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "gog-calendar",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "gog-chat-readonly",
       "type": "positive",
       "case_id": 1,
@@ -8922,6 +11031,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "gog-chat-readonly",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "github-project-provisioning",
       "type": "positive",
       "case_id": 1,
@@ -9012,6 +11131,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "github-project-provisioning",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "github-issue-create",
       "type": "positive",
       "case_id": 1,
@@ -9102,6 +11231,16 @@
     {
       "host": "codex",
       "environment": "superset",
+      "skill": "github-issue-create",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
       "skill": "plugin-release",
       "type": "positive",
       "case_id": 1,
@@ -9153,6 +11292,26 @@
       "host": "codex",
       "environment": "superset",
       "skill": "plugin-release",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "plugin-release",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "plugin-release",
       "type": "ambiguous",
       "case_id": 1,
       "status": "not_run",
@@ -9173,6 +11332,26 @@
       "host": "codex",
       "environment": "superset",
       "skill": "plugin-release",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "plugin-release",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "plugin-release",
       "type": "explicit",
       "case_id": 1,
       "status": "not_run",
@@ -9185,6 +11364,26 @@
       "skill": "plugin-release",
       "type": "no_skill_negative",
       "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "plugin-release",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "plugin-release",
+      "type": "negative_trigger",
+      "case_id": 2,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"

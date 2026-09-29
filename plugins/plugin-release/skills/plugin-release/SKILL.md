@@ -18,8 +18,14 @@ Claude Code向けではない。Claude Codeのplugin marketplaceを更新する�
 
 ## 2. リリース候補を準備する
 
-1. 変更対象のプラグインだけを更新する。Codexへ出す変更なら `.codex-plugin/plugin.json` の`version`を、そのリポジトリの変更規模に合う次の版へ進める。別ホストにも同時配布する場合は、そのホストのmanifestと互換性も確認する。マーケットプレイスJSONのsource pathは、プラグインを追加・削除・移動するときだけ更新する。
-2. スキルの変更なら、各スキルのtrigger/eval、READMEの一覧・件数、マーケットプレイスの整合性を更新する。秘密情報、利用者の個人パス、非公開運用情報を配布物へ含めない。
+1. 変更対象のプラグインだけを更新する。各ホストの `plugin.json` はそのホスト向けパッケージの版を表すため、ホスト間で版が異なっていてよい。共通スキルの変更を複数ホストへ出すなら各manifestの版をそれぞれ進め、片方だけの変更なら対象ホストだけを進める。別ホストにも配布する場合は、そのホストのmanifestと互換性も確認する。マーケットプレイスJSONのsource pathは、プラグインを追加・削除・移動するときだけ更新する。
+2. スキルの変更なら、各スキルのtrigger/eval、READMEの一覧・件数、マーケットプレイスの整合性を更新する。trigger matrixやskill descriptionを変えた場合はbaselineも再生成する。
+
+   ```bash
+   uv run python -m scripts.run_trigger_eval --output evals/results/baseline.json --deterministic
+   ```
+
+   秘密情報、利用者の個人パス、非公開運用情報を配布物へ含めない。
 3. 次のリポジトリ検証を実行する。
 
    ```bash

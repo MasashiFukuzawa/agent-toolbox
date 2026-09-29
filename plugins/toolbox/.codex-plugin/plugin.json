@@ -1,6 +1,6 @@
 {
   "name": "toolbox",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Reusable engineering agent skills",
   "author": {
     "name": "Agent Toolbox Contributors"
@@ -8,7 +8,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Toolbox",
-    "shortDescription": "Reusable engineering workflows with explicit safety boundaries.",
+    "shortDescription": "Research, review, testing, visualization, and engineering workflows.",
     "longDescription": "Reusable engineering agent skills",
     "developerName": "Agent Toolbox Contributors",
     "category": "Productivity",

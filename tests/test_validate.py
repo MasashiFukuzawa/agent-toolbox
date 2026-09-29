@@ -6,6 +6,7 @@ from scripts.validate import (
     REVIEW_COMMON_BEGIN,
     REVIEW_COMMON_END,
     SEMVER,
+    _validate_registry,
     _validate_review_common_mirror,
     _validate_review_mirror,
     validate,
@@ -57,6 +58,33 @@ def test_codex_plugin_versions_follow_semver() -> None:
     assert not SEMVER.fullmatch("next")
     assert not SEMVER.fullmatch("1.2.3-01")
     assert not SEMVER.fullmatch("1١.2.3")
+
+
+def test_every_published_host_manifest_has_semver_without_requiring_equal_versions() -> None:
+    versions = []
+    for path in (ROOT / "plugins").glob("*/.*-plugin/plugin.json"):
+        version = json.loads(path.read_text())["version"]
+        assert SEMVER.fullmatch(version)
+        versions.append(version)
+    assert versions
+
+
+def test_registry_supported_hosts_must_match_host_manifests(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/trigger-registry.yml").write_text(
+        "skills:\n  sample:\n    canonical_name: sample\n    supported_hosts: [codex]\n    nearest_neighbors: []\n"
+    )
+    plugin_dir = tmp_path / "plugins/sample"
+    (plugin_dir / ".codex-plugin").mkdir(parents=True)
+    (plugin_dir / ".codex-plugin/plugin.json").write_text('{"skills":"./skills/published/"}')
+    (plugin_dir / "skills/sample").mkdir(parents=True)
+    (plugin_dir / "skills/sample/SKILL.md").write_text("---\nname: sample\n---\n")
+    (plugin_dir / "skills/published/other").mkdir(parents=True)
+    (plugin_dir / "skills/published/other/SKILL.md").write_text("---\nname: other\n---\n")
+    errors: list[str] = []
+    _validate_registry({"sample": "description"}, errors)
+    assert any("supported_hosts" in error and "plugin manifests" in error for error in errors)
 
 
 def test_trigger_baseline_covers_every_registered_case() -> None:

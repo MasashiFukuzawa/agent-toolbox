@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import json
-import re
 import subprocess
 import sys
 import tempfile
@@ -41,10 +40,10 @@ def main() -> int:
                 output = output_file.read()
     if process.returncode:
         raise SystemExit(process.stderr or "model command failed")
-    match = re.search(r'\{\s*"selected_skill"\s*:\s*"([^"]+)"\s*\}', output, re.DOTALL)
-    if not match:
-        raise SystemExit("model did not return selected_skill JSON")
-    selected = match.group(1)
+    try:
+        selected = parse_selected_skill(output)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     # Hosts prepend the plugin namespace ("toolbox:codex-review"); the registry
     # and matrix use bare canonical names. Measured live: 11 of 14 failures in
     # the first real run were this prefix, not wrong selection.
@@ -54,13 +53,23 @@ def main() -> int:
     return 0
 
 
+def parse_selected_skill(output: str) -> str:
+    try:
+        response = json.loads(output)
+    except json.JSONDecodeError as exc:
+        raise ValueError("model did not return a standalone JSON object") from exc
+    if not isinstance(response, dict) or not isinstance(response.get("selected_skill"), str):
+        raise ValueError("model response must be a JSON object with a string selected_skill")
+    return response["selected_skill"]
+
+
 def load_skill_catalog(host: str) -> dict[str, str]:
     registry = yaml.safe_load((ROOT / "docs/trigger-registry.yml").read_text())["skills"]
     skills = {}
     for path in sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")):
         metadata = yaml.safe_load(path.read_text().split("---", 2)[1])
         name = metadata["name"]
-        supported_hosts = registry.get(name, {}).get("supported_hosts", ["claude-code", "codex"])
+        supported_hosts = registry[name]["supported_hosts"]
         if host in supported_hosts:
             skills[name] = metadata["description"]
     return skills
