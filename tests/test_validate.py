@@ -1,3 +1,4 @@
+import copy
 import json
 import shutil
 from pathlib import Path
@@ -121,25 +122,54 @@ def test_trigger_result_documents_are_checked_against_published_schema(tmp_path:
     monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
     (tmp_path / "evals/results").mkdir(parents=True)
     (tmp_path / "evals/result-schema.json").write_bytes((ROOT / "evals/result-schema.json").read_bytes())
-    document = {
+    valid_document = {
         "schema_version": 1,
-        "summary": {"total": 0, "passed": 0, "failed": 0, "not_run": 0},
+        "matrix_sha256": "0" * 64,
+        "summary": {"total": 1, "passed": 1, "failed": 0, "not_run": 0},
         "results": [
             {
                 "host": "codex",
                 "environment": "isolated",
-                "skill": {},
-                "type": [],
-                "case_id": {},
-                "status": "unknown",
-                "unexpected": True,
+                "skill": "sample",
+                "type": "positive",
+                "case_id": 1,
+                "status": "passed",
             }
         ],
     }
-    (tmp_path / "evals/results/invalid.json").write_text(json.dumps(document))
+    (tmp_path / "evals/results/valid.json").write_text(json.dumps(valid_document))
     errors: list[str] = []
     _validate_results(errors)
-    assert any("trigger result schema mismatch" in error for error in errors)
+    assert errors == []
+
+    invalid_documents = []
+    invalid = copy.deepcopy(valid_document)
+    invalid["results"][0]["skill"] = {}
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
+    invalid["results"][0]["type"] = "unregistered"
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
+    invalid["results"][0]["case_id"] = {}
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
+    invalid["results"][0]["unexpected"] = True
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
+    invalid["summary"]["unexpected"] = True
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
+    invalid["unexpected"] = True
+    invalid_documents.append(invalid)
+    invalid = copy.deepcopy(valid_document)
+    invalid["matrix_sha256"] = "not-a-digest"
+    invalid_documents.append(invalid)
+
+    for document in invalid_documents:
+        (tmp_path / "evals/results/invalid.json").write_text(json.dumps(document))
+        errors = []
+        _validate_results(errors)
+        assert any("trigger result schema mismatch" in error for error in errors)
 
 
 def test_trigger_baseline_covers_every_registered_case() -> None:
