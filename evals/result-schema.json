@@ -12,10 +12,10 @@
       "additionalProperties": false,
       "required": ["total", "passed", "failed", "not_run"],
       "properties": {
-        "total": {"type": "integer"},
-        "passed": {"type": "integer"},
-        "failed": {"type": "integer"},
-        "not_run": {"type": "integer"}
+        "total": {"type": "integer", "minimum": 0},
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "not_run": {"type": "integer", "minimum": 0}
       }
     },
     "results": {

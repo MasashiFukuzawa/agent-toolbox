@@ -13,6 +13,14 @@ def test_trigger_matrix_is_complete() -> None:
     assert matrix["hosts"] == ["claude-code", "codex"]
 
 
+def test_trigger_matrix_reports_missing_registry_fields(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.trigger_eval.ROOT", tmp_path)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/trigger-registry.yml").write_text("skills:\n  sample:\n    nearest_neighbors: []\n")
+    with pytest.raises(ValueError, match="supported_hosts"):
+        build_matrix()
+
+
 def test_codex_only_skills_are_scoped_out_of_other_host_cases() -> None:
     matrix = build_matrix()
     codex_only = [case for case in matrix["cases"] if case["skill"] == "plugin-release"]
