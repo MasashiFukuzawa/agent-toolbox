@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["schema_version", "generated_at", "summary", "results"],
+  "required": ["schema_version", "summary", "results"],
   "properties": {
     "schema_version": {"const": 1},
-    "generated_at": {"type": "string"},
+    "generated_at": {"type": "string", "format": "date-time"},
     "summary": {
       "type": "object",
       "required": ["total", "passed", "failed", "not_run"],

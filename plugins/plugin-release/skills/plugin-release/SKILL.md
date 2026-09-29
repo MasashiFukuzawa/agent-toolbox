@@ -22,7 +22,7 @@ Claude Code向けではない。Claude Codeのplugin marketplaceを更新する�
 2. スキルの変更なら、各スキルのtrigger/eval、READMEの一覧・件数、マーケットプレイスの整合性を更新する。trigger matrixやskill descriptionを変えた場合はbaselineも再生成する。
 
    ```bash
-   uv run python -m scripts.run_trigger_eval --output evals/results/baseline.json
+   uv run python -m scripts.run_trigger_eval --output evals/results/baseline.json --deterministic
    ```
 
    秘密情報、利用者の個人パス、非公開運用情報を配布物へ含めない。

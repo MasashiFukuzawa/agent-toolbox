@@ -18,6 +18,9 @@ def main() -> int:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--sample", type=int)
     parser.add_argument("--command")
+    parser.add_argument(
+        "--deterministic", action="store_true", help="omit the run timestamp for reproducible baseline files"
+    )
     args = parser.parse_args()
     matrix = build_matrix()
     work = [
@@ -35,11 +38,12 @@ def main() -> int:
     counts = {status: sum(row["status"] == status for row in results) for status in ("passed", "failed", "not_run")}
     document = {
         "schema_version": 1,
-        "generated_at": datetime.now(UTC).isoformat(),
         "matrix_sha256": matrix_sha256(matrix),
         "summary": {"total": len(results), **counts},
         "results": results,
     }
+    if not args.deterministic:
+        document["generated_at"] = datetime.now(UTC).isoformat()
     output = (ROOT / args.output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n")

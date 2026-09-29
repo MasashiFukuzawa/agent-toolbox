@@ -47,7 +47,7 @@ Use `/plugin` to update or uninstall a plugin. Claude Code discovers the marketp
 
 ### Codex
 
-Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `plugin-release`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release. `plugin-release` is a separate Codex-only plugin. Install it with `codex plugin add plugin-release@agent-toolbox` if it is not already installed.
+Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `plugin-release`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release. `plugin-release` is a separate Codex-only plugin. If it is not installed, add it from the `agent-toolbox` marketplace in Codex's plugin manager. For CLI installation, check `codex plugin --help` first; on CLI versions that support it, use `codex plugin add plugin-release@agent-toolbox`.
 
 The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill before reporting repository changes complete.
 

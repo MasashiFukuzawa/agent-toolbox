@@ -1,5 +1,7 @@
+import json
+
 from scripts.model_trigger_adapter import load_skill_catalog
-from scripts.run_trigger_eval import _evaluate
+from scripts.run_trigger_eval import _evaluate, main
 from scripts.trigger_eval import build_matrix, check_matrix, is_valid_selection, matrix_sha256
 
 
@@ -83,6 +85,16 @@ def test_valid_selection_accepts_only_known_host_skills_or_neutral_decisions() -
     assert is_valid_selection("claude-code", "ask-provider")
     assert not is_valid_selection("claude-code", "plugin-release")
     assert not is_valid_selection("codex", "garbage")
+
+
+def test_deterministic_baseline_generation_is_byte_reproducible(tmp_path, monkeypatch) -> None:
+    output = tmp_path / "baseline.json"
+    monkeypatch.setattr("sys.argv", ["run_trigger_eval", "--output", str(output), "--deterministic"])
+    assert main() == 0
+    first = output.read_bytes()
+    assert "generated_at" not in json.loads(first)
+    assert main() == 0
+    assert output.read_bytes() == first
 
 
 def test_every_case_has_an_expected_result() -> None:
