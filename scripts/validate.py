@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 import yaml
+from jsonschema import Draft202012Validator, FormatChecker, SchemaError
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_PATHS = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md"))
@@ -167,9 +168,26 @@ def _marketplace_source_path(entry: dict, host: str) -> str | None:
 
 
 def _validate_results(errors: list[str]) -> None:
+    schema_path = ROOT / "evals/result-schema.json"
+    try:
+        schema = json.loads(schema_path.read_text())
+        Draft202012Validator.check_schema(schema)
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    except (OSError, json.JSONDecodeError, SchemaError) as exc:
+        errors.append(f"invalid trigger result schema {schema_path.relative_to(ROOT)}: {exc}")
+        return
+
     for path in (ROOT / "evals/results").glob("*.json"):
         try:
             result = json.loads(path.read_text())
+            if schema_errors := list(validator.iter_errors(result)):
+                for schema_error in schema_errors:
+                    location = "/".join(str(part) for part in schema_error.absolute_path) or "$"
+                    errors.append(
+                        f"trigger result schema mismatch: {path.relative_to(ROOT)} at {location}: "
+                        f"{schema_error.message}"
+                    )
+                continue
             rows, summary = result["results"], result["summary"]
             if summary["total"] != len(rows):
                 errors.append(f"trigger result total mismatch: {path.relative_to(ROOT)}")
@@ -262,6 +280,8 @@ def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:
         for neighbor in entry.get("nearest_neighbors", []):
             if neighbor not in skills:
                 errors.append(f"unknown nearest neighbor {neighbor} from {name}")
+            elif not declared_hosts <= set(registry[neighbor].get("supported_hosts", [])):
+                errors.append(f"nearest neighbor {neighbor} from {name} lacks required hosts {sorted(declared_hosts)}")
 
 
 def _host_publishes_skill(skill_path: Path, host: str) -> bool:

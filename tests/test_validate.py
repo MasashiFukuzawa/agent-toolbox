@@ -7,6 +7,7 @@ from scripts.validate import (
     REVIEW_COMMON_END,
     SEMVER,
     _validate_registry,
+    _validate_results,
     _validate_review_common_mirror,
     _validate_review_mirror,
     validate,
@@ -85,6 +86,59 @@ def test_registry_supported_hosts_must_match_host_manifests(tmp_path: Path, monk
     errors: list[str] = []
     _validate_registry({"sample": "description"}, errors)
     assert any("supported_hosts" in error and "plugin manifests" in error for error in errors)
+
+
+def test_nearest_neighbor_must_support_every_host_of_the_skill(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/trigger-registry.yml").write_text(
+        "skills:\n"
+        "  sample:\n"
+        "    canonical_name: sample\n"
+        "    supported_hosts: [codex]\n"
+        "    nearest_neighbors: [neighbor]\n"
+        "  neighbor:\n"
+        "    canonical_name: neighbor\n"
+        "    supported_hosts: [claude-code]\n"
+        "    nearest_neighbors: []\n"
+    )
+    sample = tmp_path / "plugins/sample"
+    (sample / ".codex-plugin").mkdir(parents=True)
+    (sample / ".codex-plugin/plugin.json").write_text('{"skills":"./skills/"}')
+    (sample / "skills/sample").mkdir(parents=True)
+    (sample / "skills/sample/SKILL.md").write_text("---\nname: sample\n---\n")
+    neighbor = tmp_path / "plugins/neighbor"
+    (neighbor / ".claude-plugin").mkdir(parents=True)
+    (neighbor / ".claude-plugin/plugin.json").write_text("{}")
+    (neighbor / "skills/neighbor").mkdir(parents=True)
+    (neighbor / "skills/neighbor/SKILL.md").write_text("---\nname: neighbor\n---\n")
+    errors: list[str] = []
+    _validate_registry({"sample": "", "neighbor": ""}, errors)
+    assert any("nearest neighbor neighbor from sample lacks required hosts" in error for error in errors)
+
+
+def test_trigger_result_documents_are_checked_against_published_schema(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    (tmp_path / "evals/results").mkdir(parents=True)
+    (tmp_path / "evals/result-schema.json").write_bytes((ROOT / "evals/result-schema.json").read_bytes())
+    document = {
+        "schema_version": 1,
+        "summary": {"total": 0, "passed": 0, "failed": 0, "not_run": 0},
+        "results": [
+            {
+                "host": "codex",
+                "environment": "isolated",
+                "skill": "sample",
+                "type": "positive",
+                "case_id": 1,
+                "status": "unknown",
+            }
+        ],
+    }
+    (tmp_path / "evals/results/invalid.json").write_text(json.dumps(document))
+    errors: list[str] = []
+    _validate_results(errors)
+    assert any("trigger result schema mismatch" in error for error in errors)
 
 
 def test_trigger_baseline_covers_every_registered_case() -> None:
