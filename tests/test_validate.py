@@ -220,7 +220,7 @@ def test_review_mirrors_pass_on_current_repository() -> None:
 def test_review_common_mirror_normalizes_provider_tokens(tmp_path: Path) -> None:
     root = _copy_review_skills(tmp_path)
     for skill, sentence in (
-        ("codex-review", "既定は gpt-6-luna で、昇格先は gpt-6-sol。Codex を codex exec で起動する。"),
+        ("codex-review", "既定は gpt-6.1-sol で、昇格先は gpt-6-astra。Codex を codex exec で起動する。"),
         ("claude-review", "既定は claude-sonnet-5-5 で、昇格先は claude-opus-5-5。Claude を claude -p で起動する。"),
     ):
         path = root / "plugins/toolbox/skills" / skill / "SKILL.md"

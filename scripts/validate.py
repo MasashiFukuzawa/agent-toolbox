@@ -430,8 +430,8 @@ REVIEW_COMMON_END = "<!-- MIRROR:review-common END -->"
 # tokens (e.g. "claude-opus-5-5" vs "claude") from corrupting each other.
 REVIEW_COMMON_TOKENS: dict[str, tuple[tuple[str, str], ...]] = {
     "codex-review": (
-        ("gpt-6-luna", "⟪DEFAULT⟫"),
-        ("gpt-6-sol", "⟪STRONG⟫"),
+        ("gpt-6.1-sol", "⟪DEFAULT⟫"),
+        ("gpt-6-astra", "⟪STRONG⟫"),
         ("codex exec", "⟪CLI⟫"),
         ("Codex", "⟪PROVIDER⟫"),
         ("codex", "⟪provider⟫"),
