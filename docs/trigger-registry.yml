@@ -61,7 +61,7 @@ skills:
     supported_hosts: [claude-code, codex]
     runtime_dependencies: [codex]
     side_effect_level: read-only
-    positive_triggers: ["Codexでレビューして", "OpenAIの別視点が欲しい", "codex-reviewで", "Codexに見てもらって", "lunaに見てもらって", "solに相談して", "astraに相談して"]
+    positive_triggers: ["Codexでレビューして", "OpenAIの別視点が欲しい", "codex-reviewで", "Codexに見てもらって", "solに相談して", "astraに相談して"]
     nearest_neighbors: [claude-review]
     negative_triggers: ["Claudeでレビューして", "第三者レビューして"]
     ambiguous_precedence: "provider未指定で選択権限も未委任なら確認、委任済みならmodel-selectionで選択"

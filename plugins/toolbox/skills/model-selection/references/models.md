@@ -1,19 +1,31 @@
 # モデル・effortの初期候補
 
-整理日: 2026-09-29。既存review skillの運用値を集約したもの。独立した性能ベンチマークや価格比較としては未検証。利用可能性は起動ホストで確認する。
+整理日: 2026-09-30。既存review skillの運用値を集約したもの。独立した性能ベンチマークや価格比較としては未検証。利用可能性は起動ホストで確認する。
 
 | Provider | モデルID | effort初期値 | 主な初期候補用途 |
 |---|---|---|---|
-| OpenAI | `gpt-6-luna` | `high` | 設計済みの実装、範囲の明確な調査・差分レビュー |
-| OpenAI | `gpt-6-sol` | `medium` | 設計判断、高い不確実性、複雑な実装 |
+| OpenAI | `gpt-6.1-sol` | `low` | 設計済みの実装、範囲の明確な調査・差分レビュー。力の入れ具合はeffortで調整する（下記） |
 | OpenAI | `gpt-6-astra` | `low` | controller、特に難しい横断判断。明示指定または選択権限が必要 |
 | Anthropic | `claude-sonnet-5-5` | `medium` | 設計済みの実装、範囲の明確な調査・差分レビュー |
 | Anthropic | `claude-opus-5-5` | `low` | 設計判断、高い不確実性、複雑な実装・controller |
 | Anthropic | `claude-fable-5-1` | `low` | 特に難しい長時間課題。明示指定または選択権限が必要 |
 
-providerのみ指定された通常レビューは、そのproviderの表の先頭を初期候補とする。設計そのものが対象、不確実性が高い、拠り所の設計がない場合は次の候補を検討する。controllerに必ず特定モデルを要求する表ではない。
+providerのみ指定された通常レビューは、そのproviderの表の先頭を初期候補とする。設計そのものが対象、不確実性が高い、拠り所の設計がない場合、OpenAIは上記のeffort段階を、Anthropicは次の候補を検討する。controllerに必ず特定モデルを要求する表ではない。
 
 モデル指定はfamily/tierを尊重し、版付き指定もこの表の最新の同系列IDへ解決する（既存review skillの方針を維持）。指定版と異なる場合は起動前に置換を伝える。系列の変更はしない。表にない系列や利用不能なIDは推測せず確認する。ユーザーが旧版への固定自体を要件として明示した場合は、この既定との衝突を説明して解決してから起動する。
+
+OpenAIのリリース発表（2026-09-30）とAPIモデルページでGPT-6.1 SolのAPI ID `gpt-6.1-sol`（ハイフン区切りではなくドット）、Codexでの提供、対応effort `low`/`medium`（API既定）/`high`/`xhigh`/`max`（`none`/`minimal`は非対応）を確認: <https://openai.com/index/introducing-gpt-6-1-sol/>, <https://developers.openai.com/api/docs/models/gpt-6.1-sol>. `gpt-6-sol`はこの版で置き換え、`sol`指定は`gpt-6.1-sol`へ解決する。API既定の`medium`ではなく`low`を初期値とする。`gpt-6-luna`は運用上の品質不足のため候補から外した。`luna`を指定された場合は表にない系列として扱い、黙って`sol`へ置換せず確認する。
+
+## OpenAI: effortによるレビュー強度
+
+OpenAIではモデルを`gpt-6.1-sol`に固定し、まずeffortでレビュー・調査の力の入れ具合を変える。`gpt-6-astra`への変更はeffortを上げても横断判断が足りない場合に限る。
+
+| effort | 使う場面 |
+|---|---|
+| `low` | 既定。設計済みの差分レビュー、範囲の明確な実装・調査 |
+| `medium` | 設計判断そのものが対象、不確実性が高い、拠り所の設計がない |
+| `high` | 不可逆操作・セキュリティ境界・広範囲への影響など、見落としの影響が大きく理由を記録できる場合 |
+| `xhigh` / `max` | 明示指定または明示的な選択権限がある場合のみ |
 
 Anthropicのリリース発表（2026-09-28）でSonnet 5.5のAPI ID `claude-sonnet-5-5` と提供開始を確認: <https://www.anthropic.com/claude-sonnet-5-5>.
 
