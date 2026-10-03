@@ -36,7 +36,7 @@ export interface Adapter {
   context(): Promise<boolean>;
   verify(goal: Goal): Promise<boolean>;
   authorize(candidate: Candidate): Promise<boolean>;
-  /** True requires every dispatched external mutation to be durably committed or known not dispatched. Pending/202/timeout must be false. Local input editing alone need not satisfy the goal. */
+  /** True requires every dispatched external mutation to be durably committed or known not dispatched. Unknown delivery, unvalidated 202 and timeout must be false. A validated persisted admission receipt confirms admission only, not background completion. Local input editing alone need not satisfy the goal. */
   afterAction(candidate: Candidate): Promise<boolean>;
   file?(candidate: Candidate, value: string): Promise<{name: string; mimeType: string; buffer: Buffer}>;
 }

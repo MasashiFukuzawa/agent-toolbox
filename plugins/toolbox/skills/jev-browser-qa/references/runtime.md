@@ -40,7 +40,8 @@ restarts and reconcile authoritative state before rearming. DOM checks are not a
 Playwright actions: the wrapper must also gate each mutation request. Runs own the Page across checker/model waits; concurrent operator primitives are rejected.
 Individual operations are also serialized, and sessions own separate handles. `verified` requires the adapter's
 checker. `afterAction=true` requires every external mutation to have committed durably or
-be known not dispatched; toast/202/timeout must return false. Local input editing need not
+be known not dispatched; toast/unvalidated-202/timeout must return false. A schema-validated
+persisted admission receipt confirms admission only, never background completion. Local input editing need not
 satisfy the whole goal. Checks must include authoritative persisted state when a goal changes data. A goal classifier
 cannot assert persistence. The default confidence floor applies to both action and blocker answers and is 0.9; this is an experimental routing
 setting, not calibrated correctness or permission evidence.
@@ -124,3 +125,5 @@ the first unverified goal. This is a local integration/quality experiment, not s
 An independent goal checker never clears an uncertain-write fence. After the wrapper has reconciled its durable journal and the original request has terminated, close the old browser context and start a fresh Page; replacing only the Session cannot reopen writes. Budget handles become unusable when their lock owner closes.
 
 Session origin and DOM scope are fixed. Changing either adapter field blocks operations; create a new Session for a newly authorized scope. The adapter context callback must retain its original principal and resource authority for the Session lifetime, rather than changing its expected identity dynamically. Context checks also reject navigation occurring during asynchronous identity checks.
+
+Context checks monitor main-frame navigation during asynchronous callbacks, including same-URL reloads and round trips. A schema-validated persisted admission receipt can confirm request admission while its background job remains pending; it must never be interpreted as goal completion.

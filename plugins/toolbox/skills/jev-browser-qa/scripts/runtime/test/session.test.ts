@@ -324,3 +324,18 @@ test("changing adapter scope after observation cannot use the previous target", 
     assert.equal((await session.act(fixtureGoals[1], observed.epoch, observed.candidates[0].id)).reason, "context_changed");
   });
 });
+
+test("same-URL reloads and round trips invalidate a pending context check", async () => {
+  for (const mode of ["reload", "roundtrip"]) await withFixture(async (page, adapter) => {
+    let checks = 0;
+    const originalUrl = page.url();
+    const session = createSession(page, {...adapter, async verify() {return true;}, async context() {
+      if (++checks === 2) {
+        if (mode === "reload") await page.reload();
+        else {await page.goto("about:blank"); await page.goto(originalUrl);}
+      }
+      return true;
+    }});
+    assert.equal((await session.run(fixtureGoals[1], pickFirst)).reason, "context_changed_after_verify");
+  });
+});

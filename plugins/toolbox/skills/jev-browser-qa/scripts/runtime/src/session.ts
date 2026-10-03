@@ -1,4 +1,4 @@
-import type { ElementHandle, JSHandle, Page } from "playwright";
+import type { ElementHandle, JSHandle, Page, Frame } from "playwright";
 import type { Adapter, Candidate, Goal, Limits, Observation, Result, Session, Decider, Event } from "./contracts.ts";
 
 const pageLocks = new WeakSet<Page>();
@@ -19,8 +19,13 @@ export function createSession(page: Page, adapter: Adapter, options: Partial<Lim
   async function context() {
     const url = page.url();
     if (adapter.origin !== origin || adapter.scopeSelector !== scopeSelector || new URL(url).origin !== origin) return false;
-    const valid = await adapter.context();
-    return valid && page.url() === url && new URL(page.url()).origin === origin && adapter.origin === origin && adapter.scopeSelector === scopeSelector;
+    let navigated = false;
+    const onNavigation = (frame: Frame) => { if (frame === page.mainFrame()) navigated = true; };
+    page.on("framenavigated", onNavigation);
+    try {
+      const valid = await adapter.context();
+      return valid && !navigated && page.url() === url && new URL(page.url()).origin === origin && adapter.origin === origin && adapter.scopeSelector === scopeSelector;
+    } finally { page.off("framenavigated", onNavigation); }
   }
   async function observe(goal: Goal, internal = false): Promise<Observation> {
     if (runningOwners.has(page) && (!internal || runningOwners.get(page) !== sessionOwner)) throw new Error("blocked_concurrent_operation");
