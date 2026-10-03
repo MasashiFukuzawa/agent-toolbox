@@ -121,6 +121,15 @@ def plugin_path_within(root: Path, plugin_dir: Path, path: Path) -> Path | None:
 
 def path_within_root(root: Path, path: Path) -> Path | None:
     try:
+        if path.is_symlink():
+            link = path.readlink()
+            if link.is_absolute():
+                return None
+            target = Path(os.path.abspath(path.parent / link))
+            target.relative_to(root.resolve(strict=True))
+            # A distributed link must not depend on another link or linked directory.
+            if any(candidate.is_symlink() for candidate in (target, *target.parents)):
+                return None
         resolved = path.resolve(strict=True)
         resolved.relative_to(root.resolve(strict=True))
     except (OSError, RuntimeError, ValueError):
@@ -403,6 +412,8 @@ def require_public_file(root: Path, path: Path) -> Path:
         resolved = path.resolve(strict=True)
     except (OSError, RuntimeError) as exc:
         raise ValueError(f"required repository input is missing or unresolved: {path}") from exc
+    if path.is_symlink() and path_within_root(root, path) is None:
+        raise ValueError(f"required repository input has an unsafe symlink: {path}")
     try:
         resolved.relative_to(root)
     except ValueError as exc:

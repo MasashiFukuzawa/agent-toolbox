@@ -59,7 +59,7 @@ The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill 
 - Browser profiles and Google OAuth data remain outside the repository.
 - `gog` skills permit read-only commands only and wrap untrusted Workspace content.
 - Repository checks validate frontmatter, manifests, local links, trigger metadata, and common secret patterns. CI also runs gitleaks.
-- Validation excludes untracked content ignored by repository `.gitignore` rules and local tool state. Tracked shared files remain subject to validation; personal Git excludes do not change the checks. Public symlinks must stay within the repository and, for plugin content, within the same plugin. Directory symlinks are rejected. These checks also work in copies without Git metadata.
+- Validation excludes untracked content ignored by repository `.gitignore` rules and local tool state. Tracked shared files remain subject to validation; personal Git excludes do not change the checks. Public symlinks must be relative, point directly to a regular file, and stay within the repository and, for plugin content, within the same plugin. Directory symlinks and chains are rejected. In copies without Git metadata, validation applies `.gitignore` rules and local-state exclusions, but cannot recover which ignored files were originally tracked. Validate the Git checkout before distributing such a copy.
 
 Review a skill's guardrails before using it with authenticated services or write-capable tools.
 

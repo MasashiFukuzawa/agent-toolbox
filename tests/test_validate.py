@@ -292,9 +292,35 @@ def test_plugin_boundary_allows_internal_resource_symlink(tmp_path: Path, monkey
     resource.parent.mkdir(parents=True)
     resource.write_text("shared")
     alias = plugin_dir / "references/alias"
-    alias.symlink_to(resource)
+    alias.symlink_to("shared.md")
 
     assert _plugin_boundary_errors() == []
+
+
+@pytest.mark.parametrize("link_kind", ["absolute", "ignored-intermediate", "linked-directory"])
+def test_public_resource_link_must_directly_reference_a_relative_file(tmp_path: Path, link_kind: str) -> None:
+    from scripts.plugin_paths import require_public_file
+
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    plugin = tmp_path / "plugins/sample"
+    shared = plugin / "references/shared.md"
+    shared.parent.mkdir(parents=True)
+    shared.write_text("public")
+    alias = plugin / "references/alias.md"
+    if link_kind == "absolute":
+        alias.symlink_to(shared)
+    elif link_kind == "ignored-intermediate":
+        (tmp_path / ".gitignore").write_text("plugins/sample/references/local.md\n")
+        (shared.parent / "local.md").symlink_to("shared.md")
+        alias.symlink_to("local.md")
+    else:
+        (tmp_path / ".gitignore").write_text("plugins/sample/local\n")
+        (plugin / "local").symlink_to("references", target_is_directory=True)
+        alias.symlink_to("../local/shared.md")
+
+    assert "plugin path escapes plugin: plugins/sample/references/alias.md" in plugin_boundary_errors(tmp_path)
+    with pytest.raises(ValueError, match="unsafe symlink"):
+        require_public_file(tmp_path, alias)
 
 
 def test_plugin_boundary_rejects_internal_directory_symlink(tmp_path: Path, monkeypatch) -> None:
@@ -303,7 +329,7 @@ def test_plugin_boundary_rejects_internal_directory_symlink(tmp_path: Path, monk
     resources = plugin_dir / "references/shared"
     resources.mkdir(parents=True)
     alias = plugin_dir / "references/alias"
-    alias.symlink_to(resources, target_is_directory=True)
+    alias.symlink_to("shared", target_is_directory=True)
 
     assert _plugin_boundary_errors() == ["plugin directory symlinks are not allowed: plugins/sample/references/alias"]
 
@@ -423,7 +449,7 @@ def test_public_plugin_symlink_cannot_target_git_ignored_file(tmp_path: Path) ->
     ignored_target = plugin_dir / "private.md"
     ignored_target.write_text("local-only skill contents")
     skill = plugin_dir / "skills/local/SKILL.md"
-    skill.symlink_to(ignored_target)
+    skill.symlink_to("../../private.md")
 
     assert plugin_boundary_errors(tmp_path) == [
         "plugin symlink targets ignored content: plugins/sample/skills/local/SKILL.md"
@@ -805,7 +831,7 @@ def test_full_validation_rejects_repository_directory_symlink_to_ancestor(tmp_pa
     monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
     docs = tmp_path / "docs"
     docs.mkdir()
-    (docs / "loop").symlink_to(docs, target_is_directory=True)
+    (docs / "loop").symlink_to(".", target_is_directory=True)
     (tmp_path / "plugins").mkdir()
 
     errors, _warnings = validate()
