@@ -27,6 +27,10 @@ UI automationやstagingでWeb appを検証する。機能が見当たらない�
 - For unattended E2E, prefer the repo's CI-native secret store plus workload identity path over human-approved local secret access.
 - If an E2E identity change crosses IAM, perimeter, secret-store, or deployment-stack boundaries, treat it as an infra change. Check the repo runbook for cross-stack apply order before changing app tests or workflows.
 
+## Jevによる実験的な操作
+
+`jev-browser-qa` を使う場合も、本スキルのpreflight・repository wrapper・操作許可・独立した結果確認・cleanupを適用する。Jevはwrapperが許可した操作を選ぶ実行backendであり、認証や許可を代替しない。既存のrun承認範囲を維持し、課金・人の判断が必要な境界では引き継ぐ。
+
 ## token効率のよいworkflow
 
 1. Define a small verification matrix: render, happy path, error path, persistence, cleanup, authorization if relevant.
