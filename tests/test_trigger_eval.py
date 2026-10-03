@@ -15,10 +15,37 @@ def test_trigger_matrix_is_complete() -> None:
 
 def test_trigger_matrix_reports_missing_registry_fields(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr("scripts.trigger_eval.ROOT", tmp_path)
+    (tmp_path / "plugins").mkdir()
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs/trigger-registry.yml").write_text("skills:\n  sample:\n    nearest_neighbors: []\n")
     with pytest.raises(ValueError, match="supported_hosts"):
         build_matrix()
+
+
+def test_trigger_matrix_rejects_external_skill_symlink_before_reading(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.trigger_eval.ROOT", tmp_path)
+    plugin_dir = tmp_path / "plugins/sample"
+    plugin_dir.mkdir(parents=True)
+    external = tmp_path / "external/skills/sample/SKILL.md"
+    external.parent.mkdir(parents=True)
+    external.write_bytes(b"\xff")
+    (plugin_dir / "skills").symlink_to(external.parent.parent, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="plugin path escapes plugin"):
+        build_matrix()
+
+
+def test_model_skill_catalog_rejects_external_skill_symlink_before_reading(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.model_trigger_adapter.ROOT", tmp_path)
+    plugin_dir = tmp_path / "plugins/sample"
+    plugin_dir.mkdir(parents=True)
+    external = tmp_path / "external/skills/sample/SKILL.md"
+    external.parent.mkdir(parents=True)
+    external.write_bytes(b"\xff")
+    (plugin_dir / "skills").symlink_to(external.parent.parent, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="plugin path escapes plugin"):
+        load_skill_catalog("codex")
 
 
 def test_codex_only_skills_are_scoped_out_of_other_host_cases() -> None:
@@ -123,6 +150,76 @@ def test_deterministic_baseline_generation_is_byte_reproducible(tmp_path, monkey
     assert "generated_at" not in json.loads(first)
     assert main() == 0
     assert output.read_bytes() == first
+
+
+@pytest.mark.parametrize("option", ["--sample", "--limit"])
+@pytest.mark.parametrize("value", ["0", "-1"])
+def test_evaluation_rejects_nonpositive_case_counts(option, value, tmp_path, monkeypatch, capsys) -> None:
+    output = tmp_path / "results.json"
+    monkeypatch.setattr("sys.argv", ["run_trigger_eval", option, value, "--output", str(output)])
+
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 2
+    assert f"{option} must be a positive integer" in capsys.readouterr().err
+    assert not output.exists()
+
+
+@pytest.mark.parametrize(
+    ("case_count", "sample", "expected_ids"),
+    [
+        (5, 1, [2]),
+        (4, 1, [2]),
+        (5, 2, [0, 4]),
+        (5, 3, [0, 2, 4]),
+        (6, 3, [0, 2, 5]),
+        (5, 5, [0, 1, 2, 3, 4]),
+        (5, 6, [0, 1, 2, 3, 4]),
+    ],
+)
+def test_sample_selects_deterministic_cases_across_the_full_matrix(
+    case_count, sample, expected_ids, tmp_path, monkeypatch
+) -> None:
+    matrix = {
+        "hosts": ["codex"],
+        "environments": ["isolated"],
+        "cases": [
+            {"id": index, "skill": "done", "type": "positive", "supported_hosts": ["codex"]}
+            for index in range(case_count)
+        ],
+    }
+    output = tmp_path / "results.json"
+    monkeypatch.setattr("scripts.run_trigger_eval.build_matrix", lambda: matrix)
+    monkeypatch.setattr("sys.argv", ["run_trigger_eval", "--sample", str(sample), "--output", str(output)])
+
+    assert main() == 0
+
+    rows = json.loads(output.read_text())["results"]
+    assert [row["case_id"] for row in rows] == expected_ids
+
+
+@pytest.mark.parametrize(("limit", "sample", "expected_ids"), [(3, 2, [0, 2]), (9, 2, [0, 4])])
+def test_sample_selects_across_the_limited_candidate_set(limit, sample, expected_ids, tmp_path, monkeypatch) -> None:
+    matrix = {
+        "hosts": ["codex"],
+        "environments": ["isolated"],
+        "cases": [
+            {"id": index, "skill": "done", "type": "positive", "supported_hosts": ["codex"]}
+            for index in range(5)
+        ],
+    }
+    output = tmp_path / "results.json"
+    monkeypatch.setattr("scripts.run_trigger_eval.build_matrix", lambda: matrix)
+    monkeypatch.setattr(
+        "sys.argv",
+        ["run_trigger_eval", "--limit", str(limit), "--sample", str(sample), "--output", str(output)],
+    )
+
+    assert main() == 0
+
+    rows = json.loads(output.read_text())["results"]
+    assert [row["case_id"] for row in rows] == expected_ids
 
 
 def test_every_case_has_an_expected_result() -> None:

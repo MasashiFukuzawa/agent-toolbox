@@ -10,12 +10,17 @@ import tempfile
 
 import yaml
 
+from scripts.plugin_paths import public_paths, require_public_file, require_safe_repository_paths
 from scripts.trigger_eval import ROOT
 
 
 def main() -> int:
     payload = json.load(sys.stdin)
-    skills = load_skill_catalog(payload["host"])
+    try:
+        skills = load_skill_catalog(payload["host"])
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
     catalog = "\n".join(f"- {name}: {description}" for name, description in skills.items())
     if payload["environment"] == "superset":
         catalog += "\n- generic-writing: 一般文章を編集する。専門的な開発workflowには使わない。"
@@ -64,10 +69,11 @@ def parse_selected_skill(output: str) -> str:
 
 
 def load_skill_catalog(host: str) -> dict[str, str]:
-    registry = yaml.safe_load((ROOT / "docs/trigger-registry.yml").read_text())["skills"]
+    require_safe_repository_paths(ROOT)
+    registry = yaml.safe_load(require_public_file(ROOT, ROOT / "docs/trigger-registry.yml").read_text())["skills"]
     skills = {}
-    for path in sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")):
-        metadata = yaml.safe_load(path.read_text().split("---", 2)[1])
+    for path in sorted(public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/SKILL.md")))):
+        metadata = yaml.safe_load(require_public_file(ROOT, path).read_text().split("---", 2)[1])
         name = metadata["name"]
         supported_hosts = registry[name]["supported_hosts"]
         if host in supported_hosts:

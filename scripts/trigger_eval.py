@@ -11,6 +11,8 @@ from pathlib import Path
 
 import yaml
 
+from scripts.plugin_paths import public_paths, require_public_file, require_safe_repository_paths
+
 ROOT = Path(__file__).resolve().parents[1]
 KNOWN_HOSTS = ("claude-code", "codex")
 REQUIRED_MATRIX_FIELDS = {"supported_hosts", "positive_triggers", "nearest_neighbors", "negative_triggers"}
@@ -23,6 +25,7 @@ NEUTRAL_DECISIONS = {"none", "disambiguate", "ask-provider"}
 
 
 def build_matrix() -> dict:
+    require_safe_repository_paths(ROOT)
     registry = _load_registry(ROOT / "docs/trigger-registry.yml")
     cases: list[dict] = []
     for name, entry in registry.items():
@@ -73,8 +76,8 @@ def build_matrix() -> dict:
             cases.append(_case(name, "negative_trigger", index, phrase, f"not:{name}", supported_hosts))
 
     skill_descriptions = {}
-    for path in sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")):
-        metadata = yaml.safe_load(path.read_text().split("---", 2)[1])
+    for path in sorted(public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/SKILL.md")))):
+        metadata = yaml.safe_load(require_public_file(ROOT, path).read_text().split("---", 2)[1])
         skill_descriptions[metadata["name"]] = metadata["description"]
 
     return {
@@ -113,7 +116,7 @@ def is_valid_selection(host: str, selected: str) -> bool:
 
 @lru_cache(maxsize=4)
 def _load_registry(path: Path) -> dict:
-    return yaml.safe_load(path.read_text())["skills"]
+    return yaml.safe_load(require_public_file(ROOT, path).read_text())["skills"]
 
 
 def check_matrix(matrix: dict) -> list[str]:
