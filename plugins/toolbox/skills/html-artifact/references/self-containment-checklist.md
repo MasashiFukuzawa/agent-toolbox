@@ -13,4 +13,4 @@ The default is one HTML file whose essential content remains readable offline, w
 - If printing is requested, inspect print output, including any closed details. Do not add print scripts when unnecessary.
 - Use browser tools in an isolated artifact directory. Never delete files merely because they appeared after a browser call; confirm ownership first.
 
-No palette, theme, file-size or glossary-count requirement applies. Clarity and accessibility are the acceptance criteria. Follow SKILL.md for delivery paths and the concise user-facing report.
+No palette, file-size or glossary-count requirement applies. Clarity and accessibility are the acceptance criteria. Follow SKILL.md for the light-only theme, opening the saved final HTML, delivery paths and the concise user-facing report.
