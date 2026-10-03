@@ -22,7 +22,13 @@ def main() -> int:
         "--deterministic", action="store_true", help="omit the run timestamp for reproducible baseline files"
     )
     args = parser.parse_args()
-    matrix = build_matrix()
+    for option, value in (("--limit", args.limit), ("--sample", args.sample)):
+        if value is not None and value < 1:
+            parser.error(f"{option} must be a positive integer")
+    try:
+        matrix = build_matrix()
+    except ValueError as exc:
+        parser.error(str(exc))
     work = [
         (host, environment, case)
         for host in matrix["hosts"]
@@ -33,7 +39,12 @@ def main() -> int:
     if args.limit is not None:
         work = work[: args.limit]
     if args.sample is not None and args.sample < len(work):
-        work = [work[int(index * len(work) / args.sample)] for index in range(args.sample)]
+        if args.sample == 1:
+            indices = [len(work) // 2]
+        else:
+            intervals = args.sample - 1
+            indices = [index * (len(work) - 1) // intervals for index in range(args.sample)]
+        work = [work[index] for index in indices]
     results = [_evaluate(host, env, case, args.command) for host, env, case in work]
     counts = {status: sum(row["status"] == status for row in results) for status in ("passed", "failed", "not_run")}
     document = {

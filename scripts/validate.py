@@ -13,8 +13,17 @@ from urllib.parse import unquote
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker, SchemaError
 
+from scripts.plugin_paths import (
+    is_tracked_file,
+    iter_public_files,
+    plugin_boundary_errors,
+    plugin_path_within,
+    public_paths,
+    repository_boundary_errors,
+    require_public_file,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
-SKILL_PATHS = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md"))
 FRONTMATTER = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 SEMVER_IDENTIFIER = r"(?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)"
 SEMVER = re.compile(
@@ -37,11 +46,21 @@ HOST_MANIFEST_DIRS = {"codex": ".codex-plugin", "claude-code": ".claude-plugin"}
 
 
 def validate() -> tuple[list[str], list[str]]:
+    """Stop before reading repository content if a symlink escapes or is unresolved."""
     errors: list[str] = []
     warnings: list[str] = []
+    errors.extend(_repository_boundary_errors())
+    errors.extend(_plugin_boundary_errors())
+    if errors:
+        return errors, warnings
+
     skills: dict[str, str] = {}
-    for path in SKILL_PATHS:
-        text = path.read_text()
+    for path in _skill_paths():
+        try:
+            text = require_public_file(ROOT, path).read_text()
+        except (OSError, ValueError) as exc:
+            errors.append(f"cannot read public skill {path.relative_to(ROOT)}: {exc}")
+            continue
         match = FRONTMATTER.match(text)
         if not match:
             errors.append(f"missing frontmatter: {path.relative_to(ROOT)}")
@@ -92,18 +111,48 @@ def validate() -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
+def _repository_boundary_errors() -> list[str]:
+    return repository_boundary_errors(ROOT)
+
+
+def _plugin_boundary_errors() -> list[str]:
+    return plugin_boundary_errors(ROOT)
+
+
+def _skill_paths() -> list[Path]:
+    return sorted(public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/SKILL.md"))))
+
+
 def _validate_manifests(errors: list[str]) -> None:
-    plugin_dirs = sorted(path for path in (ROOT / "plugins").iterdir() if path.is_dir())
+    plugins_root = ROOT / "plugins"
+    if plugins_root.is_symlink():
+        errors.append("plugins directory escapes repository through a symlink")
+        return
+    plugin_dirs = sorted(path for path in public_paths(ROOT, list((ROOT / "plugins").iterdir())) if path.is_dir())
+    if any(path.is_symlink() for path in plugin_dirs):
+        errors.extend(_plugin_boundary_errors())
+        return
     host_names = {"Codex": [], "Claude": []}
     for plugin_dir in plugin_dirs:
         found_manifest = False
         for host, directory in (("Codex", ".codex-plugin"), ("Claude", ".claude-plugin")):
             path = plugin_dir / directory / "plugin.json"
+            if _has_symlink_parent(plugin_dir, path):
+                errors.append(f"manifest path traverses a symlink: {path.relative_to(ROOT)}")
+                continue
+            if not public_paths(ROOT, [path]):
+                continue
+            if path.is_symlink():
+                errors.append(f"manifest must not be a symlink: {path.relative_to(ROOT)}")
+                continue
             if not path.is_file():
+                continue
+            if _path_within_plugin(plugin_dir, path) is None:
+                errors.append(f"manifest path escapes plugin: {path.relative_to(ROOT)}")
                 continue
             found_manifest = True
             try:
-                manifest = json.loads(path.read_text())
+                manifest = json.loads(require_public_file(ROOT, path).read_text())
                 if manifest.get("name") != plugin_dir.name:
                     errors.append(f"manifest name mismatch: {path.relative_to(ROOT)}")
                 version = manifest.get("version")
@@ -119,16 +168,35 @@ def _validate_manifests(errors: list[str]) -> None:
                         errors.append(f"Codex manifest has invalid skills path: {path.relative_to(ROOT)}")
                     else:
                         for skill_path in skill_paths:
-                            target = (plugin_dir / skill_path).resolve()
-                            try:
-                                target.relative_to(plugin_dir.resolve())
-                            except ValueError:
-                                errors.append(f"Codex skills path escapes plugin: {path.relative_to(ROOT)}")
+                            target = _codex_skill_root(plugin_dir, skill_path)
+                            if target is None:
+                                lexical_target = (plugin_dir / skill_path).resolve(strict=False)
+                                try:
+                                    lexical_target.relative_to(plugin_dir.resolve())
+                                except ValueError:
+                                    errors.append(f"Codex skills path escapes plugin: {path.relative_to(ROOT)}")
+                                else:
+                                    errors.append(f"Codex skills path has no skills: {path.relative_to(ROOT)}")
                                 continue
-                            if not target.is_dir() or not list(target.glob("*/SKILL.md")):
+                            discovered_skills = (
+                                public_paths(ROOT, list(target.glob("*/SKILL.md"))) if target.is_dir() else []
+                            )
+                            if not discovered_skills:
                                 errors.append(f"Codex skills path has no skills: {path.relative_to(ROOT)}")
+                            elif any(_path_within_plugin(plugin_dir, skill) is None for skill in discovered_skills):
+                                errors.append(f"Codex skill path escapes plugin: {path.relative_to(ROOT)}")
+                else:
+                    skills_path = plugin_dir / "skills"
+                    target = _path_within_plugin(plugin_dir, skills_path) if skills_path.exists() else None
+                    if skills_path.exists() and target is None:
+                        errors.append(f"Claude skills path escapes plugin: {path.relative_to(ROOT)}")
+                    elif target is not None and target.is_dir() and any(
+                        _path_within_plugin(plugin_dir, skill) is None
+                        for skill in public_paths(ROOT, list(target.glob("*/SKILL.md")))
+                    ):
+                        errors.append(f"Claude skill path escapes plugin: {path.relative_to(ROOT)}")
                 host_names[host].append(plugin_dir.name)
-            except (OSError, json.JSONDecodeError) as exc:
+            except (OSError, json.JSONDecodeError, ValueError) as exc:
                 errors.append(f"invalid or missing manifest {path.relative_to(ROOT)}: {exc}")
         if not found_manifest:
             errors.append(f"plugin has no host manifest: {plugin_dir.relative_to(ROOT)}")
@@ -138,7 +206,7 @@ def _validate_manifests(errors: list[str]) -> None:
     )
     for path, host in pairs:
         try:
-            entries = json.loads(path.read_text())["plugins"]
+            entries = json.loads(require_public_file(ROOT, path).read_text())["plugins"]
             names = sorted(item["name"] for item in entries)
             if names != sorted(host_names[host]):
                 errors.append(f"{host} marketplace/plugin drift")
@@ -146,14 +214,16 @@ def _validate_manifests(errors: list[str]) -> None:
             expected_paths = {name: f"./plugins/{name}" for name in host_names[host]}
             if source_paths != expected_paths:
                 errors.append(f"{host} marketplace source path drift")
-        except (OSError, KeyError, json.JSONDecodeError) as exc:
+        except (OSError, KeyError, json.JSONDecodeError, ValueError) as exc:
             errors.append(f"invalid {host} marketplace manifest: {exc}")
 
     done_plugin = ROOT / "plugins/done/skills/done"
     for relative in ("references/done.example.yml", "references/done.schema.json"):
-        if not (done_plugin / relative).is_file():
+        try:
+            require_public_file(ROOT, done_plugin / relative)
+        except ValueError:
             errors.append(f"done plugin distribution is missing: {relative}")
-    if list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml")):
+    if public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml"))):
         errors.append("skill-local agents/openai.yaml is not adopted in this repository")
 
 
@@ -168,18 +238,27 @@ def _marketplace_source_path(entry: dict, host: str) -> str | None:
 
 
 def _validate_results(errors: list[str]) -> None:
+    baseline_path = ROOT / "evals/results/baseline.json"
+    try:
+        require_public_file(ROOT, baseline_path)
+        if is_tracked_file(ROOT, baseline_path) is False:
+            raise ValueError("required trigger baseline is not tracked by Git")
+    except ValueError as exc:
+        errors.append(f"required trigger baseline is missing or ignored: {baseline_path.relative_to(ROOT)}: {exc}")
+        return
+
     schema_path = ROOT / "evals/result-schema.json"
     try:
-        schema = json.loads(schema_path.read_text())
+        schema = json.loads(require_public_file(ROOT, schema_path).read_text())
         Draft202012Validator.check_schema(schema)
         validator = Draft202012Validator(schema, format_checker=FormatChecker())
-    except (OSError, json.JSONDecodeError, SchemaError) as exc:
+    except (OSError, json.JSONDecodeError, SchemaError, ValueError) as exc:
         errors.append(f"invalid trigger result schema {schema_path.relative_to(ROOT)}: {exc}")
         return
 
-    for path in (ROOT / "evals/results").glob("*.json"):
+    for path in public_paths(ROOT, list((ROOT / "evals/results").glob("*.json"))):
         try:
-            result = json.loads(path.read_text())
+            result = json.loads(require_public_file(ROOT, path).read_text())
             if schema_errors := list(validator.iter_errors(result)):
                 for schema_error in schema_errors:
                     location = "/".join(str(part) for part in schema_error.absolute_path) or "$"
@@ -215,32 +294,34 @@ def _validate_results(errors: list[str]) -> None:
                 }
                 if actual != expected or len(rows) != len(expected):
                     errors.append("baseline trigger result is stale or incomplete")
-        except (OSError, KeyError, json.JSONDecodeError) as exc:
+        except (OSError, KeyError, json.JSONDecodeError, ValueError) as exc:
             errors.append(f"invalid trigger result {path.relative_to(ROOT)}: {exc}")
 
 
 def _validate_skill_evals(errors: list[str]) -> None:
-    for path in ROOT.glob("plugins/*/skills/*/evals/evals.json"):
+    for path in public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/evals/evals.json"))):
         try:
-            document = json.loads(path.read_text())
+            document = json.loads(require_public_file(ROOT, path).read_text())
             expected_name = path.parents[1].name
             if document["skill_name"] != expected_name:
                 errors.append(f"eval skill_name mismatch: {path.relative_to(ROOT)}")
             for case in document["evals"]:
                 if not {"id", "prompt", "expected_output"} <= set(case):
                     errors.append(f"incomplete eval case: {path.relative_to(ROOT)}")
-        except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        except (OSError, KeyError, TypeError, json.JSONDecodeError, ValueError) as exc:
             errors.append(f"invalid skill eval {path.relative_to(ROOT)}: {exc}")
-    for path in ROOT.glob("plugins/*/skills/*/evals/semantic-results.json"):
+    for path in public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/evals/semantic-results.json"))):
         try:
-            result = json.loads(path.read_text())
+            result = json.loads(require_public_file(ROOT, path).read_text())
             skill_path = path.parents[1] / "SKILL.md"
             evals_path = path.parent / "evals.json"
-            skill_hash = hashlib.sha256(skill_path.read_bytes()).hexdigest()
-            evals_hash = hashlib.sha256(evals_path.read_bytes()).hexdigest()
+            safe_skill_path = require_public_file(ROOT, skill_path)
+            safe_evals_path = require_public_file(ROOT, evals_path)
+            skill_hash = hashlib.sha256(safe_skill_path.read_bytes()).hexdigest()
+            evals_hash = hashlib.sha256(safe_evals_path.read_bytes()).hexdigest()
             if result["skill_sha256"] != skill_hash or result["evals_sha256"] != evals_hash:
                 errors.append(f"stale semantic evaluation: {path.relative_to(ROOT)}")
-            evals = json.loads(evals_path.read_text())["evals"]
+            evals = json.loads(safe_evals_path.read_text())["evals"]
             expected = {case["id"]: len(case.get("assertions", [])) for case in evals}
             for executor in result["executors"]:
                 if executor["status"] == "passed":
@@ -251,12 +332,17 @@ def _validate_skill_evals(errors: list[str]) -> None:
                         errors.append(f"incomplete semantic evaluation: {path.relative_to(ROOT)}")
                 elif executor["status"] == "not_run" and not executor.get("reason"):
                     errors.append(f"semantic evaluation skip needs reason: {path.relative_to(ROOT)}")
-        except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        except (OSError, KeyError, TypeError, json.JSONDecodeError, ValueError) as exc:
             errors.append(f"invalid semantic evaluation {path.relative_to(ROOT)}: {exc}")
 
 
 def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:
-    registry = yaml.safe_load((ROOT / "docs/trigger-registry.yml").read_text())["skills"]
+    registry_path = ROOT / "docs/trigger-registry.yml"
+    try:
+        registry = yaml.safe_load(require_public_file(ROOT, registry_path).read_text())["skills"]
+    except (OSError, KeyError, TypeError, yaml.YAMLError, ValueError) as exc:
+        errors.append(f"invalid trigger registry {registry_path.relative_to(ROOT)}: {exc}")
+        return
     if missing := set(skills) - set(registry):
         errors.append(f"trigger registry missing: {', '.join(sorted(missing))}")
     if extra := set(registry) - set(skills):
@@ -270,7 +356,7 @@ def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:
         actual_hosts = {
             host
             for host in HOST_MANIFEST_DIRS
-            if any(_host_publishes_skill(path, host) for path in ROOT.glob(f"plugins/*/skills/{name}/SKILL.md"))
+            if any(_host_publishes_skill(path, host) for path in _skill_paths() if path.parent.name == name)
         }
         if declared_hosts != actual_hosts:
             errors.append(
@@ -289,17 +375,30 @@ def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:
 def _host_publishes_skill(skill_path: Path, host: str) -> bool:
     plugin_dir = skill_path.parents[2]
     manifest_path = plugin_dir / HOST_MANIFEST_DIRS[host] / "plugin.json"
-    if not manifest_path.is_file():
+    if (
+        not public_paths(ROOT, [manifest_path])
+        or manifest_path.is_symlink()
+        or _has_symlink_parent(plugin_dir, manifest_path)
+        or _path_within_plugin(plugin_dir, manifest_path) is None
+        or not manifest_path.is_file()
+    ):
+        return False
+    resolved_skill = _path_within_plugin(plugin_dir, skill_path)
+    if resolved_skill is None:
         return False
     if host == "claude-code":
+        skills_root = _path_within_plugin(plugin_dir, plugin_dir / "skills")
+        if skills_root is None:
+            return False
         try:
-            skill_path.resolve().relative_to((plugin_dir / "skills").resolve())
+            resolved_skill.relative_to(skills_root)
             return True
         except ValueError:
             return False
     try:
-        manifest = json.loads(manifest_path.read_text())
-    except (OSError, json.JSONDecodeError):
+        repository_root = plugin_dir.parent.parent
+        manifest = json.loads(require_public_file(repository_root, manifest_path).read_text())
+    except (OSError, json.JSONDecodeError, ValueError):
         return False
     paths = manifest.get("skills", [])
     if isinstance(paths, str):
@@ -307,14 +406,35 @@ def _host_publishes_skill(skill_path: Path, host: str) -> bool:
     if not isinstance(paths, list):
         return False
     for relative in paths:
-        if not isinstance(relative, str) or not relative.startswith("./"):
+        target = _codex_skill_root(plugin_dir, relative)
+        if target is None:
             continue
-        target = (plugin_dir / relative).resolve()
         try:
-            skill_path.resolve().relative_to(target)
+            resolved_skill.relative_to(target)
             return True
         except ValueError:
             continue
+    return False
+
+
+def _codex_skill_root(plugin_dir: Path, relative: object) -> Path | None:
+    if not isinstance(relative, str) or not relative.startswith("./"):
+        return None
+    return _path_within_plugin(plugin_dir, plugin_dir / relative)
+
+
+def _path_within_plugin(plugin_dir: Path, path: Path) -> Path | None:
+    return plugin_path_within(ROOT, plugin_dir, path)
+
+
+def _has_symlink_parent(root: Path, path: Path) -> bool:
+    parent = path.parent
+    while parent != root.parent:
+        if parent.is_symlink():
+            return True
+        if parent == parent.parent:
+            return False
+        parent = parent.parent
     return False
 
 
@@ -330,13 +450,13 @@ def _scan_public_content(errors: list[str]) -> None:
         ),
     }
     exclusions = {ROOT / "scripts/validate.py", ROOT / "docs/trigger-registry.yml", ROOT / "docs/skill-conventions.md"}
-    for path in ROOT.rglob("*"):
-        if not path.is_file() or ".git" in path.parts or ".venv" in path.parts:
+    for path in iter_public_files(ROOT):
+        if _is_root_excluded(path):
             continue
         if path == Path(__file__).resolve():
             continue
         try:
-            content = path.read_text()
+            content = require_public_file(ROOT, path).read_text()
         except UnicodeDecodeError:
             continue
         for label, pattern in banned.items():
@@ -344,18 +464,23 @@ def _scan_public_content(errors: list[str]) -> None:
                 continue
             if pattern.search(content):
                 errors.append(f"{label}: {path.relative_to(ROOT)}")
-    if list(ROOT.glob("**/case-study.md")):
+    if any(path.name == "case-study.md" for path in iter_public_files(ROOT)):
         errors.append("private case study must not be published")
 
 
 def _validate_markdown_links(errors: list[str]) -> None:
     """Reject dangling local Markdown links without trying to validate external URLs."""
     link_pattern = re.compile(r"(?<!!)\[[^]]*]\(([^)]+)\)")
-    skill_roots = {path.parent for path in SKILL_PATHS}
-    for path in ROOT.rglob("*.md"):
-        if ".git" in path.parts:
+    skill_roots = {path.parent for path in _skill_paths()}
+    for path in iter_public_files(ROOT, ".md"):
+        if _is_root_excluded(path):
             continue
-        for raw_target in link_pattern.findall(path.read_text()):
+        try:
+            content = require_public_file(ROOT, path).read_text()
+        except (OSError, ValueError) as exc:
+            errors.append(f"cannot read public Markdown {path.relative_to(ROOT)}: {exc}")
+            continue
+        for raw_target in link_pattern.findall(content):
             target = raw_target.strip().split(maxsplit=1)[0].strip("<>")
             if not target or target.startswith(("#", "http://", "https://", "mailto:")):
                 continue
@@ -369,6 +494,14 @@ def _validate_markdown_links(errors: list[str]) -> None:
             skill_root = next((root for root in skill_roots if path == root / "SKILL.md" or root in path.parents), None)
             if skill_root and resolved != skill_root and skill_root not in resolved.parents:
                 errors.append(f"skill-local Markdown link escapes skill root in {path.relative_to(ROOT)}: {target}")
+
+
+def _is_root_excluded(path: Path) -> bool:
+    try:
+        first = path.relative_to(ROOT).parts[0]
+    except (ValueError, IndexError):
+        return False
+    return first in {".git", ".venv"}
 
 
 REVIEW_MIRROR_SKILLS = ("codex-review", "claude-review")
@@ -400,7 +533,11 @@ def _validate_review_mirror(errors: list[str], root: Path = ROOT) -> None:
         if not path.exists():
             errors.append(f"review mirror: missing {path.relative_to(root)}")
             continue
-        block = _extract_mirror_block(path.read_text(encoding="utf-8"))
+        try:
+            block = _extract_mirror_block(require_public_file(root, path).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            errors.append(f"review mirror: cannot read {path.relative_to(root)}: {exc}")
+            continue
         if block is None:
             errors.append(f"review mirror: markers not found in {path.relative_to(root)}")
             continue
@@ -418,7 +555,10 @@ def _validate_review_mirror(errors: list[str], root: Path = ROOT) -> None:
             if not path.exists():
                 errors.append(f"review mirror: missing {path.relative_to(root)}")
                 continue
-            contents[skill] = path.read_text(encoding="utf-8")
+            try:
+                contents[skill] = require_public_file(root, path).read_text(encoding="utf-8")
+            except (OSError, ValueError) as exc:
+                errors.append(f"review mirror: cannot read {path.relative_to(root)}: {exc}")
         if len(contents) == len(REVIEW_MIRROR_SKILLS) and len(set(contents.values())) != 1:
             errors.append(f"review mirror: {relative} differs between {' and '.join(REVIEW_MIRROR_SKILLS)}")
 
@@ -482,7 +622,12 @@ def _validate_review_common_mirror(errors: list[str], root: Path = ROOT) -> None
         if not path.exists():
             errors.append(f"review mirror: missing {path.relative_to(root)}")
             continue
-        blocks = _extract_common_blocks(path.read_text(encoding="utf-8"))
+        try:
+            contents = require_public_file(root, path).read_text(encoding="utf-8")
+        except (OSError, ValueError) as exc:
+            errors.append(f"review mirror: cannot read {path.relative_to(root)}: {exc}")
+            continue
+        blocks = _extract_common_blocks(contents)
         if blocks is None:
             errors.append(f"review mirror: unbalanced MIRROR:review-common markers in {path.relative_to(root)}")
             continue
@@ -514,7 +659,7 @@ def main() -> int:
     if errors:
         print("\n".join(dict.fromkeys(errors)), file=sys.stderr)
         return 1
-    print(f"validation: PASS ({len(SKILL_PATHS)} skills)")
+    print(f"validation: PASS ({len(_skill_paths())} skills)")
     return 0
 
 

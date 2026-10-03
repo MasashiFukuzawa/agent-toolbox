@@ -49,7 +49,7 @@ Use `/plugin` to update or uninstall a plugin. Claude Code discovers the marketp
 
 ### Codex
 
-Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `plugin-release`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release. Since toolbox 0.7.1, `plugin-release` has been a separate Codex-only plugin and is not included in toolbox. Moving the skill out of toolbox was a breaking package change that shipped in 0.7.1 as a patch; 0.8.0 establishes the corrected minor-version policy for future breaking skill removals or moves. If you upgraded from toolbox 0.7.0 or earlier and relied on its bundled skill, install `plugin-release` separately from the `agent-toolbox` marketplace. In CLI versions whose `codex plugin --help` lists `add`, use `codex plugin add plugin-release@agent-toolbox`.
+Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `plugin-release`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release. Since toolbox 0.7.1, `plugin-release` has been a separate Codex-only plugin and is not included in toolbox. Removing the skill from toolbox was a breaking package change, but shipped in 0.7.1 as a patch. Toolbox 0.8.0 marks the corrected policy and introduces no further breaking package change. Future skill removals or moves will ship in a minor version or higher. If you upgraded from toolbox 0.7.0 or earlier and relied on its bundled skill, install `plugin-release` separately from the `agent-toolbox` marketplace. In CLI versions whose `codex plugin --help` lists `add`, use `codex plugin add plugin-release@agent-toolbox`.
 
 The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill before reporting repository changes complete.
 
@@ -59,6 +59,7 @@ The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill 
 - Browser profiles and Google OAuth data remain outside the repository.
 - `gog` skills permit read-only commands only and wrap untrusted Workspace content.
 - Repository checks validate frontmatter, manifests, local links, trigger metadata, and common secret patterns. CI also runs gitleaks.
+- Validation excludes untracked content ignored by repository `.gitignore` rules and local tool state. Tracked shared files remain subject to validation; personal Git excludes do not change the checks. Public symlinks must be relative, point directly to a regular file, and stay within the repository and, for plugin content, within the same plugin. Directory symlinks and chains are rejected. In copies without Git metadata, validation applies `.gitignore` rules and local-state exclusions, but cannot recover which ignored files were originally tracked. Validate the Git checkout before distributing such a copy.
 
 Review a skill's guardrails before using it with authenticated services or write-capable tools.
 
