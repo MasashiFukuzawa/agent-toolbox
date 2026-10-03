@@ -6,7 +6,7 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 20 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 21 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
 | `plugin-release` | 1 | Codex Git marketplace release workflow | Git, GitHub CLI (`gh`), Codex CLI, Python 3.11+, `uv` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
@@ -14,7 +14,7 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 ### Skill catalog
 
-- `toolbox` (20, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `progress-report`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
+- `toolbox` (21, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `jev-browser-qa` (experimental), `model-selection`, `progress-report`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
 - `plugin-release` (1, Codex only): `plugin-release`.
 - `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.

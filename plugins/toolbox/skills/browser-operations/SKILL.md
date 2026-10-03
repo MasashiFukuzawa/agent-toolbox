@@ -33,6 +33,10 @@ Rule of thumb: "operate the page and get a result" → CLI. "Find out why it is 
 
 The CLI is preferred for token efficiency: it writes results (snapshots, screenshots) to `.playwright-cli/` on disk so you read only what you need. Command map and details: `references/tool-selection.md`.
 
+## JevによるQAからの引き継ぎ
+
+`jev-browser-qa` のstaging検証は `e2e-capability-verification` とrepository wrapperを入口にする。協調ログインはその分離sessionで行い、既に所有されたPageを日常profileや別toolへ移さない。Jev利用だけを理由に通常のCLI選択や操作許可を変更しない。
+
 ## @playwright/cli の使用
 
 - No auth needed: plain `playwright-cli` (in-memory profile, headless by default). Example: `playwright-cli open <url>`, `playwright-cli snapshot`, `playwright-cli click <ref>`, `playwright-cli close`.

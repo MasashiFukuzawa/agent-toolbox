@@ -1,0 +1,32 @@
+{
+  "name": "@agent-toolbox/jev-browser-qa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./dist/index.js",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "packageManager": "pnpm@11.5.0",
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "fixture": "node src/cli.ts fixture",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "0.6.0",
+    "playwright": "1.63.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "typescript": "7.0.2"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24",
+      "onFail": "download"
+    }
+  }
+}

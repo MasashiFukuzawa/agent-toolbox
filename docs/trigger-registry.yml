@@ -95,3 +95,14 @@ skills:
     nearest_neighbors: [done, cloudflare-worker-cd]
     negative_triggers: ["完了前の品質ゲートだけを通して", "個人用ローカルpluginのcachebusterを更新して"]
     ambiguous_precedence: "Codex Gitマーケットプレイスへの配布はplugin-release、品質ゲートだけならdone、ローカル開発pluginの更新はplugin-creatorを優先"
+
+  jev-browser-qa:
+    <<: *defaults
+    canonical_name: jev-browser-qa
+    category: testing
+    runtime_dependencies: [node24, pnpm, playwright, typesafe-api]
+    side_effect_level: external-write
+    positive_triggers: ["Jevで動作確認して", "JevでブラウザQAを高速化して"]
+    nearest_neighbors: [e2e-capability-verification, browser-operations]
+    negative_triggers: ["通常のブラウザ閲覧", "ログインだけを引き継いで"]
+    ambiguous_precedence: "stagingの許可と認証はe2e-capability-verification、Jevによる操作はjev-browser-qa、ログインはbrowser-operations"
