@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "rules": [],
+  "fingerprints": [
+    {
+      "hash": "sha256:8643d2012d072107",
+      "rule_id": "TM1",
+      "file": "scripts/runtime/test/private-files.test.ts",
+      "reason": "Reviewed false positive: fs/promises rm import; cleanup only removes the uniquely created mkdtemp fixture directory in finally. Full source hash is required before suppression."
+    },
+    {
+      "hash": "sha256:d726fb2fbbf33711",
+      "rule_id": "TM1",
+      "file": "scripts/runtime/test/session.test.ts",
+      "reason": "Reviewed false positive: fs/promises rm import; cleanup only removes the uniquely created mkdtemp fixture directory in finally. Full source hash is required before suppression."
+    }
+  ],
+  "source_sha256": {
+    "scripts/runtime/test/private-files.test.ts": "a1c7c6f901d9f6267babc08d21720b6a252c2a2a9835d7b8be4414ef4b7f3f8b",
+    "scripts/runtime/test/session.test.ts": "6a4987a825afd85de20dff35bc1139b10260f4d4e1b4b35dad0f8f5e05e912ab"
+  }
+}

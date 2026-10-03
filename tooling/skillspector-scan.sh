@@ -18,5 +18,11 @@ for skill_dir in "$@"; do
   [[ -f "$skill_dir/SKILL.md" ]] || continue
   name=${skill_dir#plugins/}
   name=${name/\/skills\//__}
-  skillspector scan "$skill_dir" --format json --output "$out_dir/$name.json" --no-llm
+  baseline="tooling/skillspector-baselines/$name.json"
+  scan_args=()
+  if [[ -f "$baseline" ]]; then
+    python3 -m scripts.verify_scan_baseline "$skill_dir" "$baseline"
+    scan_args=(--baseline "$baseline" --show-suppressed)
+  fi
+  skillspector scan "$skill_dir" --format json --output "$out_dir/$name.json" --no-llm "${scan_args[@]}"
 done
