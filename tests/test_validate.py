@@ -297,7 +297,7 @@ def test_plugin_boundary_allows_internal_resource_symlink(tmp_path: Path, monkey
     assert _plugin_boundary_errors() == []
 
 
-@pytest.mark.parametrize("link_kind", ["absolute", "ignored-intermediate", "linked-directory"])
+@pytest.mark.parametrize("link_kind", ["absolute", "ignored-intermediate", "linked-directory", "linked-dotdot"])
 def test_public_resource_link_must_directly_reference_a_relative_file(tmp_path: Path, link_kind: str) -> None:
     from scripts.plugin_paths import require_public_file
 
@@ -313,10 +313,15 @@ def test_public_resource_link_must_directly_reference_a_relative_file(tmp_path: 
         (tmp_path / ".gitignore").write_text("plugins/sample/references/local.md\n")
         (shared.parent / "local.md").symlink_to("shared.md")
         alias.symlink_to("local.md")
-    else:
+    elif link_kind == "linked-directory":
         (tmp_path / ".gitignore").write_text("plugins/sample/local\n")
         (plugin / "local").symlink_to("references", target_is_directory=True)
         alias.symlink_to("../local/shared.md")
+    else:
+        (tmp_path / ".gitignore").write_text("plugins/sample/references/local\n")
+        (shared.parent / "nested").mkdir()
+        (shared.parent / "local").symlink_to("nested", target_is_directory=True)
+        alias.symlink_to("local/../shared.md")
 
     assert "plugin path escapes plugin: plugins/sample/references/alias.md" in plugin_boundary_errors(tmp_path)
     with pytest.raises(ValueError, match="unsafe symlink"):

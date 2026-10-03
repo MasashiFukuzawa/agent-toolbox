@@ -125,8 +125,8 @@ def path_within_root(root: Path, path: Path) -> Path | None:
             link = path.readlink()
             if link.is_absolute():
                 return None
-            target = Path(os.path.abspath(path.parent / link))
-            target.relative_to(root.resolve(strict=True))
+            target = path.parent / link
+            Path(os.path.abspath(target)).relative_to(root.resolve(strict=True))
             # A distributed link must not depend on another link or linked directory.
             if any(candidate.is_symlink() for candidate in (target, *target.parents)):
                 return None
