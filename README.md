@@ -85,3 +85,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution rules and [SECURITY.md](
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
+`html-artifact` retains its standard mode and offers a visual-first mode for requests for simpler, diagram-heavy HTML. It keeps conclusions and decision-critical conditions visible, with optional supporting detail disclosed progressively. A fictional, self-contained sample is available in its templates directory.

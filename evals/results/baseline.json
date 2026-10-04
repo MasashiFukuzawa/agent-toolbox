@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "matrix_sha256": "1a8c493555c838e19b8fcdd2a953d528001815592b503631989698303c0271c8",
+  "matrix_sha256": "001767e954385ceea290209a085188a655ab0fec070f54343214dcdd620e177a",
   "summary": {
-    "total": 1278,
+    "total": 1282,
     "passed": 0,
     "failed": 0,
-    "not_run": 1278
+    "not_run": 1282
   },
   "results": [
     {
@@ -1831,6 +1831,16 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "html-artifact",
+      "type": "negative_trigger",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "owner-board",
       "type": "positive",
       "case_id": 1,
@@ -4951,6 +4961,16 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "html-artifact",
+      "type": "negative_trigger",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "owner-board",
       "type": "positive",
       "case_id": 1,
@@ -8064,6 +8084,16 @@
       "skill": "html-artifact",
       "type": "negative_trigger",
       "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "html-artifact",
+      "type": "negative_trigger",
+      "case_id": 3,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
@@ -11334,6 +11364,16 @@
       "skill": "html-artifact",
       "type": "negative_trigger",
       "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "html-artifact",
+      "type": "negative_trigger",
+      "case_id": 3,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
