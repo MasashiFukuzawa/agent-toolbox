@@ -1,0 +1,257 @@
+{
+  "version": 1,
+  "title": "いま、あなたにお願いしたいこと",
+  "maintainer": "統合役",
+  "namespace": "",
+  "session_names": [
+    "統合役",
+    "設計担当",
+    "実装担当"
+  ],
+  "terms": {
+    "preferred_terms": {
+      "配備": "デプロイ"
+    }
+  },
+  "context": [
+    {
+      "type": "paragraph",
+      "text": "表示確認用の架空サンプルです。内容・期限・回答・進捗は実際の依頼ではありません。回答やコマンドの実行は不要です。"
+    }
+  ],
+  "items": [
+    {
+      "id": "Q12",
+      "title": "試作を確認する範囲を選ぶ",
+      "kind": "decision",
+      "state": "open",
+      "urgency": "today",
+      "due": "2026-01-01 17:00 UTC（架空の期限）",
+      "question": "最初は少人数で確認し、使いにくい点を直してから広げてよいですか？",
+      "purpose": "試作の説明量や操作の分かりやすさを、実際の読み手で確かめるためです。",
+      "background": "基本の画面は揃っています。先に読みやすさを確かめるか、利用場面の幅を集めるかで準備する説明が変わります。",
+      "owner_reason": "誰に、どの段階で見せるかはオーナーの判断範囲です。",
+      "consequence": "確認対象の選定は待ちます。表示の修正は続けられます。",
+      "reply": "Q12: 1",
+      "options": [
+        {
+          "code": "2",
+          "label": "最初から広く確認",
+          "reason": "利用場面や要望の幅を一度に集められます。",
+          "drawback": "初回から説明と問い合わせ対応が増えます。"
+        },
+        {
+          "code": "1",
+          "label": "少人数で先に確認",
+          "reason": "読みやすさの具体的な改善点を絞れます。",
+          "drawback": "すべての利用者を代表するとは言えず、その後に意見を広げる必要があります。"
+        }
+      ],
+      "recommended": "1",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "回答を作業に反映するまで"
+        },
+        {
+          "type": "svg",
+          "path": "diagrams/answer-flow.svg",
+          "alt": "回答を受けた統合役が担当へ共有し、反映を確認する",
+          "caption": "フロー図。回答の受領と、作業への反映は別に記録します。"
+        },
+        {
+          "type": "svg",
+          "path": "diagrams/answer-sequence.svg",
+          "alt": "オーナーが統合役へ回答し、統合役が担当へ判断を共有し、担当が反映結果を統合役へ返す",
+          "caption": "シーケンス図。主体と、連絡の順序を示します。"
+        },
+        {
+          "type": "table",
+          "caption": "担当と責任",
+          "columns": [
+            "主体",
+            "担当"
+          ],
+          "rows": [
+            [
+              "統合役",
+              "判断の共有と反映結果の確認"
+            ],
+            [
+              "担当",
+              "承認された範囲での作業と結果の報告"
+            ]
+          ]
+        },
+        {
+          "type": "link",
+          "label": "確認範囲の考え方と比較",
+          "href": "explanation.html#comparison"
+        }
+      ]
+    },
+    {
+      "id": "Q13",
+      "title": "公開用サンプルの内容を確認する",
+      "kind": "task",
+      "state": "open",
+      "urgency": "soon",
+      "question": "あなたの端末にある公開用サンプルを確認し、公開可か要修正かを教えてください。",
+      "purpose": "実際の案件の情報を公開資料へ混ぜないためです。",
+      "background": "公開するサンプルを、実案件とは独立した架空の内容で準備しています。",
+      "owner_reason": "このサンプルはオーナーの端末で管理され、AIからは参照できません。",
+      "inputs": "架空のJSONファイル。実際の案件の値は使用しません。",
+      "consequence": "サンプルの公開は待ちます。本文と表示の検証は続けられます。",
+      "reply": "Q13: 公開可",
+      "return_expected": "公開可、または要修正と修正箇所の概要だけ。原本の内容は貼らないでください。",
+      "steps": [
+        {
+          "title": "確認用ファイルを整形する",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "下は表示確認用のコマンド例です。実行は不要です。"
+            },
+            {
+              "type": "code",
+              "label": "ターミナル · Python 3",
+              "text": "python3 -m json.tool \"./review-materials/sample-input-for-owner-review-with-a-long-descriptive-filename.json\" \"./review-materials/sample-input-formatted-for-review.json\""
+            }
+          ]
+        },
+        {
+          "title": "内容を確認する",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "実在する名前・個人情報・秘密の値・内部URLがないこと。",
+                "架空の内容だけで構成されていること。"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "結果だけ返信する",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "ファイルの中身は貼らず、公開可か要修正かを返してください。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Q14",
+      "title": "更新通知を受け取る方法を選ぶ",
+      "kind": "decision",
+      "state": "preparing",
+      "urgency": "none",
+      "question": "まだ答えなくて構いません。通知方法の比較を整理してから判断をお願いします。",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "連絡板の見え方が決まったあとに提示します。通知頻度と必要な操作を整理中で、期限は未定です。"
+        }
+      ]
+    },
+    {
+      "id": "Q11",
+      "title": "資料で使う用語",
+      "kind": "decision",
+      "state": "answered",
+      "urgency": "none",
+      "answer": {
+        "text": "デプロイに統一する",
+        "at": "2026-01-01T09:00:00+00:00",
+        "follow_up": {
+          "state": "pending",
+          "summary": "関連資料への反映待ち"
+        },
+        "relays": [
+          {
+            "to": "設計担当",
+            "state": "sent"
+          },
+          {
+            "to": "実装担当",
+            "state": "pending"
+          }
+        ]
+      },
+      "question": "資料の用語をデプロイへ統一してよいですか？",
+      "purpose": "資料間の表現を揃えるためです。",
+      "background": "資料の表現にばらつきがあります。",
+      "owner_reason": "読み手が希望する表現を確認するためです。",
+      "consequence": "用語の統一を待ちます。",
+      "reply": "Q11: 1",
+      "recommended": "1",
+      "options": [
+        {
+          "code": "1",
+          "label": "デプロイへ統一",
+          "reason": "表現の揺れを減らせます。",
+          "drawback": "過去資料の表現を直す必要があります。"
+        },
+        {
+          "code": "2",
+          "label": "用語を維持",
+          "reason": "既存の文面をそのまま使えます。",
+          "drawback": "資料間で表現が揃いません。"
+        }
+      ]
+    },
+    {
+      "id": "Q10",
+      "title": "連絡板を開くタイミング",
+      "kind": "decision",
+      "state": "answered",
+      "urgency": "none",
+      "answer": {
+        "text": "初回と重要な依頼時",
+        "at": "2026-01-01T08:00:00+00:00",
+        "follow_up": {
+          "state": "done",
+          "summary": "通常更新は通知とリンクにする設定を反映済み"
+        },
+        "relays": []
+      },
+      "question": "連絡板を初回と重要な依頼時に開く運用でよいですか？",
+      "purpose": "更新の見落としと読み手の中断を減らすためです。",
+      "background": "通常更新でもページを開くと作業が中断されます。",
+      "owner_reason": "読み手の通知の好みを確認するためです。",
+      "consequence": "連絡板を開く頻度の変更を待ちます。",
+      "reply": "Q10: 1",
+      "recommended": "1",
+      "options": [
+        {
+          "code": "1",
+          "label": "初回と重要な依頼時",
+          "reason": "判断が必要な更新へ注意を向けられます。",
+          "drawback": "通常更新は通知のリンクから開く必要があります。"
+        },
+        {
+          "code": "2",
+          "label": "毎回開く",
+          "reason": "すべての更新をすぐ読めます。",
+          "drawback": "中断が増えます。"
+        }
+      ]
+    },
+    {
+      "id": "Q9",
+      "title": "公開範囲の再確認",
+      "kind": "decision",
+      "state": "withdrawn",
+      "urgency": "none",
+      "withdrawal": "公開せずローカルで確認する指示が既にあり、追加の確認は不要"
+    }
+  ],
+  "related": [
+    {
+      "label": "判断材料の別資料 · 架空サンプル",
+      "href": "explanation.html"
+    }
+  ]
+}
