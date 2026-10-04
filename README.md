@@ -6,7 +6,7 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 20 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 21 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
 | `plugin-release` | 1 | Codex Git marketplace release workflow | Git, GitHub CLI (`gh`), Codex CLI, Python 3.11+, `uv` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
@@ -14,7 +14,7 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 ### Skill catalog
 
-- `toolbox` (20, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `progress-report`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
+- `toolbox` (21, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `owner-board`, `progress-report`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
 - `plugin-release` (1, Codex only): `plugin-release`.
 - `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.
@@ -32,6 +32,10 @@ Autopilot delegates bounded work while the controller retains artifact review an
 progress-report --ascii Focus on blockers and dependencies
 progress-report --html Focus on the release outlook
 ```
+
+### Owner board
+
+`owner-board` maintains a local owner communication board from JSON with fixed question IDs, decisions, human tasks, answer history, and pending follow-ups or relays. Its static HTML supports freely ordered text, tables, code, and offline SVG diagrams, including sequence and flow diagrams. Python 3.11+ is its only runtime dependency. Operational data stays outside public repositories; creating a board does not authorize publishing it or adding external messaging. General presentation uses `html-artifact`, progress context uses `progress-report`, and execution authority stays with `autopilot`.
 
 ### Claude Code
 
