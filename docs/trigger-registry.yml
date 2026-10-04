@@ -74,7 +74,7 @@ skills:
   codebase-audit: {<<: *defaults, canonical_name: codebase-audit, category: review, positive_triggers: ["コードベース全体を監査して"], nearest_neighbors: [codex-review], negative_triggers: ["単一PRレビュー"]}
   context-handoff: {<<: *defaults, canonical_name: context-handoff, category: communication, side_effect_level: workspace-write, positive_triggers: ["引き継ぎを作って"], nearest_neighbors: [progress-report], negative_triggers: ["判断者向け進捗報告"]}
   e2e-capability-verification: {<<: *defaults, canonical_name: e2e-capability-verification, category: testing, side_effect_level: external-write, positive_triggers: ["stagingでE2E確認して"], nearest_neighbors: [browser-operations], negative_triggers: ["アドホックなブラウザ操作"]}
-  html-artifact: {<<: *defaults, canonical_name: html-artifact, category: visualization, side_effect_level: workspace-write, positive_triggers: ["HTMLで図解して", "HTML一枚物を作って", "比較をHTMLで可視化して"], nearest_neighbors: [ascii-diagram, owner-board], negative_triggers: ["会話内の小さな図", "人間への依頼と回答を連絡板で継続管理して"]}
+  html-artifact: {<<: *defaults, canonical_name: html-artifact, category: visualization, side_effect_level: workspace-write, positive_triggers: ["HTMLで図解して", "HTML一枚物を作って", "比較をHTMLで可視化して", "HTMLをシンプルに", "HTMLを図解多めで", "HTMLを文章少なめで", "HTMLをぱっと見で分かるように", "疲れてるので図解HTMLにして", "読む気力がないのでHTMLで要点だけ"], nearest_neighbors: [ascii-diagram, owner-board], negative_triggers: ["会話内の小さな図", "通常のチャットを要点だけで返して", "人間への依頼と回答を連絡板で継続管理して"]}
   owner-board:
     <<: *defaults
     canonical_name: owner-board

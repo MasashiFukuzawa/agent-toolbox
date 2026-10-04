@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工作セットの準備 — 図解優先サンプル</title>
+<style>
+:root {color-scheme:light;font-family:system-ui,sans-serif;color:#17212b;background:#f8fafc;line-height:1.6}
+* {box-sizing:border-box} body {margin:0} main {max-width:960px;margin:auto;padding:24px}
+h1 {font-size:1.7rem;margin:0 0 8px} h2 {font-size:1.2rem;margin:24px 0 12px} p {margin:8px 0}
+.cards {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.card {min-width:0;background:white;border:1px solid #64748b;border-radius:12px;padding:16px}
+.answer {display:block;font-size:1.6rem;font-weight:750;color:#166534}
+.verdict,.decision {background:#e8f5ed;border-left:5px solid #166534;padding:12px 16px;margin-top:12px}
+.caution {color:#991b1b} .note {color:#475569;font-size:.95rem}
+.figure {overflow-x:auto;padding:8px;background:white;border:1px solid #64748b;border-radius:12px}
+svg {display:block;width:100%;min-width:600px;height:auto}
+table {border-collapse:collapse;width:100%;background:white} caption {text-align:left;padding:8px 0}
+th,td {border:1px solid #64748b;padding:10px;text-align:center} th:first-child {text-align:left}
+.recommended {background:#e8f5ed;color:#166534} details {margin-top:16px;border:1px solid #64748b;border-radius:8px;padding:12px;background:white}
+summary {cursor:pointer;font-weight:650} :focus-visible {outline:3px solid #1d4ed8;outline-offset:4px}
+@media(max-width:600px) {main {padding:16px}.cards {grid-template-columns:minmax(0,1fr)}.card {padding:12px}.answer {font-size:1.3rem} th,td {padding:6px} h1 {font-size:1.4rem}}
+</style>
+</head>
+<body>
+<!-- Purpose: A fictional decision about preparing craft kits; no operational data. -->
+<main>
+<header><h1>工作セットは少量から準備する</h1><p class="note">架空の題材です。実際の進捗・安全性を示す資料ではありません。</p></header>
+<section aria-label="3秒で分かる結論"><h2>3秒で</h2><div class="cards">
+<div class="card">今すぐ決める？<strong class="answer">急がない</strong></div>
+<div class="card">何を選ぶ？<strong class="answer">少量で試す</strong></div>
+<div class="card">開始の条件は？<strong class="answer">材料の確認</strong></div>
+</div><p class="verdict"><strong>判定：材料を確認できたら、少量の試作を始める。</strong></p>
+<p class="caution"><strong>停止条件：</strong>材料が未確認なら開始しない。期限は未定。</p></section>
+<section><h2>確認 → 試作 → 準備</h2><div class="figure" tabindex="0" role="region" aria-label="準備の流れ。狭い画面では横にスクロールできます"><svg viewBox="0 0 632 96" role="img" aria-label="材料を確認し、少量で試し、結果を見て準備する"><defs /><g><g data-cell-id="0"><g data-cell-id="1"><g data-cell-id="2"><g transform="translate(0.5,0.5)"><rect x="10" y="10" width="160" height="64" rx="9.6" ry="9.6" fill="#f1f5f9" stroke="#475569" pointer-events="all" /></g><g><g /></g></g><g data-cell-id="3"><g transform="translate(0.5,0.5)"><rect x="220" y="10" width="160" height="64" rx="9.6" ry="9.6" fill="#e8f5ed" stroke="#166534" pointer-events="all" /></g><g><g /></g></g><g data-cell-id="4"><g transform="translate(0.5,0.5)"><rect x="430" y="10" width="180" height="64" rx="9.6" ry="9.6" fill="#f1f5f9" stroke="#475569" pointer-events="all" /></g><g><g /></g></g><g data-cell-id="5"><g transform="translate(0.5,0.5)"><path d="M 170 42 L 213.63 42" fill="none" stroke="#475569" stroke-miterlimit="10" pointer-events="stroke" /><path d="M 218.88 42 L 211.88 45.5 L 213.63 42 L 211.88 38.5 Z" fill="#475569" stroke="#475569" stroke-miterlimit="10" pointer-events="all" /></g></g><g data-cell-id="6"><g transform="translate(0.5,0.5)"><path d="M 380 42 L 423.63 42" fill="none" stroke="#475569" stroke-miterlimit="10" pointer-events="stroke" /><path d="M 428.88 42 L 421.88 45.5 L 423.63 42 L 421.88 38.5 Z" fill="#475569" stroke="#475569" stroke-miterlimit="10" pointer-events="all" /></g></g></g></g></g><text x="90" y="48" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#17212b">材料を確認</text><text x="300" y="48" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#17212b">少量で試す</text><text x="520" y="48" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#17212b">結果を見て準備</text></svg></div><p class="note">材料の確認が先。試作の結果を見て、残りを準備します。狭い画面では図を横にスクロールできます。</p></section>
+<section><h2>選択肢の比較</h2><table><caption>架空の比較。負担は相対的な目安です。</caption><thead><tr><th scope="col">比較軸</th><th scope="col">全量準備</th><th scope="col" class="recommended">少量試作<br>推奨</th></tr></thead><tbody>
+<tr><th scope="row">最初の負担</th><td>大</td><td class="recommended">小</td></tr>
+<tr><th scope="row">修正のしやすさ</th><td>低</td><td class="recommended">高</td></tr>
+</tbody></table></section>
+<section class="decision"><h2>決めること</h2><p><strong>少量の試作から始める？</strong></p><p>推奨：始める（材料確認後）。</p><p>理由：修正の負担を抑えられる。</p><p>欠点：全量の完成までに試作の手間が加わる。</p><p>条件：完成形が確定済みなら、全量準備を再検討します。</p></section>
+<details><summary>比較の前提を見る</summary><p>完成形が未確定という架空の前提です。</p><p>負担と修正のしやすさだけを比べています。</p></details>
+</main></body></html>
