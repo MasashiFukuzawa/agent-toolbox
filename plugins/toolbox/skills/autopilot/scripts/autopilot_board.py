@@ -111,6 +111,41 @@ def gate_allows(config: dict[str, Any], gate: str) -> bool:
     return value == "auto" or value is True
 
 
+def resolve_actor_gates(config: dict[str, Any]) -> tuple[dict[str, Any], str | None, dict[str, str]]:
+    """Apply explicit account overrides without weakening legacy gate defaults."""
+    overrides = config.get("actorOverrides", {})
+    if not isinstance(overrides, dict):
+        raise Failure("actorOverrides must be an object")
+    normalized = {}
+    for actor, gates in overrides.items():
+        key = actor.casefold()
+        if not re.fullmatch(r"github:[a-z0-9][a-z0-9-]*", key):
+            raise Failure("actorOverrides keys must be github:<login>")
+        if key in normalized:
+            raise Failure("actorOverrides contains duplicate accounts ignoring case")
+        if not isinstance(gates, dict) or any(
+            gate not in ("merge", "deploy") or value not in ("auto", "human")
+            for gate, value in gates.items()
+        ):
+            raise Failure("actorOverrides values must map merge/deploy to auto/human")
+        normalized[key] = gates
+    sources = {gate: "gates" for gate in ("merge", "deploy")}
+    if not normalized:
+        return config, None, sources
+    try:
+        user = json.loads(run_gh(["api", "user"]))
+        login = user.get("login") if isinstance(user, dict) else None
+        if not isinstance(login, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]*", login):
+            raise Failure("GitHub API returned no valid login")
+    except (Failure, OSError, ValueError) as exc:
+        raise Failure(f"cannot resolve GitHub actor; restore gh authentication/connectivity: {exc}") from exc
+    actor = f"github:{login.casefold()}"
+    selected = normalized.get(actor, {})
+    effective = {**config, "gates": {**config.get("gates", {}), **selected}}
+    sources.update({gate: f"actorOverrides.{actor}" for gate in selected})
+    return effective, actor, sources
+
+
 def protection_is_enforced(protection: dict[str, Any]) -> tuple[bool, list[str]]:
     """Check that branch protection can actually stop a bad automated merge.
 
@@ -174,12 +209,15 @@ def cmd_preflight(args: argparse.Namespace) -> dict[str, Any]:
             "Refusing every write."
         )
 
+    effective, actor, gate_sources = resolve_actor_gates(config)
     base = config.get("baseBranch", "main")
     result: dict[str, Any] = {
         "repo": expected,
         "baseBranch": base,
         "mergeGate": "human",
-        "deployGate": "auto" if gate_allows(config, "deploy") else "human",
+        "deployGate": "auto" if gate_allows(effective, "deploy") else "human",
+        "actor": actor,
+        "gateSources": gate_sources,
         "notes": [],
         "configDigest": config_digest(config),
     }
@@ -192,7 +230,7 @@ def cmd_preflight(args: argparse.Namespace) -> dict[str, Any]:
             "inProgress": status_name(source, "inProgress"),
         }
 
-    if gate_allows(config, "merge"):
+    if gate_allows(effective, "merge"):
         enforced, reasons = branch_protection_state(expected, base)
         if enforced:
             result["mergeGate"] = "auto"
@@ -202,7 +240,7 @@ def cmd_preflight(args: argparse.Namespace) -> dict[str, Any]:
             # gate were simply unset -- whereas refusing to start strands the whole
             # backlog over a repository setting no task can fix.
             result["notes"].append(
-                f"gates.merge asked for automatic merge, but {base} cannot enforce it "
+                f"resolved merge gate asked for automatic merge, but {base} cannot enforce it "
                 f"({'; '.join(reasons)}). Running with a human merge gate instead."
             )
     return result

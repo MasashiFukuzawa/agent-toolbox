@@ -805,3 +805,83 @@ class TestBranchNameCommand:
     def test_non_ascii_without_an_issue_number_uses_a_stable_hash(self, capsys):
         assert board.main(["branch-name", "--title", "日本語"]) == 0
         assert json.loads(capsys.readouterr().out)["branch"].startswith("autopilot/task-")
+
+
+class TestActorPreflight:
+    def run(self, tmp_path, monkeypatch, capsys, overrides, login="Senior-Example", protected=True):
+        config = tmp_path / "autopilot.json"
+        config.write_text(json.dumps({
+            "repo": "owner/name",
+            "gates": {"merge": True, "deploy": "human"},
+            "actorOverrides": overrides,
+        }))
+
+        def fake(args):
+            if args[0] == "repo":
+                return json.dumps({"nameWithOwner": "owner/name"})
+            if args == ["api", "user"]:
+                if isinstance(login, Exception):
+                    raise login
+                return json.dumps({"login": login})
+            return json.dumps(TestProtectionIsEnforced.GOOD if protected else {})
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        code = board.main(["--config", str(config), "preflight"])
+        output = capsys.readouterr()
+        return code, json.loads(output.out) if output.out else None, output.err
+
+    def test_account_override_is_case_insensitive_and_partial(self, tmp_path, monkeypatch, capsys):
+        code, out, _ = self.run(tmp_path, monkeypatch, capsys,
+                               {"GitHub:SENIOR-example": {"deploy": "auto"}})
+        assert code == 0
+        assert (out["mergeGate"], out["deployGate"]) == ("auto", "auto")
+        assert out["actor"] == "github:senior-example"
+        assert out["gateSources"] == {
+            "merge": "gates", "deploy": "actorOverrides.github:senior-example",
+        }
+
+    def test_override_can_require_mentor(self, tmp_path, monkeypatch, capsys):
+        code, out, _ = self.run(tmp_path, monkeypatch, capsys,
+                               {"github:senior-example": {"merge": "human"}})
+        assert code == 0 and out["mergeGate"] == "human"
+
+    def test_unknown_account_uses_shared_gates(self, tmp_path, monkeypatch, capsys):
+        code, out, _ = self.run(tmp_path, monkeypatch, capsys,
+                               {"github:other": {"merge": "human"}})
+        assert code == 0 and out["mergeGate"] == "auto"
+        assert out["gateSources"]["merge"] == "gates"
+
+    def test_override_cannot_bypass_protection(self, tmp_path, monkeypatch, capsys):
+        code, out, _ = self.run(tmp_path, monkeypatch, capsys,
+                               {"github:senior-example": {"merge": "auto"}}, protected=False)
+        assert code == 0 and out["mergeGate"] == "human"
+        assert out["notes"]
+
+    @pytest.mark.parametrize("login", [None, "", [], "bad login", board.Failure("HTTP 401"),
+                                       board.Failure("network unavailable")])
+    def test_unresolved_actor_stops_instead_of_using_shared_auto(self, tmp_path, monkeypatch, capsys, login):
+        code, out, err = self.run(tmp_path, monkeypatch, capsys,
+                                 {"github:senior-example": {"merge": "human"}}, login=login)
+        assert code == 1 and out is None
+        assert "cannot resolve GitHub actor" in err
+
+    @pytest.mark.parametrize("overrides", [None, [], {"plain-login": {}},
+        {"github:user": {"merge": True}}, {"github:user": {"merge": "Auto"}},
+        {"github:user": {"unknown": "auto"}}, {"github:user": []},
+        {"github:User": {}, "github:user": {}}])
+    def test_invalid_policy_stops(self, tmp_path, monkeypatch, capsys, overrides):
+        code, out, err = self.run(tmp_path, monkeypatch, capsys, overrides)
+        assert code == 1 and out is None
+        assert "actorOverrides" in err
+
+    def test_empty_overrides_do_not_require_actor_lookup(self, tmp_path, monkeypatch, capsys):
+        code, out, _ = self.run(tmp_path, monkeypatch, capsys, {}, login=AssertionError("no lookup"))
+        assert code == 0 and out["actor"] is None
+
+    def test_account_change_updates_gate_even_with_same_digest(self, tmp_path, monkeypatch, capsys):
+        overrides = {"github:senior": {"merge": "auto"}, "github:junior": {"merge": "human"}}
+        _, before, _ = self.run(tmp_path, monkeypatch, capsys, overrides, login="senior")
+        _, after, _ = self.run(tmp_path, monkeypatch, capsys, overrides, login="junior")
+        assert before["configDigest"] == after["configDigest"]
+        assert before["actor"] != after["actor"]
+        assert (before["mergeGate"], after["mergeGate"]) == ("auto", "human")

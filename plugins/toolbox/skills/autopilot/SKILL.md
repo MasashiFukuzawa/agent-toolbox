@@ -38,13 +38,31 @@ merge/deployはconfigの明示許可、または対象・条件を特定した�
 | 進捗報告 | `progress-report`。再開用索引とは分ける |
 | タスク選択・journal | [task sources](references/task-sources.md) |
 
+## 実行者別のgate設定
+
+共通の`gates`へ任意の`actorOverrides`を項目単位で重ねる（BASIS: REAL-DEMAND — チーム内で承認方針が異なる）。
+
+```json
+{
+  "gates": {"merge": "human", "deploy": "human"},
+  "actorOverrides": {"github:senior-example": {"merge": "auto"}}
+}
+```
+
+- 上書き省略・空なら従来どおり。新たな認証アカウント照会は不要。
+- 空でなければpreflightが`gh api user`のloginを取得し、`github:<login>`を大小文字を区別せず照合する。各人が自分のGitHub認証を使う前提。Git作者・assignee・会話の自己申告で代替しない。
+- 一致したmerge/deployだけ上書きする。未指定項目と未登録アカウントは共通設定を使い、共通設定の未指定項目はhuman。既存`gates`のboolean互換は維持するが、上書き値は`auto`/`human`のみ。
+- 型・キー・値の不正、大小文字だけ異なる重複アカウントは設定エラー。認証取得失敗は共通設定へfallbackせず停止する。原因を示し、認証切れなら`gh auth login`、通信障害なら復旧後に再実行する。
+- 上書き後もbranch protection、品質検証、必須レビュー、人間確認の既存条件を適用する。doneは変更しない。
+- humanではPRと必要な検証を揃え、対象・条件を特定した人間の承認を待つ。メンターの自動選定・通知は行わない。
+
 ## Preflight
 
 ```bash
 <skill-dir>/scripts/autopilot_board.py preflight
 ```
 
-非ゼロなら書込みを行わない。出力のrepo、baseBranch、mergeGate、deployGate、configDigest、Project情報をrunの設定snapshotとして保持する。digestが変われば再preflightして既存承認への影響を確認する。
+非ゼロなら書込みを行わない。出力のrepo、baseBranch、actor、gateSources、mergeGate、deployGate、notes、configDigest、Project情報をrunの設定snapshotとして保持する。開始・再開時とmerge/deploy直前にpreflightを実行する。actorまたはdigestが変われば以前の自動実行許可を引き継がず、gateと既存承認への影響を再評価する。認証取得不能なら停止する。`actor: null`は上書き未使用。gateSourcesは設定元、notesは降格理由を表し、最終的な許可はmergeGate/deployGateで判断する。
 
 自動mergeのbranch protection検査がhumanへ降格した場合、その理由を維持する。単なるauto指定で迂回しない。品質ゲート定義（`.agents/**`、CI設定等）の変更はautoでも人間のmerge確認へ回す。
 

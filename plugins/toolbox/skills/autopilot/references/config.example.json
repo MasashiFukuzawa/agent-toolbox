@@ -83,5 +83,7 @@
       "auto",
       "human"
     ]
-  }
+  },
+  "actorOverrides": {},
+  "_actorOverridesNote": "任意。空・省略時は従来どおり。例: {\"github:senior-example\": {\"merge\": \"auto\"}}。loginは各人のGitHub認証アカウントへ変更する。指定したmerge/deployだけ上書きする。値はauto/humanのみ。認証取得失敗時は停止する。"
 }
