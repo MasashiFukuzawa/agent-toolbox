@@ -59,9 +59,9 @@ The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill 
 
 ### Global instructions (optional)
 
-`global-instructions/AGENTS.md` is a Japanese-language set of cross-project instructions for Claude Code, Codex, and Cursor: output language and terminology, candid recommendations, root-cause fixes, AI-implementation scoping, and verification before reporting completion. It references the `ai-native-engineering` and `browser-operations` skills from `toolbox`.
+`global-instructions/AGENTS.md` is a Japanese-language set of cross-project principles for Claude Code, Codex, and Cursor.
 
-To use it, clone this repository to a location you only update with `git pull --ff-only`, then point each host's global instruction file at it with a symlink: `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and `~/.cursor/AGENTS.md`. Do not link a working checkout where you switch branches, because a branch without the file silently removes the instructions from every session. Back up any existing real file before replacing it.
+To use it, clone this repository to a location you only update with `git pull --ff-only`, then point each host's global instruction file at it with a symlink: `~/.codex/AGENTS.md`, `~/.cursor/AGENTS.md`, and `~/.claude/CLAUDE.md` (Claude Code reads a project's `AGENTS.md` but not a user-level one). Do not link a working checkout where you switch branches, because a branch without the file silently removes the instructions from every session. Back up any existing real file before replacing it.
 
 ## Security model
 
