@@ -782,8 +782,8 @@ wheels = [
 
 [[package]]
 name = "skillspector"
-version = "2.13.2"
-source = { git = "https://github.com/NVIDIA/skillspector?tag=v2.13.2#abd82935b67f765a9541013c0866c6349251dcdf" }
+version = "2.13.3"
+source = { git = "https://github.com/NVIDIA/skillspector?tag=v2.13.3#38a1dfe93325d2f8bfcd4f8d0241eed706334915" }
 dependencies = [
     { name = "boto3" },
     { name = "httpx" },
@@ -813,7 +813,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "skillspector", git = "https://github.com/NVIDIA/skillspector?tag=v2.13.2" }]
+requires-dist = [{ name = "skillspector", git = "https://github.com/NVIDIA/skillspector?tag=v2.13.3" }]
 
 [[package]]
 name = "sniffio"
