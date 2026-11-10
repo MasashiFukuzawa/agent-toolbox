@@ -1,0 +1,13 @@
+# Third-party skills that complement the toolbox plugin. They are installed from their
+# upstream repositories with `gh skill install`, not copied into this repository.
+# Review each upstream skill before installing it; `gh skill` does not verify skill content.
+
+[[skill]]
+repository = "mizchi/skills"
+name = "empirical-prompt-tuning"
+reason = "Evaluates a skill or prompt with fresh executors and iterates until improvements plateau."
+
+[[skill]]
+repository = "mattpocock/skills"
+name = "grilling"
+reason = "Stress-tests a plan or design by asking one question at a time."
