@@ -1,0 +1,23 @@
+{
+  "skill_name": "plugin-release",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "toolboxのスキルを直したのでリリースして、Claude CodeとCodexの両方に反映されたか確認して。",
+      "expected_output": "両ホストのplugin.jsonの版を進め、検証・PR・CI・マージ確認を行う。マージ後にClaude Codeはmarketplace update・plugin update・plugin list、Codexはmarketplace upgrade・plugin listで版を確認し、ホストごとに結果を分けて報告する。Claude Codeは再起動が必要と伝える。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "ローカルで作っている個人用プラグインのcachebusterを更新して再インストールして。",
+      "expected_output": "このリポジトリのGitマーケットプレイス配布ではないため対象外と判断し、そのホストの公式のローカルプラグイン手順を確認するよう伝える。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "PRのCIは通った。まだmainに入っていない変更がインストール済みか教えて。",
+      "expected_output": "PRのCI成功と配布元refへのマージ、マーケットプレイス同期を区別し、現在のインストール版を確認するまで反映済みと断定しない。",
+      "files": []
+    }
+  ]
+}

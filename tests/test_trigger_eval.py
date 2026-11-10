@@ -6,6 +6,9 @@ from scripts.model_trigger_adapter import load_skill_catalog, parse_selected_ski
 from scripts.run_trigger_eval import _evaluate, main
 from scripts.trigger_eval import build_matrix, check_matrix, is_valid_selection, matrix_sha256
 
+# A registered skill with two nearest neighbors and two negative triggers.
+SAMPLE_SKILL = "typescript-project-foundation"
+
 
 def test_trigger_matrix_is_complete() -> None:
     matrix = build_matrix()
@@ -48,17 +51,35 @@ def test_model_skill_catalog_rejects_external_skill_symlink_before_reading(tmp_p
         load_skill_catalog("codex")
 
 
-def test_codex_only_skills_are_scoped_out_of_other_host_cases() -> None:
+def _write_host_scoped_repository(root) -> None:
+    (root / "docs").mkdir()
+    (root / "docs/trigger-registry.yml").write_text(
+        "skills:\n"
+        "  shared-skill: {supported_hosts: [claude-code, codex], positive_triggers: [], "
+        "nearest_neighbors: [], negative_triggers: []}\n"
+        "  codex-skill: {supported_hosts: [codex], positive_triggers: [], "
+        "nearest_neighbors: [], negative_triggers: []}\n"
+    )
+    for name in ("shared-skill", "codex-skill"):
+        skill = root / f"plugins/sample/skills/{name}/SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text(f"---\nname: {name}\ndescription: {name}\n---\n")
+
+
+def test_host_specific_skills_are_scoped_out_of_other_host_cases(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.trigger_eval.ROOT", tmp_path)
+    _write_host_scoped_repository(tmp_path)
     matrix = build_matrix()
-    codex_only = [case for case in matrix["cases"] if case["skill"] == "plugin-release"]
+    codex_only = [case for case in matrix["cases"] if case["skill"] == "codex-skill"]
     assert codex_only
     assert all(case["supported_hosts"] == ["codex"] for case in codex_only)
 
 
-def test_host_specific_skill_catalogs_include_only_supported_skills() -> None:
-    assert "plugin-release" not in load_skill_catalog("claude-code")
-    assert "model-selection" in load_skill_catalog("claude-code")
-    assert "plugin-release" in load_skill_catalog("codex")
+def test_host_specific_skill_catalogs_include_only_supported_skills(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.model_trigger_adapter.ROOT", tmp_path)
+    _write_host_scoped_repository(tmp_path)
+    assert set(load_skill_catalog("claude-code")) == {"shared-skill"}
+    assert set(load_skill_catalog("codex")) == {"shared-skill", "codex-skill"}
 
 
 def test_baseline_fingerprint_covers_prompt_and_host_matrix() -> None:
@@ -69,7 +90,7 @@ def test_baseline_fingerprint_covers_prompt_and_host_matrix() -> None:
 
 def test_baseline_fingerprint_covers_skill_descriptions() -> None:
     matrix = build_matrix()
-    changed = {**matrix, "skill_descriptions": {**matrix["skill_descriptions"], "plugin-release": "changed"}}
+    changed = {**matrix, "skill_descriptions": {**matrix["skill_descriptions"], SAMPLE_SKILL: "changed"}}
     assert matrix_sha256(changed) != matrix_sha256(matrix)
 
 
@@ -77,29 +98,29 @@ def test_nearest_negative_cases_cover_every_declared_neighbor() -> None:
     matrix = build_matrix()
     cases = [
         case for case in matrix["cases"]
-        if case["skill"] == "plugin-release" and case["type"] == "nearest_negative"
+        if case["skill"] == SAMPLE_SKILL and case["type"] == "nearest_negative"
     ]
     assert len(cases) == 2 * 2
-    assert {case["expected"] for case in cases} == {"done", "cloudflare-worker-cd"}
+    assert {case["expected"] for case in cases} == {"ai-native-engineering", "technical-research"}
 
 
 def test_ambiguous_cases_cover_every_declared_neighbor() -> None:
     matrix = build_matrix()
     cases = [
-        case for case in matrix["cases"] if case["skill"] == "plugin-release" and case["type"] == "ambiguous"
+        case for case in matrix["cases"] if case["skill"] == SAMPLE_SKILL and case["type"] == "ambiguous"
     ]
     assert len(cases) == 2 * 2
-    assert all("done" in case["prompt"] or "cloudflare-worker-cd" in case["prompt"] for case in cases)
+    assert all("ai-native-engineering" in case["prompt"] or "technical-research" in case["prompt"] for case in cases)
 
 
 def test_negative_trigger_phrases_are_explicit_exclusion_cases() -> None:
     matrix = build_matrix()
     cases = [
         case for case in matrix["cases"]
-        if case["skill"] == "plugin-release" and case["type"] == "negative_trigger"
+        if case["skill"] == SAMPLE_SKILL and case["type"] == "negative_trigger"
     ]
     assert len(cases) == 2
-    assert all(case["expected"] == "not:plugin-release" for case in cases)
+    assert all(case["expected"] == f"not:{SAMPLE_SKILL}" for case in cases)
 
 
 def test_negative_trigger_expectation_rejects_only_the_named_skill(monkeypatch) -> None:
@@ -109,9 +130,9 @@ def test_negative_trigger_expectation_rejects_only_the_named_skill(monkeypatch) 
         stderr = ""
 
     monkeypatch.setattr("scripts.run_trigger_eval.subprocess.run", lambda *args, **kwargs: Process())
-    case = {"skill": "plugin-release", "type": "negative_trigger", "id": 1, "expected": "not:plugin-release"}
+    case = {"skill": SAMPLE_SKILL, "type": "negative_trigger", "id": 1, "expected": f"not:{SAMPLE_SKILL}"}
     assert _evaluate("codex", "isolated", case, "fake")["status"] == "passed"
-    Process.stdout = '{"selected_skill":"plugin-release"}'
+    Process.stdout = json.dumps({"selected_skill": SAMPLE_SKILL})
     assert _evaluate("codex", "isolated", case, "fake")["status"] == "failed"
     Process.stdout = '{"selected_skill":"garbage"}'
     assert _evaluate("codex", "isolated", case, "fake")["status"] == "failed"
@@ -123,10 +144,12 @@ def test_negative_trigger_expectation_rejects_only_the_named_skill(monkeypatch) 
         assert _evaluate("codex", "isolated", case, "fake")["status"] == "failed"
 
 
-def test_valid_selection_accepts_only_known_host_skills_or_neutral_decisions() -> None:
-    assert is_valid_selection("codex", "plugin-release")
+def test_valid_selection_accepts_only_known_host_skills_or_neutral_decisions(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.trigger_eval.ROOT", tmp_path)
+    _write_host_scoped_repository(tmp_path)
+    assert is_valid_selection("codex", "codex-skill")
     assert is_valid_selection("claude-code", "ask-provider")
-    assert not is_valid_selection("claude-code", "plugin-release")
+    assert not is_valid_selection("claude-code", "codex-skill")
     assert not is_valid_selection("codex", "garbage")
 
 

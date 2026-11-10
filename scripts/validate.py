@@ -43,6 +43,8 @@ REQUIRED_REGISTRY_FIELDS = {
     "ambiguous_precedence",
 }
 HOST_MANIFEST_DIRS = {"codex": ".codex-plugin", "claude-code": ".claude-plugin"}
+REPO_SKILL_DIR = ".agents/skills"
+CLAUDE_REPO_SKILL_DIR = ".claude/skills"
 
 
 def validate() -> tuple[list[str], list[str]]:
@@ -56,46 +58,12 @@ def validate() -> tuple[list[str], list[str]]:
 
     skills: dict[str, str] = {}
     for path in _skill_paths():
-        try:
-            text = require_public_file(ROOT, path).read_text()
-        except (OSError, ValueError) as exc:
-            errors.append(f"cannot read public skill {path.relative_to(ROOT)}: {exc}")
-            continue
-        match = FRONTMATTER.match(text)
-        if not match:
-            errors.append(f"missing frontmatter: {path.relative_to(ROOT)}")
-            continue
-        try:
-            metadata = yaml.safe_load(match.group(1))
-        except yaml.YAMLError as exc:
-            errors.append(f"invalid YAML: {path.relative_to(ROOT)}: {exc}")
-            continue
-        name = path.parent.name
-        if set(metadata or {}) != {"name", "description"}:
-            errors.append(f"frontmatter keys must be name, description: {path.relative_to(ROOT)}")
-        if metadata.get("name") != name:
-            errors.append(f"name/directory mismatch: {path.relative_to(ROOT)}")
-        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
-            errors.append(f"invalid kebab-case name: {name}")
-        description = str(metadata.get("description", ""))
-        if len(description) > 500:
-            errors.append(f"description exceeds 500 chars: {name}")
-        if len(description) < 120:
-            errors.append(f"description is below 120-char target: {name}")
-        if len(description) > 300:
-            warnings.append(f"description exceeds 300-char warning: {name}")
-        sentences = [part for part in re.split(r"[。！？]", description) if part]
-        positive = re.search(
-            r"(?:時|依頼|場合|前|障害|検証|確認|調査|レビュー|参照|開発|実装).*使う|正のトリガー", description
-        )
-        negative = re.search(r"使わない|には.+を使う|なら.+を使う|限定する|限定し", description)
-        if len(sentences) < 3 or not positive or not negative:
-            errors.append(f"description must express purpose, trigger, and negative boundary: {name}")
-        if not re.search(r"^description:\s*>-\s*$", match.group(1), re.MULTILINE):
-            errors.append(f"description should use folded scalar: {name}")
-        if len(text.splitlines()) > 500:
-            errors.append(f"SKILL.md exceeds 500 lines: {name}")
-        skills[name] = description
+        description = _validate_skill_file(path, errors, warnings)
+        if description is not None:
+            skills[path.parent.name] = description
+    for path in _repo_skill_paths():
+        _validate_skill_file(path, errors, warnings)
+    _validate_repo_skill_mirror(errors)
 
     # No catalog-wide total cap: per-skill bounds above govern residency cost,
     # and a total cap couples unrelated skills (adding one forces trimming
@@ -109,6 +77,69 @@ def validate() -> tuple[list[str], list[str]]:
     _validate_review_mirror(errors)
     _validate_review_common_mirror(errors)
     return errors, warnings
+
+
+def _validate_skill_file(path: Path, errors: list[str], warnings: list[str]) -> str | None:
+    try:
+        text = require_public_file(ROOT, path).read_text()
+    except (OSError, ValueError) as exc:
+        errors.append(f"cannot read public skill {path.relative_to(ROOT)}: {exc}")
+        return None
+    match = FRONTMATTER.match(text)
+    if not match:
+        errors.append(f"missing frontmatter: {path.relative_to(ROOT)}")
+        return None
+    try:
+        metadata = yaml.safe_load(match.group(1))
+    except yaml.YAMLError as exc:
+        errors.append(f"invalid YAML: {path.relative_to(ROOT)}: {exc}")
+        return None
+    name = path.parent.name
+    if set(metadata or {}) != {"name", "description"}:
+        errors.append(f"frontmatter keys must be name, description: {path.relative_to(ROOT)}")
+    if metadata.get("name") != name:
+        errors.append(f"name/directory mismatch: {path.relative_to(ROOT)}")
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
+        errors.append(f"invalid kebab-case name: {name}")
+    description = str(metadata.get("description", ""))
+    if len(description) > 500:
+        errors.append(f"description exceeds 500 chars: {name}")
+    if len(description) < 120:
+        errors.append(f"description is below 120-char target: {name}")
+    if len(description) > 300:
+        warnings.append(f"description exceeds 300-char warning: {name}")
+    sentences = [part for part in re.split(r"[。！？]", description) if part]
+    positive = re.search(
+        r"(?:時|依頼|場合|前|障害|検証|確認|調査|レビュー|参照|開発|実装).*使う|正のトリガー", description
+    )
+    negative = re.search(r"使わない|には.+を使う|なら.+を使う|限定する|限定し", description)
+    if len(sentences) < 3 or not positive or not negative:
+        errors.append(f"description must express purpose, trigger, and negative boundary: {name}")
+    if not re.search(r"^description:\s*>-\s*$", match.group(1), re.MULTILINE):
+        errors.append(f"description should use folded scalar: {name}")
+    if len(text.splitlines()) > 500:
+        errors.append(f"SKILL.md exceeds 500 lines: {name}")
+    return description
+
+
+def _repo_skill_paths() -> list[Path]:
+    """Repository-local skills: Codex reads `.agents/skills`, Claude Code reads `.claude/skills`."""
+    return sorted(public_paths(ROOT, list(ROOT.glob(f"{REPO_SKILL_DIR}/*/SKILL.md"))))
+
+
+def _validate_repo_skill_mirror(errors: list[str]) -> None:
+    """Each repository-local skill is a file in `.agents/skills` linked from `.claude/skills`."""
+    sources = {path.parent.name: path for path in _repo_skill_paths()}
+    links = {
+        path.parent.name: path
+        for path in public_paths(ROOT, list(ROOT.glob(f"{CLAUDE_REPO_SKILL_DIR}/*/SKILL.md")))
+    }
+    for name in sorted(set(sources) | set(links)):
+        source, link = sources.get(name), links.get(name)
+        if link is None:
+            errors.append(f"repo skill {name} needs a {CLAUDE_REPO_SKILL_DIR}/{name}/SKILL.md symlink")
+        elif source is None or not link.is_symlink() or link.resolve() != source.resolve():
+            errors.append(f"{link.relative_to(ROOT)} must be a symlink to {REPO_SKILL_DIR}/{name}/SKILL.md")
 
 
 def _repository_boundary_errors() -> list[str]:
@@ -299,7 +330,8 @@ def _validate_results(errors: list[str]) -> None:
 
 
 def _validate_skill_evals(errors: list[str]) -> None:
-    for path in public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/evals/evals.json"))):
+    eval_paths = [*ROOT.glob("plugins/*/skills/*/evals/evals.json"), *ROOT.glob(f"{REPO_SKILL_DIR}/*/evals/evals.json")]
+    for path in public_paths(ROOT, eval_paths):
         try:
             document = json.loads(require_public_file(ROOT, path).read_text())
             expected_name = path.parents[1].name
@@ -471,7 +503,7 @@ def _scan_public_content(errors: list[str]) -> None:
 def _validate_markdown_links(errors: list[str]) -> None:
     """Reject dangling local Markdown links without trying to validate external URLs."""
     link_pattern = re.compile(r"(?<!!)\[[^]]*]\(([^)]+)\)")
-    skill_roots = {path.parent for path in _skill_paths()}
+    skill_roots = {path.parent for path in [*_skill_paths(), *_repo_skill_paths()]}
     for path in iter_public_files(ROOT, ".md"):
         if _is_root_excluded(path):
             continue

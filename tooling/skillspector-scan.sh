@@ -12,11 +12,12 @@ out_dir=${1:-/tmp/skillspector}
 shift || true
 mkdir -p "$out_dir"
 if [[ $# -eq 0 ]]; then
-  set -- plugins/*/skills/*
+  set -- plugins/*/skills/* .agents/skills/*
 fi
 for skill_dir in "$@"; do
   [[ -f "$skill_dir/SKILL.md" ]] || continue
   name=${skill_dir#plugins/}
+  name=${name/#.agents\/skills\//repo__}
   name=${name/\/skills\//__}
   skillspector scan "$skill_dir" --format json --output "$out_dir/$name.json" --no-llm
 done
