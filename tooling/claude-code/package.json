@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "description": "Pins the Claude Code CLI that CI uses to validate the plugin manifest.",
+  "devDependencies": {
+    "@anthropic-ai/claude-code": "2.1.311"
+  }
+}

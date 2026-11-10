@@ -1,0 +1,28 @@
+version: 2
+# Cooldown holds back newly published versions so that a compromised release is likely
+# to be caught and yanked before it is proposed here.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ["*"]
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      python:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /tooling/claude-code
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
