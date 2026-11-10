@@ -7,7 +7,6 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
 | `toolbox` | 21 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
-| `plugin-release` | 1 | Codex Git marketplace release workflow | Git, GitHub CLI (`gh`), Codex CLI, Python 3.11+, `uv` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
@@ -15,7 +14,6 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 ### Skill catalog
 
 - `toolbox` (21, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `owner-board`, `progress-report`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
-- `plugin-release` (1, Codex only): `plugin-release`.
 - `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.
 - `github-operations` (2, Claude Code and Codex): `github-project-provisioning` and `github-issue-create`.
@@ -49,11 +47,9 @@ progress-report --html Focus on the release outlook
 
 Use `/plugin` to update or uninstall a plugin. Claude Code discovers the marketplace from `.claude-plugin/marketplace.json`.
 
-`plugin-release` is Codex-only. It was present in the shared toolbox package through 0.7.0 and is not available in Claude Code from 0.7.1 onward; there is no Claude Code replacement in this marketplace.
-
 ### Codex
 
-Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `plugin-release`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release. Since toolbox 0.7.1, `plugin-release` has been a separate Codex-only plugin and is not included in toolbox. Removing the skill from toolbox was a breaking package change, but shipped in 0.7.1 as a patch. Toolbox 0.8.0 marks the corrected policy and introduces no further breaking package change. Future skill removals or moves will ship in a minor version or higher. If you upgraded from toolbox 0.7.0 or earlier and relied on its bundled skill, install `plugin-release` separately from the `agent-toolbox` marketplace. In CLI versions whose `codex plugin --help` lists `add`, use `codex plugin add plugin-release@agent-toolbox`.
+Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release.
 
 The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill before reporting repository changes complete.
 
@@ -85,6 +81,8 @@ uv run python -m scripts.validate
 uv run python -m scripts.trigger_eval --check
 bash -n plugins/done/scripts/quality-gate-stop.sh
 ```
+
+Maintainer-only skills live in this repository instead of a plugin. Each is a file under `.agents/skills/<name>/` (read by Codex) with a `.claude/skills/<name>/SKILL.md` symlink to it (read by Claude Code), so both hosts load it when working in this repository. `plugin-release` releases these plugins to both marketplaces; it is no longer distributed as a Codex plugin, so uninstall `plugin-release@agent-toolbox` if you installed it.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution rules and [SECURITY.md](SECURITY.md) for vulnerability reporting.
 

@@ -26,6 +26,7 @@ from scripts.validate import (
     _validate_manifests,
     _validate_markdown_links,
     _validate_registry,
+    _validate_repo_skill_mirror,
     _validate_results,
     _validate_review_common_mirror,
     _validate_review_mirror,
@@ -128,13 +129,46 @@ def test_done_documentation_is_inside_plugin_distribution() -> None:
     assert "../../" not in skill
 
 
-def test_plugin_release_is_only_published_in_the_codex_marketplace() -> None:
-    assert (ROOT / "plugins/plugin-release/.codex-plugin/plugin.json").is_file()
-    assert not (ROOT / "plugins/plugin-release/.claude-plugin/plugin.json").exists()
-    codex = json.loads((ROOT / ".agents/plugins/marketplace.json").read_text())
-    claude = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text())
-    assert "plugin-release" in {plugin["name"] for plugin in codex["plugins"]}
-    assert "plugin-release" not in {plugin["name"] for plugin in claude["plugins"]}
+def test_plugin_release_is_a_repository_skill_for_both_hosts() -> None:
+    source = ROOT / ".agents/skills/plugin-release/SKILL.md"
+    link = ROOT / ".claude/skills/plugin-release/SKILL.md"
+    assert source.is_file() and not source.is_symlink()
+    assert link.is_symlink() and link.resolve() == source.resolve()
+    assert not (ROOT / "plugins/plugin-release").exists()
+    for marketplace in (".agents/plugins/marketplace.json", ".claude-plugin/marketplace.json"):
+        names = {plugin["name"] for plugin in json.loads((ROOT / marketplace).read_text())["plugins"]}
+        assert "plugin-release" not in names
+
+
+def _write_repo_skill(root: Path, link_target: str | None) -> None:
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    source = root / ".agents/skills/sample/SKILL.md"
+    source.parent.mkdir(parents=True)
+    source.write_text("---\nname: sample\ndescription: sample\n---\n")
+    if link_target is not None:
+        link = root / ".claude/skills/sample/SKILL.md"
+        link.parent.mkdir(parents=True)
+        link.symlink_to(link_target)
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+
+
+@pytest.mark.parametrize(
+    ("link_target", "expected"),
+    [
+        ("../../../.agents/skills/sample/SKILL.md", []),
+        (None, ["repo skill sample needs a .claude/skills/sample/SKILL.md symlink"]),
+        ("../../../README.md", [".claude/skills/sample/SKILL.md must be a symlink to .agents/skills/sample/SKILL.md"]),
+    ],
+)
+def test_repo_skills_must_be_linked_for_claude_code(
+    tmp_path: Path, monkeypatch, link_target: str | None, expected: list[str]
+) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    (tmp_path / "README.md").write_text("readme")
+    _write_repo_skill(tmp_path, link_target)
+    errors: list[str] = []
+    _validate_repo_skill_mirror(errors)
+    assert errors == expected
 
 
 def test_codex_plugin_versions_follow_semver() -> None:
