@@ -132,6 +132,18 @@ description: >-
 - 日本語を含む要素に `text-transform: uppercase` を、日本語の文章幅に `ch` 単位を使わない。
 - `overflow:hidden` やline-clampで文字を切らない。ツールチップが親要素のoverflowやページの端で切れないようにする。
 
+## 保存先
+
+人が開く成果物は、Finderやエクスプローラーで辿れる一か所に集める。優先順位は、ユーザーの指定 → repoが定めるartifactの慣習 → 次の既定。
+
+- 置き場: `$AGENT_ARTIFACTS_DIR`、未設定なら `~/Documents/agent-artifacts/`。その下に `<project>/` を作る。
+- `<project>`: git repo内なら `git rev-parse --path-format=absolute --git-common-dir` の親directoryの名前（worktreeからでも本体のrepo名になる）。repo外の作業は `_misc`。
+- 名前: 1ファイルの成果物は `YYYY-MM-DD_<kind>_<slug>.html`、複数ファイルの成果物は `YYYY-MM-DD_<kind>_<slug>/`。日付は作成日、`<kind>` は `doc`・`progress`・`owner-board` のどれか、`<slug>` は内容を表すASCIIのkebab-case。同じ日に同じ名前があれば末尾に `_HHMM` を足す。ホスト名・セッションIDは入れない。
+- 同じ資料を直すときは同じファイルを上書きする。別の時点の報告は新しいファイルにする。
+- 新しく作るdirectoryは所有者だけが読めるpermission（700）にする。
+- repo内や他者の作業ツリーへ副産物を混ぜない。review記録・引継ぎ・autopilotのjournalなど機械が読む記録は、各スキルが定める永続state領域に置き、ここへ混ぜない。
+- 書込みが拒否されたら（hostのsandboxなど）、保存できたと装わない。理由と、置き場を書込み許可に加える設定（Codexは `sandbox_workspace_write.writable_roots`、Claude Codeは `permissions.additionalDirectories`）を伝える。代わりに一時領域へ保存した場合は、そのパスと消えうることを伝える。
+
 ## セルフレビューしてすぐ開く
 
 ブラウザでの表示確認は行わない（ユーザーから頼まれた場合は、browser-operationsを読んでから行う）。保存後にコードを読み返し、次を確認・修正する。
@@ -145,7 +157,5 @@ description: >-
 7. 隠した補足を開かなくても、判断に必要なことが分かるか。
 
 修正後は、保存した最終版をすぐOSの標準の方法で開く。macOSは `open "<絶対パス>"`、Linuxは `xdg-open "<絶対パス>"`、Windows PowerShellは `Invoke-Item -LiteralPath '<絶対パス>'` を使う。ユーザーが開かないよう指定した場合は従う。開けなかった場合は、その理由を報告する。
-
-保存先の優先順位は、ユーザーの指定 → repoが定めるartifactの慣習 → repo外のsession成果物領域。他者の作業ツリーへ副産物を混ぜない。
 
 チャットには結論1〜2行とHTMLの絶対パスを返し、「表示はコードのセルフレビューのみで確認」と一言添える。HTML全文・行数・自賛は書かない。
