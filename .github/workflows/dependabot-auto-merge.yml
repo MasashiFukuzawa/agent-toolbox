@@ -1,7 +1,7 @@
 name: dependabot-auto-merge
 # Queues Dependabot's minor and patch updates to merge once the required checks pass.
-# Major updates, updates whose type is unknown (such as git sources), and updates whose
-# package maintainers changed are left for review.
+# Major updates, updates whose type Dependabot cannot classify, and updates whose package
+# maintainers changed are left for review. Git sources pinned to semver tags count as versions.
 on: pull_request
 permissions:
   contents: read
