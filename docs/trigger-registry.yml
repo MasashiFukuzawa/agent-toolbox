@@ -79,7 +79,6 @@ skills:
     <<: *defaults
     canonical_name: owner-board
     category: communication
-    runtime_dependencies: [python3.11+]
     side_effect_level: workspace-write
     positive_triggers: ["オーナー連絡板を作って", "連絡板を最新化して", "連絡板のQへの回答を反映して"]
     nearest_neighbors: [progress-report, html-artifact, autopilot]

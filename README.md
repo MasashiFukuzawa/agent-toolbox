@@ -26,6 +26,8 @@ Autopilot delegates bounded work while the controller retains artifact review an
 
 `progress-report` accepts natural-language instructions to focus the report without requiring scope flags. Add `--ascii` for in-chat diagrams, `--html` for a saved visual HTML report, or both for an in-chat summary plus HTML. The report skill owns the facts and decision context; `ascii-diagram` and `html-artifact` own presentation. Install the complete toolbox plugin to use these integrations. HTML output does not authorize publishing or uploading it.
 
+Human-facing HTML from `html-artifact`, `progress-report`, and `owner-board` is saved under `~/Documents/agent-artifacts/<project>/` (override with `AGENT_ARTIFACTS_DIR`), named `YYYY-MM-DD_<kind>_<slug>`, so Finder or Explorer can find output from either host in one place. `<project>` is the main repository name, also from a worktree. Sandboxed hosts need that directory allowed for writing: Codex `sandbox_workspace_write.writable_roots`, Claude Code `permissions.additionalDirectories`. Machine-read records such as review runs and handoffs stay in each skill's state directory.
+
 ```text
 progress-report --ascii Focus on blockers and dependencies
 progress-report --html Focus on the release outlook
@@ -33,7 +35,7 @@ progress-report --html Focus on the release outlook
 
 ### Owner board
 
-`owner-board` maintains a local owner communication board from JSON with fixed question IDs, decisions, human tasks, answer history, and pending follow-ups or relays. Its static HTML supports freely ordered text, tables, code, and offline SVG diagrams, including sequence and flow diagrams. Python 3.11+ is its only runtime dependency. Operational data stays outside public repositories; creating a board does not authorize publishing it or adding external messaging. General presentation uses `html-artifact`, progress context uses `progress-report`, and execution authority stays with `autopilot`.
+`owner-board` keeps one continuously updated local HTML board of decisions and tasks for a human owner. It opens with the current milestone and what is blocked, lists open requests, and writes each request as background, problem, goal, and the ask, with fixed question IDs and an archive page for answers, follow-ups, and relays. Agents edit the HTML directly from a self-contained example; there is no runtime dependency. Operational boards stay outside public repositories; creating a board does not authorize publishing it or adding external messaging. General presentation and the save location use `html-artifact`, progress context uses `progress-report`, and execution authority stays with `autopilot`.
 
 ### Claude Code
 

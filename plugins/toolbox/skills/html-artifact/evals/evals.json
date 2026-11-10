@@ -61,6 +61,12 @@
       "prompt": "CI/CD、監視、権限設計、開発環境をまとめて見直す提案をHTMLで作って。どれも細かい設定変更案まで入れて。",
       "expected_output": "総論のスコープが一度の議論には大きすぎると判断し、今回決める範囲に絞るか資料を分けることを示す。総論（課題・目的・決めること）と全体像を先に置き、細かい設定変更案は対応する論点の各論に置き、変化を示すなら総論の図の該当箇所を拡大した各論用のAsIs/ToBe図を使う。前提の合意がない細部を先に決めさせない。",
       "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "このrepoのworktreeで作業中。移行計画をHTMLにして。保存場所は任せる。",
+      "expected_output": "保存先は $AGENT_ARTIFACTS_DIR、未設定なら ~/Documents/agent-artifacts/<project>/ にする。<project> はworktreeでも本体のrepo名にし、ファイル名は YYYY-MM-DD_doc_<ASCIIのkebab-case slug>.html にする。repo内や作業ツリーには保存しない。書込みが拒否されたら保存できたと装わず、書込み許可に加える設定を伝える。保存後に開き、絶対パスを返す。",
+      "files": []
     }
   ]
 }
