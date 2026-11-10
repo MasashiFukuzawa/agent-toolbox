@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ref="38a1dfe93325d2f8bfcd4f8d0241eed706334915" # v2.13.3
+ref="326a2b489411a20ed742ff13701be39ba00063c8"
 if ! command -v skillspector >/dev/null 2>&1; then
   command -v uv >/dev/null 2>&1 || python3 -m pip install --quiet --user uv
   export PATH="$HOME/.local/bin:$PATH"
-  uv tool install --quiet --python 3.14 "git+https://github.com/NVIDIA/skillspector.git@$ref"
+  uv tool install --quiet --python 3.12 "git+https://github.com/NVIDIA/skillspector.git@$ref"
 fi
 
 out_dir=${1:-/tmp/skillspector}
