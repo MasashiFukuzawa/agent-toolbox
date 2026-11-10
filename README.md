@@ -87,7 +87,7 @@ Review a skill's guardrails before using it with authenticated services or write
 
 ## Development
 
-Python 3.11+ and [uv](https://docs.astral.sh/uv/) are required for repository tooling.
+Python 3.15+ and [uv](https://docs.astral.sh/uv/) are required for repository tooling.
 
 ```bash
 uv sync --dev

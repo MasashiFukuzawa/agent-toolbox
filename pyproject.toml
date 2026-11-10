@@ -1,7 +1,7 @@
 [project]
 name = "agent-toolbox-tooling"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.15"
 dependencies = [
     "jsonschema>=4.23,<5",
     "pathspec>=0.12,<2",
@@ -18,7 +18,10 @@ pythonpath = ["."]
 
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+# Ruff's Python 3.15 support is still a preview; move to py315 once it is stable.
+target-version = "py314"
+# Bundled skill scripts and the installers run on the user's own Python, which may be older.
+per-file-target-version = { "plugins/**/*.py" = "py311", "global-instructions/*.py" = "py311", "recommended-skills/*.py" = "py311" }
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
