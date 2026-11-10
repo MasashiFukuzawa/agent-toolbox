@@ -1,6 +1,6 @@
-# Third-party skills that complement the toolbox plugin. They are installed from their
-# upstream repositories with `gh skill install`, not copied into this repository.
-# Review each upstream skill before installing it; `gh skill` does not verify skill content.
+# Third-party skills that complement the toolbox plugin. install.py fetches each one from its
+# upstream repository with `gh skill install`, scans it with the SkillSpector release pinned in
+# tooling/skillspector, and installs it only if the scan passes. CI runs the same scan.
 
 [[skill]]
 repository = "mizchi/skills"

@@ -11,6 +11,8 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest>=9.2.0,<10", "ruff>=0.17.3,<1"]
+# Not installed; pins the uv release that CI installs (setup-uv reads it from uv.lock) so Dependabot updates it.
+uv = ["uv>=0.13.6,<1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "plugins/toolbox/skills/typescript-project-foundation/scripts/tests"]
@@ -18,8 +20,7 @@ pythonpath = ["."]
 
 [tool.ruff]
 line-length = 120
-# Ruff's Python 3.15 support is still a preview; move to py315 once it is stable.
-target-version = "py314"
+target-version = "py315"
 # Bundled skill scripts and the installers run on the user's own Python, which may be older.
 per-file-target-version = { "plugins/**/*.py" = "py311", "global-instructions/*.py" = "py311", "recommended-skills/*.py" = "py311" }
 

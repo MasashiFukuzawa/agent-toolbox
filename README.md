@@ -67,13 +67,13 @@ It links `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and `~/.cursor/AGENTS.md` 
 
 ### Recommended third-party skills (optional)
 
-`recommended-skills/skills.toml` lists skills from other repositories that complement the toolbox plugin. Install them at user scope for Claude Code and Codex with [GitHub CLI](https://cli.github.com/):
+`recommended-skills/skills.toml` lists skills from other repositories that complement the toolbox plugin. Install them at user scope for Claude Code and Codex with [GitHub CLI](https://cli.github.com/) and [uv](https://docs.astral.sh/uv/):
 
 ```bash
 python3 recommended-skills/install.py
 ```
 
-Skills that are already installed are left alone; update them with `gh skill update`. `gh skill` does not verify skill content, so review each upstream skill before installing it.
+The installer fetches each skill from its upstream repository and scans it with the [SkillSpector](https://github.com/NVIDIA/skillspector) release pinned in `tooling/skillspector`. A skill is installed only if the scan passes; a rejected skill leaves any installed copy unchanged. Re-run the installer to pick up upstream changes instead of `gh skill update`, which skips the scan. `--scan-only` scans without installing; CI runs it on every change. A passing static scan lowers the risk but does not prove a skill is safe, so still read a skill before relying on it.
 
 ## Security model
 
