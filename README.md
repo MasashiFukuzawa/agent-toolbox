@@ -57,7 +57,23 @@ The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill 
 
 `global-instructions/AGENTS.md` is a Japanese-language set of cross-project principles for Claude Code, Codex, and Cursor.
 
-To use it, clone this repository to a location you only update with `git pull --ff-only`, then point each host's global instruction file at it with a symlink: `~/.codex/AGENTS.md`, `~/.cursor/AGENTS.md`, and `~/.claude/CLAUDE.md` (Claude Code reads a project's `AGENTS.md` but not a user-level one). Do not link a working checkout where you switch branches, because a branch without the file silently removes the instructions from every session. Back up any existing real file before replacing it.
+Clone this repository to a location you only update with `git pull --ff-only`, then run the installer from that clone:
+
+```bash
+python3 global-instructions/install.py
+```
+
+It links `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and `~/.cursor/AGENTS.md` to the clone's file for each host whose configuration directory exists (Claude Code reads a project's `AGENTS.md` but not a user-level one), and schedules a job that fast-forwards the clone every six hours: launchd on macOS, a systemd user timer on Linux. It never replaces a real file; back that file up, remove it, and re-run. Pass `--scheduler none` to skip the job, and `--uninstall` to remove the links into this clone and the job. Do not run it from a working checkout where you switch branches, because a branch without the file silently removes the instructions from every session.
+
+### Recommended third-party skills (optional)
+
+`recommended-skills/skills.toml` lists skills from other repositories that complement the toolbox plugin. Install them at user scope for Claude Code and Codex with [GitHub CLI](https://cli.github.com/):
+
+```bash
+python3 recommended-skills/install.py
+```
+
+Skills that are already installed are left alone; update them with `gh skill update`. `gh skill` does not verify skill content, so review each upstream skill before installing it.
 
 ## Security model
 
