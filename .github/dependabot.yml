@@ -20,6 +20,12 @@ updates:
     groups:
       python:
         patterns: ["*"]
+  - package-ecosystem: uv
+    directory: /tooling/skillspector
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
   - package-ecosystem: npm
     directory: /tooling/claude-code
     schedule:

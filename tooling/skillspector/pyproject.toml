@@ -1,0 +1,12 @@
+[project]
+name = "skillspector-runner"
+version = "0"
+description = "Pins the SkillSpector release that vets third-party skills before they are installed."
+requires-python = ">=3.13,<3.14"
+dependencies = ["skillspector"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+skillspector = { git = "https://github.com/NVIDIA/skillspector", tag = "v2.13.2" }
