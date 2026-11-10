@@ -57,6 +57,12 @@ Add this Git repository as a plugin marketplace in Codex, then install `toolbox`
 
 The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill before reporting repository changes complete.
 
+### Global instructions (optional)
+
+`global-instructions/AGENTS.md` is a Japanese-language set of cross-project instructions for Claude Code, Codex, and Cursor: output language and terminology, candid recommendations, root-cause fixes, AI-implementation scoping, and verification before reporting completion. It references the `ai-native-engineering` and `browser-operations` skills from `toolbox`.
+
+To use it, clone this repository to a location you only update with `git pull --ff-only`, then point each host's global instruction file at it with a symlink: `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and `~/.cursor/AGENTS.md`. Do not link a working checkout where you switch branches, because a branch without the file silently removes the instructions from every session. Back up any existing real file before replacing it.
+
 ## Security model
 
 - Skills never include credentials, personal paths, organization-specific identifiers, or non-public operational details.
