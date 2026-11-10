@@ -1,6 +1,6 @@
 # モデル・effortの初期候補
 
-整理日: 2026-09-30。既存review skillの運用値を集約したもの。独立した性能ベンチマークや価格比較としては未検証。利用可能性は起動ホストで確認する。
+整理日: 2026-11-10。既存review skillの運用値を集約したもの。独立した性能ベンチマークや価格比較としては未検証。利用可能性は起動ホストで確認する。
 
 | Provider | モデルID | effort初期値 | 主な初期候補用途 |
 |---|---|---|---|
@@ -8,7 +8,7 @@
 | OpenAI | `gpt-6-astra` | `low` | controller、特に難しい横断判断。明示指定または選択権限が必要 |
 | Anthropic | `claude-sonnet-5-5` | `medium` | 設計済みの実装、範囲の明確な調査・差分レビュー |
 | Anthropic | `claude-opus-5-5` | `low` | 設計判断、高い不確実性、複雑な実装・controller |
-| Anthropic | `claude-fable-5-1` | `low` | 特に難しい長時間課題。明示指定または選択権限が必要 |
+| Anthropic | `claude-fable-5-2` | `low` | 特に難しい長時間課題。明示指定または選択権限が必要 |
 
 providerのみ指定された通常レビューは、そのproviderの表の先頭を初期候補とする。設計そのものが対象、不確実性が高い、拠り所の設計がない場合、OpenAIは上記のeffort段階を、Anthropicは次の候補を検討する。controllerに必ず特定モデルを要求する表ではない。
 
@@ -30,6 +30,10 @@ OpenAIではモデルを`gpt-6.1-sol`に固定し、まずeffortでレビュー�
 Anthropicのリリース発表（2026-09-28）でSonnet 5.5のAPI ID `claude-sonnet-5-5` と提供開始を確認: <https://www.anthropic.com/claude-sonnet-5-5>.
 
 Sonnet 5.5でthinkingを無効にして使う設定がある場合は、Sonnet 5の`disabled`ではなく`between_tools`への移行が必要。`between_tools`は`low`/`medium`/`high`で使え、`xhigh`/`max`ではエラーになるため、該当設定とeffortを利用ホスト側で確認する: <https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide>.
+
+Anthropicのリリース発表（2026-11-09）とモデルページでFable 5.2のAPI ID `claude-fable-5-2`（aliasも同一）、Claude APIと主要クラウドでの提供、対応effort `low`/`medium`/`high`（API既定）/`xhigh`/`max`を確認: <https://www.anthropic.com/claude-fable-and-mythos-5-2>, <https://platform.claude.com/docs/en/models/fable-5-2/overview>. `claude-fable-5-1`はこの版で置き換え、`fable`指定は`claude-fable-5-2`へ解決する。API既定の`high`ではなく`low`を初期値とする。同時発表のMythos 5.2は利用組織が限定されるため候補に含めない。
+
+Fable 5.2はadaptive thinkingが常時有効で、thinkingの無効化や`budget_tokens`指定はエラーになる。advisor toolの組合せ制限など5.1からの非互換もあるため、該当設定を利用ホスト側で確認する。zero data retentionはAnthropicの明示許可がない限り使えないため、データ保持の制約がある環境では起動前に確認する: <https://platform.claude.com/docs/en/models/fable-5-2/migration-guide>.
 
 初期値で浅い場合、対象を絞ったうえで上位候補を検討する。上位モデルでは必要に応じてeffortを一段上げる。`high`は難度・影響に見合う理由がある場合、`xhigh`以上は明示指定または明示的な選択権限がある場合に限る。対応しないeffortは黙って降格しない。
 
