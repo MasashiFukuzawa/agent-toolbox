@@ -84,6 +84,16 @@ skills:
     nearest_neighbors: [progress-report, html-artifact, autopilot]
     negative_triggers: ["単発の進捗報告だけ", "一般的なHTML資料だけ", "複数タスクを自律実行して"]
     ambiguous_precedence: "人間への依頼と回答を継続管理する連絡板はowner-board、現在地の整理はprogress-report、一般的な表示はhtml-artifact、実行の管理はautopilot"
+  daily-plan:
+    <<: *defaults
+    canonical_name: daily-plan
+    category: communication
+    runtime_dependencies: [python3]
+    side_effect_level: workspace-write
+    positive_triggers: ["今日の計画を作って", "今日やることを決めよう", "今夜から朝までの作業を決めて", "計画ページを最新化して"]
+    nearest_neighbors: [progress-report, owner-board, html-artifact, autopilot]
+    negative_triggers: ["単発の進捗報告だけ", "人間への依頼と回答を連絡板で継続管理して", "一般的なHTML資料だけ", "複数タスクを自律実行して"]
+    ambiguous_precedence: "最大24時間の作業の合意と進捗ページはdaily-plan、単発の報告はprogress-report、人への依頼はowner-board、一般的な表示はhtml-artifact、実行の管理はautopilot"
   progress-report: {<<: *defaults, canonical_name: progress-report, category: communication, side_effect_level: workspace-write, positive_triggers: ["進捗を報告して"], nearest_neighbors: [context-handoff, owner-board], negative_triggers: ["再開可能な引き継ぎ", "人間への依頼と回答を連絡板で継続管理して"]}
   ai-native-engineering: {<<: *defaults, canonical_name: ai-native-engineering, category: architecture, positive_triggers: ["この機能の実装計画を作って", "認証基盤をどう設計する", "コア機能のUXをどこまで作り込む", "セキュリティ対策がtoo muchか判断して", "MVPのスコープを決めたい", "まず簡易版で始めてよいか判断して", "将来の拡張をどこまで考慮する", "どれくらいで実装できる", "この構成はoverengineeringかレビューして"], nearest_neighbors: [adr, autopilot, technical-research], negative_triggers: ["仕様と手段が確定した単純修正", "技術調査だけ", "進捗報告だけ"], ambiguous_precedence: "判断を作る段階ではai-native-engineering、決定の記録はadr、複数タスクの自律実行はautopilot、根拠調査はtechnical-researchを優先"}
   structured-text-parsing: {<<: *defaults, canonical_name: structured-text-parsing, category: parsing, positive_triggers: ["ログから抽出して"], nearest_neighbors: [technical-research], negative_triggers: ["曖昧な自然言語理解"]}

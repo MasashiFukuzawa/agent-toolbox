@@ -6,14 +6,14 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 21 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 22 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
 
 ### Skill catalog
 
-- `toolbox` (21, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `owner-board`, `progress-report`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
+- `toolbox` (22, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `owner-board`, `progress-report`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
 - `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.
 - `github-operations` (2, Claude Code and Codex): `github-project-provisioning` and `github-issue-create`.
@@ -26,7 +26,7 @@ Autopilot delegates bounded work while the controller retains artifact review an
 
 `progress-report` accepts natural-language instructions to focus the report without requiring scope flags. Add `--ascii` for in-chat diagrams, `--html` for a saved visual HTML report, or both for an in-chat summary plus HTML. The report skill owns the facts and decision context; `ascii-diagram` and `html-artifact` own presentation. Install the complete toolbox plugin to use these integrations. HTML output does not authorize publishing or uploading it.
 
-Human-facing HTML from `html-artifact`, `progress-report`, and `owner-board` is saved under `~/Documents/agent-artifacts/<project>/` (override with `AGENT_ARTIFACTS_DIR`), named `YYYY-MM-DD_<kind>_<slug>`, so Finder or Explorer can find output from either host in one place. `<project>` is the main repository name, also from a worktree. Sandboxed hosts need that directory allowed for writing: Codex `sandbox_workspace_write.writable_roots`, Claude Code `permissions.additionalDirectories`. Machine-read records such as review runs and handoffs stay in each skill's state directory.
+Human-facing HTML from `html-artifact`, `progress-report`, `owner-board`, and `daily-plan` is saved under `~/Documents/agent-artifacts/<project>/` (override with `AGENT_ARTIFACTS_DIR`), named `YYYY-MM-DD_<kind>_<slug>`, so Finder or Explorer can find output from either host in one place. `<project>` is the main repository name, also from a worktree. Sandboxed hosts need that directory allowed for writing: Codex `sandbox_workspace_write.writable_roots`, Claude Code `permissions.additionalDirectories`. Machine-read records such as review runs and handoffs stay in each skill's state directory.
 
 ```text
 progress-report --ascii Focus on blockers and dependencies
@@ -36,6 +36,10 @@ progress-report --html Focus on the release outlook
 ### Owner board
 
 `owner-board` keeps one continuously updated local HTML board of decisions and tasks for a human owner. It opens with the current milestone and what is blocked, lists open requests, and writes each request as background, problem, goal, and the ask, with fixed question IDs and an archive page for answers, follow-ups, and relays. Agents edit the HTML directly from a self-contained example; there is no runtime dependency. Operational boards stay outside public repositories; creating a board does not authorize publishing it or adding external messaging. General presentation and the save location use `html-artifact`, progress context uses `progress-report`, and execution authority stays with `autopilot`.
+
+### Daily plan
+
+`daily-plan` agrees on up to 24 hours of work with a human — a working day, or an overnight run — and tracks it on one local HTML page per plan. The page shows the gap to the period's goals, a timeline of planned and actual work, waits, and time windows to protect, and each task's steps with a next step. A bundled standard-library Python script renders the page from a JSON plan, judges step states from GitHub (`gh`) or a watched file, and with `--watch` re-renders on an interval until the plan ends. Agreeing to a plan does not approve merges, applies, or production jobs inside it; requests to humans stay on the `owner-board` and are linked by question ID.
 
 ### Claude Code
 
