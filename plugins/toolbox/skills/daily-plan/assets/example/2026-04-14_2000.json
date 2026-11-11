@@ -1,0 +1,55 @@
+{
+  "title": "4/14 夜〜4/15 朝の作業",
+  "start": "2026-04-14T20:00:00+09:00",
+  "end": "2026-04-15T08:00:00+09:00",
+  "goals": "goals.json",
+  "repo": "example-org/search-service",
+  "ownerBoard": "../2026-04-01_owner-board_search-renewal/owner-board.html",
+  "source": {"label": "4/14 夜の合意", "href": "https://example.com/plans/2026-04#night-0414"},
+  "constraints": [
+    {"start": "06:00", "end": "09:00", "label": "本番停止を避ける"}
+  ],
+  "lanes": [
+    {
+      "name": "並び替えの staging 受入",
+      "goal": "staging で受入ケース12件を通し、結果を受入台帳に記録する",
+      "advances": {"goal": "search", "stage": "staging受入"},
+      "plan": {"start": "20:00", "end": "23:30"},
+      "actual": {"start": "20:10", "end": "23:50"},
+      "steps": [
+        {"label": "受入データの投入", "state": "done"},
+        {"label": "受入ケース12件の実行", "state": "done", "note": "12件成功"},
+        {"label": "受入台帳の PR を merge", "check": "pr-merged:412", "state": "done"}
+      ]
+    },
+    {
+      "name": "CSV取込の実装",
+      "goal": "取込の検証と保存までを実装し、CI を通す",
+      "advances": {"goal": "import", "stage": "実装"},
+      "plan": {"start": "23:30", "end": "04:00"},
+      "actual": {"start": "23:50"},
+      "steps": [
+        {"label": "列の検証", "state": "done"},
+        {"label": "保存と重複の扱い", "state": "doing"},
+        {"label": "CI green", "check": "pr-ci:415"},
+        {"label": "レビュー後に merge", "check": "pr-merged:415", "waitLabel": "重複の扱いの判断待ち", "ref": "Q14"}
+      ]
+    },
+    {
+      "name": "依存ライブラリの更新",
+      "goal": "修正版の公開後に更新 PR を出し、朝の停止禁止の前に本番へ反映する",
+      "plan": {"start": "04:00", "end": "06:00"},
+      "steps": [
+        {"label": "修正版の公開（1時間ごとに監視）", "check": "file-nonempty:watch/release.txt", "waitLabel": "公開待ち（外部）"},
+        {"label": "更新 PR", "state": "todo"},
+        {"label": "本番反映（停止なし）", "state": "todo"}
+      ]
+    }
+  ],
+  "waits": [
+    {"label": "修正版の公開", "start": "20:00"}
+  ],
+  "changes": [
+    {"at": "23:40", "text": "受入台帳の merge が延びたため、CSV取込の開始を 23:50 にずらした"}
+  ]
+}

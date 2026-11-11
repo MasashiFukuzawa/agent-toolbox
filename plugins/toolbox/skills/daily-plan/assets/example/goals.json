@@ -1,0 +1,12 @@
+{
+  "title": "4月の目標",
+  "periodEnd": "2026-04-30",
+  "stages": ["契約・設計", "実装", "staging受入", "本番受入"],
+  "source": {"label": "4月の計画", "href": "https://example.com/plans/2026-04"},
+  "goals": [
+    {"id": "search", "name": "検索結果の並び替え", "reached": "実装", "target": "本番受入"},
+    {"id": "import", "name": "CSV取込", "reached": "契約・設計", "target": "staging受入"},
+    {"id": "notify", "name": "通知の配信", "reached": null, "target": "実装", "note": "配信先の決定待ち"},
+    {"id": "audit", "name": "監査ログ", "reached": "本番受入", "target": "本番受入"}
+  ]
+}
