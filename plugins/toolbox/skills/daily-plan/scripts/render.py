@@ -202,16 +202,25 @@ def _validate(day: dict, goals: dict | None) -> None:
 esc = html.escape
 
 
+_C0_AND_SPACE = "".join(map(chr, range(0x21)))
+
+
 def safe_href(href: str | None) -> str | None:
-    """https: と相対パスだけをリンクにする。"""
+    """https: と相対パスだけをリンクにする。
+
+    ブラウザはURLの中のタブ・改行と、前後の制御文字・空白を捨て、\\ を / として読む。判定の前に同じ正規化をし、
+    正規化した値を出す。そうしないと "java\\tscript:" のような値が相対パスとして通り抜ける。
+    """
     if not href:
         return None
-    lowered = href.strip().lower()
+    cleaned = re.sub(r"[\t\n\r]", "", href).strip(_C0_AND_SPACE)
+    cleaned = cleaned.replace("\\", "/")
+    lowered = cleaned.lower()
     if lowered.startswith("https://"):
-        return href
-    if re.match(r"^[a-z][a-z0-9+.-]*:", lowered) or lowered.startswith("//"):
+        return cleaned
+    if ":" in lowered.split("/", 1)[0] or lowered.startswith("//"):
         return None
-    return href
+    return cleaned or None
 
 
 def link(text: str, href: str | None) -> str:

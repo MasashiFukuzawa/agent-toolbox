@@ -298,3 +298,23 @@ def test_progress_comes_first_and_period_goals_come_last():
     day["lanes"][0]["plan"] = {"start": "21:00", "end": "23:00"}
     headings = re.findall(r"<h2>([^<：（]+)", page(day, goals))
     assert headings == ["作業の進捗", "タイムライン", "作業ごとの手順", "期間の目標"]
+
+
+@pytest.mark.parametrize(
+    "href",
+    [
+        "java\tscript:alert(1)",
+        "java\nscript:alert(1)",
+        " \x01javascript:alert(1)",
+        "\\\\evil.example/x",
+        "JaVaScRiPt:1",
+    ],
+)
+def test_links_that_a_browser_would_read_as_another_scheme_are_not_linked(href):
+    html = page(plan(source={"label": "origin", "href": href}))
+    assert "<a " not in html.split("</h1>")[1].split("</p>")[0]
+
+
+def test_relative_links_with_spaces_still_work():
+    html = page(plan(ownerBoard="../board/owner board.html"))
+    assert '<a href="../board/owner board.html">連絡板</a>' in html
