@@ -30,6 +30,7 @@ from scripts.validate import (
     _validate_results,
     _validate_review_common_mirror,
     _validate_review_mirror,
+    _validate_skill_file,
     validate,
 )
 
@@ -1157,8 +1158,51 @@ def test_semantic_evaluation_matches_current_skill() -> None:
     assert not any("semantic evaluation" in error for error in errors)
 
 
-def test_skill_local_openai_metadata_is_not_published() -> None:
-    assert list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml")) == []
+def _write_explicit_only_candidate(root: Path, frontmatter_extra: str, codex_metadata: str | None) -> Path:
+    skill = root / "plugins/sample/skills/sample/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    description = "sample skill description " * 6
+    skill.write_text(f"---\nname: sample\ndescription: {description}\n{frontmatter_extra}---\n# Sample\n")
+    if codex_metadata is not None:
+        (skill.parent / "agents").mkdir()
+        (skill.parent / "agents/openai.yaml").write_text(codex_metadata)
+    return skill
+
+
+CODEX_OPT_OUT = "policy:\n  allow_implicit_invocation: false\n"
+
+
+@pytest.mark.parametrize(
+    ("frontmatter_extra", "codex_metadata", "expected_fragment"),
+    [
+        ("", None, None),
+        ("disable-model-invocation: true\n", CODEX_OPT_OUT, None),
+        ("disable-model-invocation: true\n", None, "need both"),
+        ("", CODEX_OPT_OUT, "need both"),
+        ("disable-model-invocation: false\n", CODEX_OPT_OUT, "must be true"),
+        ("disable-model-invocation: true\n", "interface:\n  display_name: Sample\n", "may only set"),
+        ("allowed-tools: Read\n", None, "frontmatter keys"),
+    ],
+)
+def test_explicit_only_skills_must_opt_out_on_both_hosts(
+    tmp_path: Path, monkeypatch, frontmatter_extra: str, codex_metadata: str | None, expected_fragment: str | None
+) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    skill = _write_explicit_only_candidate(tmp_path, frontmatter_extra, codex_metadata)
+    errors: list[str] = []
+    _validate_skill_file(skill, errors, [])
+    explicit_only_rules = ("need both", "must be true", "may only set", "frontmatter keys")
+    relevant = [e for e in errors if any(rule in e for rule in explicit_only_rules)]
+    if expected_fragment is None:
+        assert relevant == []
+    else:
+        assert any(expected_fragment in e for e in relevant), relevant
+
+
+def test_step_back_is_explicit_only_on_both_hosts() -> None:
+    skill_dir = ROOT / "plugins/toolbox/skills/step-back"
+    assert "disable-model-invocation: true" in (skill_dir / "SKILL.md").read_text()
+    assert (skill_dir / "agents/openai.yaml").read_text() == CODEX_OPT_OUT
 
 
 def test_review_mirrors_pass_on_current_repository() -> None:

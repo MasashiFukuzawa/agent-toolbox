@@ -79,6 +79,34 @@ def validate() -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
+EXPLICIT_ONLY_KEY = "disable-model-invocation"
+EXPLICIT_ONLY_CODEX_METADATA = {"policy": {"allow_implicit_invocation": False}}
+
+
+def _validate_explicit_only(path: Path, metadata: dict, errors: list[str]) -> None:
+    """Explicit-only skills must opt out of implicit invocation on both hosts, and nothing else."""
+    relative = path.relative_to(ROOT)
+    claude_opt_out = EXPLICIT_ONLY_KEY in metadata
+    if claude_opt_out and metadata[EXPLICIT_ONLY_KEY] is not True:
+        errors.append(f"{EXPLICIT_ONLY_KEY} must be true when present: {relative}")
+    codex_path = path.parent / "agents/openai.yaml"
+    codex_opt_out = codex_path.exists()
+    if codex_opt_out:
+        try:
+            codex_metadata = yaml.safe_load(require_public_file(ROOT, codex_path).read_text())
+        except (OSError, ValueError, yaml.YAMLError) as exc:
+            errors.append(f"invalid agents/openai.yaml: {relative.parent}: {exc}")
+            return
+        if codex_metadata != EXPLICIT_ONLY_CODEX_METADATA:
+            errors.append(
+                f"agents/openai.yaml may only set policy.allow_implicit_invocation: false: {relative.parent}"
+            )
+    if claude_opt_out != codex_opt_out:
+        errors.append(
+            f"explicit-only skills need both {EXPLICIT_ONLY_KEY}: true and agents/openai.yaml: {relative.parent}"
+        )
+
+
 def _validate_skill_file(path: Path, errors: list[str], warnings: list[str]) -> str | None:
     try:
         text = require_public_file(ROOT, path).read_text()
@@ -95,8 +123,13 @@ def _validate_skill_file(path: Path, errors: list[str], warnings: list[str]) -> 
         errors.append(f"invalid YAML: {path.relative_to(ROOT)}: {exc}")
         return None
     name = path.parent.name
-    if set(metadata or {}) != {"name", "description"}:
-        errors.append(f"frontmatter keys must be name, description: {path.relative_to(ROOT)}")
+    keys = set(metadata or {})
+    if keys not in ({"name", "description"}, {"name", "description", EXPLICIT_ONLY_KEY}):
+        errors.append(
+            f"frontmatter keys must be name, description (and optionally {EXPLICIT_ONLY_KEY}): "
+            f"{path.relative_to(ROOT)}"
+        )
+    _validate_explicit_only(path, metadata or {}, errors)
     if metadata.get("name") != name:
         errors.append(f"name/directory mismatch: {path.relative_to(ROOT)}")
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
@@ -254,8 +287,9 @@ def _validate_manifests(errors: list[str]) -> None:
             require_public_file(ROOT, done_plugin / relative)
         except ValueError:
             errors.append(f"done plugin distribution is missing: {relative}")
-    if public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml"))):
-        errors.append("skill-local agents/openai.yaml is not adopted in this repository")
+    for metadata_path in public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml"))):
+        if not (metadata_path.parent.parent / "SKILL.md").is_file():
+            errors.append(f"agents/openai.yaml has no sibling skill: {metadata_path.relative_to(ROOT)}")
 
 
 def _marketplace_source_path(entry: dict, host: str) -> str | None:

@@ -2,6 +2,7 @@
 name: step-back
 description: >-
   障害対応や作業に没頭して視野が狭まった判断を、目的の分解・原因の証拠・目的を保つ案から立て直し、逆providerの第三者レビューを添えて推奨を出し直す。「step-backして」「step-backで考え直して」と明示的に呼ばれた時だけ使う。設計やスコープを最初から決めるならai-native-engineering、成果物のレビューだけならcodex-review / claude-reviewを使う。
+disable-model-invocation: true
 ---
 # Step Back — 判断を目的から立て直す
 
@@ -9,7 +10,7 @@ description: >-
 
 ## 使いどころ
 
-**明示的に呼ばれたときだけ使う。** 自分で条件を判定して起動しない。Claude Code でも Codex でも、同じ手順で動く。
+**明示的に呼ばれたときだけ使う。** 自分で条件を判定して起動しない。両ホストとも自動起動は設定で止めてあり、Claude Code では `/toolbox:step-back`、Codex では `$step-back` で呼ぶ。手順はどちらでも同じ。
 
 対象は、呼ばれた時点で直前に出していた判断である。推奨案、実行中の対処、判断依頼の下書きなどを指す。会話から特定できなければ、一文で確認する。
 
