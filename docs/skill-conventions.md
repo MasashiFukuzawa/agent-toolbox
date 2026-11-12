@@ -32,6 +32,13 @@ matrix.
 
 Host-specific options do not belong in shared skill frontmatter. Put required commands, supported hosts, safety constraints, and side effects in the body and `docs/trigger-registry.yml`.
 
+The one exception is an explicit-only skill: one that must run only when the user names it, because running it unprompted costs time, tokens, or an outside call. Such a skill opts out of implicit invocation on both hosts at once:
+
+- `disable-model-invocation: true` in the frontmatter (Claude Code; the description then stays out of context until the skill is invoked);
+- `agents/openai.yaml` next to `SKILL.md` containing only `policy: {allow_implicit_invocation: false}` (Codex).
+
+Validation rejects either half without the other and any other content in `agents/openai.yaml`. Users invoke such a skill as `/<plugin>:<name>` in Claude Code and `$<name>` in Codex. Use it only when unprompted runs would do harm; a skill that merely triggers rarely does not need it.
+
 ## Placement
 
 - `toolbox`: general engineering workflows

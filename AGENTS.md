@@ -4,8 +4,8 @@
 - Commit messages and pull-request titles and descriptions are published with this repository and follow the same rule. When work references other repositories (fleet migrations, deployed-config audits), describe them generically — "a deployed config", counts, dialect names — instead of naming the organization or repository.
 - Write for a general public audience. Keep workflows broadly reusable, and describe organization- or repository-specific behavior as optional configuration only when it materially affects the workflow.
 - Skill directory names use kebab-case and equal the frontmatter `name`.
-- Skill frontmatter contains exactly `name` and `description`.
-- Do not add skill-local `agents/openai.yaml`; this repository has not adopted that metadata format.
+- Skill frontmatter contains exactly `name` and `description`, except that an explicit-only skill also sets `disable-model-invocation: true`.
+- An explicit-only skill pairs that key with a skill-local `agents/openai.yaml` containing only `policy.allow_implicit_invocation: false`, so neither host invokes it implicitly. Do not use `agents/openai.yaml` for anything else.
 - Descriptions state purpose, positive triggers, and the negative boundary against the nearest skill.
 - Keep `SKILL.md` under 500 lines and move optional detail into `references/`.
 - Write public repository documentation in English. Skill instructions and user-facing templates use Japanese, with English technical terms where clearer.

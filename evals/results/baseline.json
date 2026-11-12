@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "matrix_sha256": "39879801241cfe03d1b787ed9fff6702d89fee10588b9def82a0ac6135c87a9f",
+  "matrix_sha256": "3a9c1110570733dd6f4646155fd8daf0df32f8f616b8368ca81dcb1277c41d7d",
   "summary": {
-    "total": 1352,
+    "total": 1428,
     "passed": 0,
     "failed": 0,
-    "not_run": 1352
+    "not_run": 1428
   },
   "results": [
     {
@@ -2641,6 +2641,196 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "structured-text-parsing",
       "type": "positive",
       "case_id": 1,
@@ -6021,6 +6211,196 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "structured-text-parsing",
       "type": "positive",
       "case_id": 1,
@@ -9401,6 +9781,196 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "step-back",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "structured-text-parsing",
       "type": "positive",
       "case_id": 1,
@@ -12774,6 +13344,196 @@
       "skill": "ai-native-engineering",
       "type": "negative_trigger",
       "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "step-back",
+      "type": "negative_trigger",
+      "case_id": 2,
       "status": "not_run",
       "actual": null,
       "error": "no evaluator command supplied"
