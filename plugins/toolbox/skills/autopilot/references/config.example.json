@@ -70,7 +70,7 @@
     "_mcpNote": "method が mcp の場合のみ使う。MCP サーバ名はrepo固有なのでここに書く。",
     "notes": ""
   },
-  "notes": "このrepo固有の注意点を自由記述する。autopilot 起動時に参照される。",
+  "notes": "このrepo固有の注意点を自由記述する。autopilot 起動時に参照される。本番などの運用手順（runbook）があれば、その場所をここに書く（例: 本番の手順は docs/runbooks/ を正本とする）。",
   "gates": {
     "_note": "破壊的操作の自動実行許可。未設定時の既定は human（PR作成まで自律・その先は停止してエスカレーション）。",
     "merge": "human",
