@@ -16,7 +16,7 @@ controllerは長時間実装・検証を原則workerまたは非同期processへ
 
 ## 永続索引と終了前照合
 
-repoごとの永続state領域へrun ID、task identity、Issueの所有者記録への参照、host handle、起動時刻、次回確認期限、出力先、待ち条件を残す。controllerが単一writerとなる。task詳細をコピーした第二の台帳や独自状態databaseは作らない。
+repoごとの永続state領域へrun ID、task identity、Issueの所有者記録への参照、host handle、起動時刻、次回確認期限、出力先、待ち条件（制約なら根拠と解除条件、仮の停止なら次回確認期限）を残す。controllerが単一writerとなる。task詳細をコピーした第二の台帳や独自状態databaseは作らない。
 
 索引は復旧の入口であり、生存や完了の証拠ではない。期限および終了前に、ホストのtask一覧・記録済みhandleのstatus/read・未処理messageから実状態を確認する。自己申告JSONだけを再検査して照合済みにしない。
 
