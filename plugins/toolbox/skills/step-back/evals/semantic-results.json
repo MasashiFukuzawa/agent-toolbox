@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "skill_sha256": "cfa959ffaf5004e1554115a68ee172c104c6f09c961957ebd046558ece9a4623",
+  "evals_sha256": "77bc8c7feda0c32a0daff5c4cd82ad08a1c9e8548591a290008a08afbcf7a6fb",
+  "reuse_note": "Each case ran three times per host with the skill text plus the case prompt (claude-code: claude-opus-5-5 at low effort; codex: gpt-6.1-sol at low effort, read-only sandbox). Executors were told the scenario was hypothetical, to use no tools, and to describe rather than start the third-party review. Outputs were anonymized and graded blind against the assertion list by a separate agent; an assertion counts as passed for a case only when all three runs passed it. This run follows two revisions: the default output was cut to five items, approved emergency rollbacks are executed without re-asking, unverified constraints are kept apart from confirmed ones, the falsification target is the recommendation after the step back, and two assertions were tightened to match. Output length fell by about 40 percent against the first version. claude-code runs named codex-review and codex runs named Claude, so both provider directions were exercised.",
+  "comparison": {
+    "condition": "Same cases without the skill, with the closing request replaced by a plain nudge to return to the goal and reconsider; three runs per host, graded blind in the same pool. These comparison runs used the first version of the skill text and the earlier, looser assertions; they were not rerun after the revisions.",
+    "skill_runs_fully_passing": "12/12",
+    "nudge_runs_fully_passing": "3/12",
+    "findings": [
+      "Both conditions withdrew the default rollback in case 1 and recommended the immediate approved rollback in case 2, so the plain nudge already corrects the narrowed recommendation.",
+      "Without the skill, codex runs failed the critical evidence assertion in case 1 (one merged hypothesis, no per-hypothesis check) and the follow-up-verification assertion in case 2 in all three runs each.",
+      "Without the skill, no run on either host proposed a third-party review in case 1.",
+      "Skill runs were about 1.5 to 4 times longer than nudge runs."
+    ]
+  },
+  "executors": [
+    {
+      "host": "claude-code",
+      "status": "passed",
+      "cases": [
+        {
+          "id": 1,
+          "passed": true,
+          "runs": 3,
+          "assertions": [
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 2,
+          "passed": true,
+          "runs": 3,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "host": "codex",
+      "status": "passed",
+      "cases": [
+        {
+          "id": 1,
+          "passed": true,
+          "runs": 3,
+          "assertions": [
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "id": 2,
+          "passed": true,
+          "runs": 3,
+          "assertions": [
+            true,
+            true,
+            true
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -6,14 +6,14 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 22 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 23 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
 
 ### Skill catalog
 
-- `toolbox` (22, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `owner-board`, `progress-report`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
+- `toolbox` (23, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `owner-board`, `progress-report`, `step-back`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
 - `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.
 - `github-operations` (2, Claude Code and Codex): `github-project-provisioning` and `github-issue-create`.
@@ -40,6 +40,10 @@ progress-report --html Focus on the release outlook
 ### Daily plan
 
 `daily-plan` agrees on up to 24 hours of work with a human — a working day, or an overnight run — and tracks it on one local HTML page per plan. The page shows the gap to the period's goals, a timeline of planned and actual work, waits, and time windows to protect, and each task's steps with a next step. A bundled standard-library Python script renders the page from a JSON plan, judges step states from GitHub (`gh`) or a watched file, and with `--watch` re-renders on an interval until the plan ends. Agreeing to a plan does not approve merges, applies, or production jobs inside it; requests to humans stay on the `owner-board` and are linked by question ID.
+
+### Step back
+
+`step-back` re-examines the decision an agent has just made when its view has narrowed, for example a recommendation to revert a change made for a purpose, or to act before the cause is known. It splits the goal into constraints to keep, the function to restore and its deadline, and the chosen means; checks cause hypotheses against primary sources read-only; and rebuilds the options with reversibility, impact, and fit with the goal before stating a recommendation. It starts one read-only third-party review from the opposite provider (Claude to `codex-review`, Codex to `claude-review`) and reports any disagreement with the observation that would settle it. It runs only when invoked explicitly and does not delay an approved emergency rollback.
 
 ### Claude Code
 
