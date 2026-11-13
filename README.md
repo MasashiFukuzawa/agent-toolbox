@@ -13,7 +13,7 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 ### Skill catalog
 
-- `toolbox` (23, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `model-selection`, `owner-board`, `progress-report`, `step-back`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
+- `toolbox` (24, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `human-notify`, `model-selection`, `owner-board`, `progress-report`, `step-back`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
 - `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.
 - `github-operations` (2, Claude Code and Codex): `github-project-provisioning` and `github-issue-create`.
@@ -37,7 +37,12 @@ progress-report --html Focus on the release outlook
 
 `owner-board` keeps one continuously updated local HTML board of decisions and tasks for a human owner. It opens with the current milestone and what is blocked, lists open requests, and writes each request as background, problem, goal, and the ask, with fixed question IDs and an archive page for answers, follow-ups, and relays. Agents edit the HTML directly from a self-contained example; there is no runtime dependency. Operational boards stay outside public repositories; creating a board does not authorize publishing it or adding external messaging. General presentation and the save location use `html-artifact`, progress context uses `progress-report`, and execution authority stays with `autopilot`.
 
+### Human notifications
+
+`human-notify` delivers urgent local requests through a macOS dialog and speech routed to a configured audio device. Every notification identifies its repository. It runs asynchronously, suppresses duplicate requests, and serializes delivery across repositories. Dialog dismissal is never approval. Device configuration and delivery state stay in user-local directories; remote delivery and unattended reminders are not provided.
+
 ### Daily plan
+
 
 `daily-plan` agrees on up to 24 hours of work with a human — a working day, or an overnight run — and tracks it on one local HTML page per plan. The page shows the gap to the period's goals, a timeline of planned and actual work, waits, and time windows to protect, and each task's steps with a next step. A bundled standard-library Python script renders the page from a JSON plan, judges step states from GitHub (`gh`) or a watched file, and with `--watch` re-renders on an interval until the plan ends. Agreeing to a plan does not approve merges, applies, or production jobs inside it; requests to humans stay on the `owner-board` and are linked by question ID.
 

@@ -35,6 +35,7 @@ merge/deployはconfigの明示許可、または対象・条件を特定した�
 | 品質受入 | controllerが`done`を使う。workerのPASSを代用にしない |
 | 独立レビュー | 許可されたproviderの`claude-review` / `codex-review`。read-only |
 | UI/E2E | `e2e-capability-verification`、ブラウザ操作は`browser-operations` |
+| 人間への急ぎの通知 | `human-notify`。repo名付き画面・音声。連絡板の依頼はowner-board側で通知し、二重送信しない。通知のOKは承認ではない |
 | 進捗報告 | `progress-report`。再開用索引とは分ける |
 | タスク選択・journal | [task sources](references/task-sources.md) |
 
