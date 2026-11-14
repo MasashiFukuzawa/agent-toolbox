@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Read-only checks for generic TypeScript project-foundation invariants."""
+"""Read-only checks for generic TypeScript project-foundation invariants.
+
+Errors are invariants that can be detected without ambiguity (exact package manager,
+lockfile, immutable Action references). Warnings are heuristics or conventions that
+equivalent tools can satisfy (secret scanning, hook runner, agent-ready scripts and
+instructions), so a repository scaffolded before a check existed keeps passing.
+Each message says what to change so that an agent can act on it.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +22,29 @@ FULL_SHA = re.compile(r"^[0-9a-fA-F]{40}$")
 DOCKER_DIGEST = re.compile(r"^docker://[^\s@]+@sha256:[0-9a-fA-F]{64}$")
 PACKAGE_MANAGER = re.compile(r"^pnpm@\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$")
 USES = re.compile(r"^\s*-?\s*uses:\s*([^\s#]+)", re.MULTILINE)
+UNIFORM_SCRIPTS = ("lint", "typecheck", "test", "verify")
+AGENT_INSTRUCTION_FILES = ("AGENTS.md", "CLAUDE.md", ".claude/CLAUDE.md")
+HOOK_CONFIGS = (
+    "lefthook.yml",
+    "lefthook.yaml",
+    "lefthook.toml",
+    "lefthook.json",
+    ".lefthook.yml",
+    ".lefthook.yaml",
+    ".pre-commit-config.yaml",
+    ".husky",
+)
+RENOVATE_CONFIGS = (
+    "renovate.json",
+    "renovate.json5",
+    ".renovaterc",
+    ".renovaterc.json",
+    ".github/renovate.json",
+    ".github/renovate.json5",
+)
+SECRET_SCANNERS = re.compile(r"gitleaks|betterleaks|trufflehog|secretlint|detect-secrets|ggshield", re.IGNORECASE)
+NPM_UPDATES = re.compile(r"package-ecosystem:\s*['\"]?npm\b")
+WORKFLOW_PERMISSIONS = re.compile(r"(?m)^\s*permissions:")
 
 
 @dataclass(frozen=True)
@@ -92,6 +122,7 @@ def check_typescript(root: Path, findings: list[Finding]) -> None:
         findings.append(Finding("error", "tsconfig-missing", "at least one tsconfig*.json is required"))
         return
     strict_found = False
+    indexed_access_found = False
     external_base_found = False
     for path in configs:
         try:
@@ -111,6 +142,8 @@ def check_typescript(root: Path, findings: list[Finding]) -> None:
             continue
         if data.get("compilerOptions", {}).get("strict") is True:
             strict_found = True
+        if data.get("compilerOptions", {}).get("noUncheckedIndexedAccess") is True:
+            indexed_access_found = True
         extends = data.get("extends")
         extend_values = [extends] if isinstance(extends, str) else extends if isinstance(extends, list) else []
         if any(isinstance(value, str) and not value.startswith((".", "/")) for value in extend_values):
@@ -123,6 +156,14 @@ def check_typescript(root: Path, findings: list[Finding]) -> None:
             else 'no tsconfig explicitly sets "strict": true'
         )
         findings.append(Finding(severity, "strict-typescript-missing", message))
+    if not indexed_access_found and not external_base_found:
+        findings.append(
+            Finding(
+                "warning",
+                "no-unchecked-indexed-access-missing",
+                'set "noUncheckedIndexedAccess": true, or record the verified ecosystem conflict that prevents it',
+            )
+        )
 
 
 def check_formatter(root: Path, package: dict[str, Any] | None, findings: list[Finding]) -> None:
@@ -265,6 +306,96 @@ def check_actions(root: Path, package: dict[str, Any] | None, findings: list[Fin
         )
 
 
+def check_workflow_permissions(root: Path, findings: list[Finding]) -> None:
+    for path in workflow_files(root):
+        text = safe_read(path, root, findings)
+        if text is not None and not WORKFLOW_PERMISSIONS.search(text):
+            findings.append(
+                Finding(
+                    "warning",
+                    "workflow-permissions-missing",
+                    "declare minimal workflow or job permissions, for example `permissions: {contents: read}`",
+                    str(path.relative_to(root)),
+                )
+            )
+
+
+def check_dependency_updates(root: Path, findings: list[Finding]) -> None:
+    if not (root / ".github").is_dir() or any((root / name).exists() for name in RENOVATE_CONFIGS):
+        return
+    dependabot = root / ".github" / "dependabot.yml"
+    text = safe_read(dependabot, root, findings) if dependabot.exists() else None
+    if text is None or not NPM_UPDATES.search(text):
+        findings.append(
+            Finding(
+                "warning",
+                "dependency-updates-package-missing",
+                "add the npm ecosystem to Dependabot, or configure an equivalent update service",
+                ".github/dependabot.yml",
+            )
+        )
+
+
+def check_hooks_and_secret_scan(root: Path, package: dict[str, Any] | None, findings: list[Finding]) -> None:
+    hook_paths = [root / name for name in HOOK_CONFIGS if (root / name).exists()]
+    if not hook_paths:
+        findings.append(
+            Finding(
+                "warning",
+                "hooks-missing",
+                "add a git hook runner config (Lefthook by default) to run format, lint and secret checks on commit",
+            )
+        )
+    scripts = package.get("scripts", {}) if package else {}
+    texts = [str(value) for value in scripts.values()] if isinstance(scripts, dict) else []
+    for path in [*(path for path in hook_paths if path.is_file()), *workflow_files(root)]:
+        text = safe_read(path, root, findings)
+        if text is not None:
+            texts.append(text)
+    if not any(SECRET_SCANNERS.search(text) for text in texts):
+        findings.append(
+            Finding(
+                "warning",
+                "secret-scan-missing",
+                "run a secret scanner on staged changes in a hook and on history in CI",
+            )
+        )
+
+
+def check_agent_ready(root: Path, package: dict[str, Any] | None, findings: list[Finding]) -> None:
+    scripts = package.get("scripts", {}) if package else {}
+    for name in UNIFORM_SCRIPTS:
+        if package is not None and (not isinstance(scripts, dict) or name not in scripts):
+            findings.append(
+                Finding(
+                    "warning",
+                    "package-script-missing",
+                    f'add a "{name}" script so people, agents and CI run the same command',
+                    "package.json",
+                )
+            )
+    instructions = [root / name for name in AGENT_INSTRUCTION_FILES if (root / name).is_file()]
+    if not instructions:
+        findings.append(
+            Finding(
+                "warning",
+                "agent-instructions-missing",
+                "add a short agent instruction file (AGENTS.md by default) that points to the commands and records",
+            )
+        )
+        return
+    texts = [safe_read(path, root, findings) for path in instructions]
+    if not any(text is not None and re.search(r"\bverify\b", text) for text in texts):
+        findings.append(
+            Finding(
+                "warning",
+                "agent-instructions-verify-missing",
+                "name the verify command in the agent instruction file so an agent can confirm its own change",
+                str(instructions[0].relative_to(root)),
+            )
+        )
+
+
 def check_foundation_record(root: Path, findings: list[Finding]) -> None:
     candidates = [
         root / "docs" / "architecture" / "foundation.md",
@@ -300,6 +431,10 @@ def main(argv: list[str] | None = None) -> int:
     check_formatter(root, package, findings)
     check_pnpm_policy(root, findings)
     check_actions(root, package, findings)
+    check_workflow_permissions(root, findings)
+    check_dependency_updates(root, findings)
+    check_hooks_and_secret_scan(root, package, findings)
+    check_agent_ready(root, package, findings)
     check_foundation_record(root, findings)
 
     errors = sum(finding.severity == "error" for finding in findings)
