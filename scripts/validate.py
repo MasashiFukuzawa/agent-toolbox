@@ -366,6 +366,7 @@ def _scan_public_content(errors: list[str]) -> None:
         ROOT / "scripts/validate.py",
         ROOT / "tests/test_validate.py",
         ROOT / "docs/skill-conventions.md",
+        ROOT / "CHANGELOG.md",  # history has to name what was removed
     }
     for path in iter_public_files(ROOT):
         if _is_root_excluded(path):

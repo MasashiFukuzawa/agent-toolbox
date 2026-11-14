@@ -2,6 +2,8 @@
 
 Agent Toolbox is a public collection of reusable engineering skills for Claude Code and Codex. It ships independently installable plugins for each host and shares host-neutral skill instructions where possible; host-specific skills document their supported hosts.
 
+For the idea behind the skills and how they fit together, see [docs/design.md](docs/design.md). For what changed between versions and how to migrate, see [CHANGELOG.md](CHANGELOG.md).
+
 ## Plugins
 
 | Plugin | Skills | Purpose | Runtime dependency |
