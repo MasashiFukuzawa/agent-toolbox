@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/human-notify/scripts/waiting_notify.py\" hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

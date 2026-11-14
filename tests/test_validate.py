@@ -17,6 +17,7 @@ from scripts.validate import (
     _has_symlink_parent,
     _path_within_plugin,
     _plugin_boundary_errors,
+    _scan_public_content,
     _skill_paths,
     _validate_manifests,
     _validate_markdown_links,
@@ -1007,3 +1008,17 @@ def test_hand_invoked_skills_are_explicit_only_on_both_hosts(skill: str) -> None
     skill_dir = ROOT / "plugins/toolbox/skills" / skill
     assert "disable-model-invocation: true" in (skill_dir / "SKILL.md").read_text()
     assert (skill_dir / "agents/openai.yaml").read_text() == CODEX_OPT_OUT
+
+
+@pytest.mark.parametrize("removed", ["daily-plan", "owner-board", "structured-text-parsing"])
+def test_public_content_must_not_reference_removed_skills(tmp_path: Path, monkeypatch, removed: str) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    (tmp_path / "README.md").write_text(f"Use `{removed}` for this.\n")
+    history = tmp_path / "docs/skill-conventions.md"
+    history.parent.mkdir()
+    history.write_text(f"`{removed}` was removed.\n")
+
+    errors: list[str] = []
+    _scan_public_content(errors)
+
+    assert errors == ["removed skill reference: README.md"]

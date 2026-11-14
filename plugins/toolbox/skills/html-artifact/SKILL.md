@@ -1,7 +1,7 @@
 ---
 name: html-artifact
 description: >-
-  計画・比較・進捗・説明を、人が見て理解し追加のやり取りなしで判断できる、図解中心の自己完結HTMLにする。論点を絞り、冒頭に結論（背景・課題・目的・相談事項）とAsIs/ToBe図を置く。「HTML一枚物で」「HTMLで図解して」「比較を視覚化して」や、HTML作成・更新での「シンプルに」「図解多めで」「要点だけ」を正のトリガーとする。会話内の小さな図にはascii-diagram、人への依頼を継続管理する連絡板にはowner-boardを使い、production UIには使わない。
+  計画・比較・進捗・説明を、人が見て理解し追加のやり取りなしで判断できる、図解中心の自己完結HTMLにする。論点を絞り、冒頭に結論（背景・課題・目的・相談事項）とAsIs/ToBe図を置く。「HTML一枚物で」「HTMLで図解して」「比較を視覚化して」や、HTML作成・更新での「シンプルに」「図解多めで」「要点だけ」を正のトリガーとする。会話内の小さな図にはascii-diagram、1つのゴールを受け入れまで追うページにはautopilotを使い、production UIには使わない。
 ---
 # HTML Artifact — 見て分かる一枚物
 
@@ -26,8 +26,7 @@ description: >-
   逆に小さすぎて全体の中の位置が見えない場合は、総論で全体と今回の範囲の関係を示す。論点は読み手が1回で答えられる（共有のみなら理解できる）単位にし、同じ読み手に同じ種類の影響を与える小さな話題は1つの論点に束ねてよい。ただし読み手が一部だけ別案を出しうるものは束ねない。上の「4つ以上」は束ねた後の数で判定する。
 - 読み手が返信の前に聞き返しそうな質問を先に挙げる。human-briefingの「先回りの確認」（変更の大きさ・日々の使い勝手・戻せるか・待ち時間の根拠）を出発点にし、「なぜ別案ではないのか」「自分の作業は何か」も加える。答えは資料に入れ、資料の外で補足しなくて済むようにする。
 - `progress-report --html` からの連携では、整理済みの事実・基準時点・判断材料を使い、内容選択はprogress-reportに任せる。HTML化のついでに対象を広げない。
-- 人への依頼と回答を継続更新する連絡板はowner-boardの規則に従う。
-- 最大24時間の作業計画と、その進捗を自動更新するページはdaily-planの規則に従う。
+- 1つのゴールを継続して追うページ（ゴールのページ）は、autopilotのページの決まりに従う。
 
 ## 最初の画面：結論とAsIs/ToBe
 
@@ -130,10 +129,10 @@ description: >-
 
 - 置き場: `$AGENT_ARTIFACTS_DIR`、未設定なら `~/Documents/agent-artifacts/`。その下に `<project>/` を作る。
 - `<project>`: git repo内なら `git rev-parse --path-format=absolute --git-common-dir` の親directoryの名前（worktreeからでも本体のrepo名になる）。repo外の作業は `_misc`。
-- 名前: 1ファイルの成果物は `YYYY-MM-DD_<kind>_<slug>.html`、複数ファイルの成果物は `YYYY-MM-DD_<kind>_<slug>/`。日付は作成日、`<kind>` は `doc`・`progress`・`owner-board`・`daily-plan` のどれか、`<slug>` は内容を表すASCIIのkebab-case。同じ日に同じ名前があれば末尾に `_HHMM` を足す。ホスト名・セッションIDは入れない。
+- 名前: 1ファイルの成果物は `YYYY-MM-DD_<kind>_<slug>.html`、複数ファイルの成果物は `YYYY-MM-DD_<kind>_<slug>/`。日付は作成日、`<kind>` は `doc`・`progress`・`goal` のどれか、`<slug>` は内容を表すASCIIのkebab-case。同じ日に同じ名前があれば末尾に `_HHMM` を足す。ホスト名・セッションIDは入れない。
 - 同じ資料を直すときは同じファイルを上書きする。別の時点の報告は新しいファイルにする。
 - 新しく作るdirectoryは所有者だけが読めるpermission（700）にする。
-- repo内や他者の作業ツリーへ副産物を混ぜない。review記録・引継ぎ・autopilotのjournalなど機械が読む記録は、各スキルが定める永続state領域に置き、ここへ混ぜない。
+- repo内や他者の作業ツリーへ副産物を混ぜない。review記録・引継ぎなど機械が読む記録は、各スキルが定める永続state領域に置き、ここへ混ぜない。
 - 書込みが拒否されたら（hostのsandboxなど）、保存できたと装わない。理由と、置き場を書込み許可に加える設定（Codexは `sandbox_workspace_write.writable_roots`、Claude Codeは `permissions.additionalDirectories`）を伝える。代わりに一時領域へ保存した場合は、そのパスと消えうることを伝える。
 
 ## セルフレビューしてすぐ開く

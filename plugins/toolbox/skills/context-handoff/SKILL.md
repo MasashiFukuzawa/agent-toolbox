@@ -63,4 +63,5 @@ description: >-
 ## 使い方の型
 
 - 出力はそのまま貼れる Markdown 1枚。ファイル保存を求められたら、repo が引き継ぎの置き場を定めていればそこへ、無ければ repo の外の `${XDG_STATE_HOME:-~/.local/state}/context-handoff/<project>/<date>-<topic>.md` へ置き、絶対パスを伝える。作業ツリーへ混ぜない（`<project>` は html-artifact の保存先と同じ決め方）
+- autopilotが進めるゴールは、ゴールのページの「引き継ぎの情報」で引き継ぐ。別の引き継ぎ文書を作らず、ページに足りないことはページへ書き足してもらう
 - Codex → Claude（またはその逆）への移譲では、冒頭に「この Markdown をそのまま新セッションの先頭に貼り付ければ引き継ぎできます」と付記する

@@ -96,11 +96,11 @@ def test_speech_uses_configured_speaker_and_repo_prefix(notify, monkeypatch):
     monkeypatch.setattr(notify.subprocess, "Popen", Dialog)
     monkeypatch.setattr(notify, "devices", lambda: {"80": "Speakers", "90": "Headphones"})
     monkeypatch.setattr(notify, "run", lambda argv, **kwargs: calls.append(argv))
-    result = notify.deliver({"repo": "example/app", "body": "Q12", "speech": "連絡板のQ12をご確認ください。"},
+    result = notify.deliver({"repo": "example/app", "body": "Q12", "speech": "ゴールのページのQ12をご確認ください。"},
                             {"device_name": "Speakers"})
     assert result["status"] == "completed"
     assert calls == [["/usr/bin/say", "-a", "80", "--",
-                      "example/appの件です。連絡板のQ12をご確認ください。"]]
+                      "example/appの件です。ゴールのページのQ12をご確認ください。"]]
 
 
 def test_worker_error_is_observable_and_body_is_removed(notify, monkeypatch, tmp_path):
