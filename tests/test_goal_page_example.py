@@ -61,8 +61,10 @@ class Page(HTMLParser):
             self._capture = ("term", [])
         elif tag == "span" and "due" in classes and self._ask is not None:
             self._capture = ("due", [])
-        elif values.get("id") == "state":
-            self._capture = ("state", [])
+        elif values.get("id") in {"state", "progress"}:
+            self._capture = (values["id"], [])
+        elif tag == "td" and "steps" in classes:
+            self._capture = ("steps", [])
         elif tag == "td" and "t" in classes:
             self._capture = ("key", [])
 
@@ -78,8 +80,10 @@ class Page(HTMLParser):
                     self._ask["terms"].append(value)
             elif kind == "due" and self._ask is not None:
                 self._ask["due"] = value
-            elif kind in {"state", "key"}:
-                self.text.setdefault(kind if kind == "state" else f"key:{self._section}", []).append(value)
+            elif kind in {"state", "progress", "steps"}:
+                self.text.setdefault(kind, []).append(value)
+            elif kind == "key":
+                self.text.setdefault(f"key:{self._section}", []).append(value)
             self._capture = None
         if tag == "article":
             self._ask = None
@@ -121,6 +125,13 @@ def test_the_state_agrees_with_what_the_page_says_is_happening(page: Page) -> No
         assert "再開の条件" in position
 
 
+def test_the_headline_progress_is_the_share_of_finished_steps(page: Page) -> None:
+    steps = [tuple(map(int, cell.split("/"))) for cell in page.text["steps"]]
+    finished, total = sum(done for done, _ in steps), sum(count for _, count in steps)
+    assert len(steps) == len(page.text["key:evidence"]), "every acceptance condition shows its steps"
+    assert page.text["progress"] == [f"{round(100 * finished / total)}%"]
+
+
 def test_every_ask_can_be_answered_from_its_own_card(page: Page) -> None:
     assert page.asks, "the example must show at least one ask"
     for ask in page.asks:
@@ -132,7 +143,7 @@ def test_every_ask_can_be_answered_from_its_own_card(page: Page) -> None:
 
 
 def test_the_ask_list_points_at_the_cards_in_the_same_order(page: Page) -> None:
-    listed = [link[1:] for link in page.links if re.fullmatch(r"#Q\d+", link)]
+    listed = list(dict.fromkeys(link[1:] for link in page.links if re.fullmatch(r"#Q\d+", link)))
     assert listed == [ask["id"] for ask in page.asks]
 
 
@@ -146,10 +157,13 @@ def test_another_session_can_take_over_from_the_page(page: Page) -> None:
     assert set(page.terms["handover"]) >= HANDOVER
 
 
-@pytest.mark.parametrize("name", ["goal-page.html", "goal-entry.html"])
+@pytest.mark.parametrize("name", ["goal-page.html", "goal-entry.html", "goal-detail.html"])
 def test_examples_stay_self_contained(name: str) -> None:
     source = (EXAMPLE / name).read_text(encoding="utf-8")
     parsed = Page(source)
     assert parsed.unsafe == []
     assert "@media" not in source
     assert all(link.startswith(("#", "https://")) or "://" not in link for link in parsed.links)
+    for link in parsed.links:
+        if link.endswith(".html") and "_" not in link:  # links between the bundled examples must resolve
+            assert (EXAMPLE / link).is_file(), link

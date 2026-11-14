@@ -96,15 +96,6 @@ def test_markdown_link_validation_skips_venv_markdown_symlinks(tmp_path: Path, m
     assert errors == []
 
 
-def test_done_documentation_is_inside_plugin_distribution() -> None:
-    skill = (ROOT / "plugins/done/skills/done/SKILL.md").read_text()
-    assert (ROOT / "plugins/done/skills/done/references/done.example.yml").is_file()
-    assert (ROOT / "plugins/done/skills/done/references/done.schema.json").is_file()
-    assert "references/done.example.yml" in skill
-    assert "references/done.schema.json" in skill
-    assert "../../" not in skill
-
-
 def test_plugin_release_is_a_repository_skill_for_both_hosts() -> None:
     source = ROOT / ".agents/skills/plugin-release/SKILL.md"
     link = ROOT / ".claude/skills/plugin-release/SKILL.md"
@@ -1010,7 +1001,7 @@ def test_hand_invoked_skills_are_explicit_only_on_both_hosts(skill: str) -> None
     assert (skill_dir / "agents/openai.yaml").read_text() == CODEX_OPT_OUT
 
 
-@pytest.mark.parametrize("removed", ["daily-plan", "owner-board", "structured-text-parsing"])
+@pytest.mark.parametrize("removed", ["daily-plan", "owner-board", "structured-text-parsing", "done"])
 def test_public_content_must_not_reference_removed_skills(tmp_path: Path, monkeypatch, removed: str) -> None:
     monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
     (tmp_path / "README.md").write_text(f"Use `{removed}` for this.\n")
@@ -1023,3 +1014,13 @@ def test_public_content_must_not_reference_removed_skills(tmp_path: Path, monkey
     _scan_public_content(errors)
 
     assert errors == ["removed skill reference: README.md"]
+
+
+def test_the_ordinary_word_done_is_not_a_removed_skill_reference(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    (tmp_path / "README.md").write_text("Say what was done, and when the work is done, stop.\n")
+
+    errors: list[str] = []
+    _scan_public_content(errors)
+
+    assert errors == []

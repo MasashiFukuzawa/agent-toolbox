@@ -66,4 +66,3 @@ git worktree prune
 
 - `fatal: '<branch>' is already checked out` → そのブランチは他の worktree が使用中。`git worktree list` で特定
 - worktree を移動/リネームしたら `git worktree repair`
-- 「元repoが dirty で Stop hook が誤発火」→ done ゲートは worktree ごとの署名検証なので、**作業した worktree 内で** done スキル（quality gate）を実行する

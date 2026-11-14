@@ -268,12 +268,6 @@ def _validate_manifests(errors: list[str]) -> None:
         except (OSError, KeyError, json.JSONDecodeError, ValueError) as exc:
             errors.append(f"invalid {host} marketplace manifest: {exc}")
 
-    done_plugin = ROOT / "plugins/done/skills/done"
-    for relative in ("references/done.example.yml", "references/done.schema.json"):
-        try:
-            require_public_file(ROOT, done_plugin / relative)
-        except ValueError:
-            errors.append(f"done plugin distribution is missing: {relative}")
     for metadata_path in public_paths(ROOT, list(ROOT.glob("plugins/*/skills/*/agents/openai.yaml"))):
         if not (metadata_path.parent.parent / "SKILL.md").is_file():
             errors.append(f"agents/openai.yaml has no sibling skill: {metadata_path.relative_to(ROOT)}")
@@ -360,6 +354,8 @@ def _scan_public_content(errors: list[str]) -> None:
             r"worktree-flow|write-meaningful-tests|documentation-lookup|research-first"
             r"|technical-research|structured-text-parsing|cloudflare-worker-cd"
             r"|daily-plan|owner-board"
+            # `done` is also an ordinary word, so only the forms that point at the retired skill.
+            r"|`done`|done(?:を|に|が|で|へ|の担当|スキル| skill| plugin|@)|(?:なら|には|は)done"
         ),
     }
     exclusions = {
