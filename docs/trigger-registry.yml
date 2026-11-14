@@ -84,6 +84,14 @@ skills:
     nearest_neighbors: [progress-report, html-artifact, autopilot]
     negative_triggers: ["単発の進捗報告だけ", "一般的なHTML資料だけ", "複数タスクを自律実行して"]
     ambiguous_precedence: "人間への依頼と回答を継続管理する連絡板はowner-board、現在地の整理はprogress-report、一般的な表示はhtml-artifact、実行の管理はautopilot"
+  human-briefing:
+    <<: *defaults
+    canonical_name: human-briefing
+    category: communication
+    positive_triggers: ["報連相の形で書いて", "この依頼を分かりやすく書き直して", "何の話か分かるように説明し直して"]
+    nearest_neighbors: [progress-report, html-artifact, owner-board]
+    negative_triggers: ["進捗を報告して", "HTML一枚物を作って", "連絡板を最新化して"]
+    ambiguous_precedence: "書き方だけならhuman-briefing、報告に載せる事実の整理はprogress-report、HTMLの表示はhtml-artifact、依頼の継続管理はowner-board"
   daily-plan:
     <<: *defaults
     canonical_name: daily-plan
