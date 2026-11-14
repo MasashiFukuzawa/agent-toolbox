@@ -1,7 +1,7 @@
 ---
 name: model-selection
 description: >-
-  controllerが実装・調査・独立レビューを委任する際、タスクに適したモデルとeffortを選び、結果に応じて見直す。「モデルを選んで」「workerのモデルを決めて」を正のトリガーとする。レビューの実行そのものには使わない。実行はclaude-review/codex-review、進行管理はautopilotへ委ねる。
+  controllerが実装・調査・独立レビューを委任する際、タスクに適したモデルとeffortを選び、結果に応じて見直す。「モデルを選んで」「workerのモデルを決めて」を正のトリガーとする。レビューの実行そのものには使わない。実行はsecond-opinion、進行管理はautopilotへ委ねる。
 ---
 # モデル選択
 
@@ -27,7 +27,7 @@ description: >-
 ## 役割ごとの境界
 
 - 実装workerは局所判断と検証を行い、controllerへ提出する。最終受入はしない。
-- 独立reviewerはread-only。懐疑的検証と根拠を返し、実装・投稿・再帰レビューをしない。起動方法と権限は各review skillを必ず読む。
+- 独立reviewerは、レビューではread-only、動作確認では固定した写しの中だけ書き込む。根拠付きの指摘か確認結果を返し、実装・投稿・再帰起動をしない。起動方法と権限は`second-opinion`を必ず読む。
 - controller自身が選択された役割をこなせない場合、能力の高いworkerやadvisorへ調査を委任できるが、品質責任を転嫁しない。
 - 独立再レビューは新規文脈、同じ処理の回収・追加質問は正確なsession IDで継続する。モデル変更と独立性の確保を混同しない。
 

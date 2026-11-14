@@ -1,7 +1,7 @@
 ---
 name: step-back
 description: >-
-  障害対応や作業に没頭して視野が狭まった判断を、目的の分解・原因の証拠・目的を保つ案から立て直し、逆providerの第三者レビューを添えて推奨を出し直す。「step-backして」「step-backで考え直して」と明示的に呼ばれた時だけ使う。設計やスコープを最初から決めるならai-native-engineering、成果物のレビューだけならcodex-review / claude-reviewを使う。
+  障害対応や作業に没頭して視野が狭まった判断を、目的の分解・原因の証拠・目的を保つ案から立て直し、逆providerの第三者レビューを添えて推奨を出し直す。「step-backして」「step-backで考え直して」と明示的に呼ばれた時だけ使う。設計やスコープを最初から決めるならai-native-engineering、成果物のレビューだけならsecond-opinionを使う。
 disable-model-invocation: true
 ---
 # Step Back — 判断を目的から立て直す
@@ -62,7 +62,7 @@ disable-model-invocation: true
 
 このスキルが呼ばれたことを、read-only レビュー1回の委任として扱い、確認なしで起動する。ユーザーが「レビューなしで」と言ったときは省く。
 
-- **provider は自分と逆にする。** Anthropic の Claude で動いているなら `codex-review`、OpenAI の Codex で動いているなら `claude-review` を使う。
+- **provider は自分と逆にする。** `second-opinion` を使い、Anthropic の Claude で動いているなら Codex を、OpenAI の Codex で動いているなら Claude を起動する。
   - 起動・待機・回収・受け取ったあとの検証は、そのスキルの手順に従う。
   - モデルと effort は、判断そのものが対象のレビューとして `model-selection` で選ぶ。
   - ユーザーが provider やモデルを指定したら、それに従う。

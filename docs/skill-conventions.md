@@ -47,4 +47,4 @@ Validation rejects either half without the other and any other content in `agent
 
 ## Review provider precedence
 
-Explicit provider names win: Claude requests use `claude-review`; Codex or OpenAI requests use `codex-review`. If a user only asks for a third-party review, ask which provider instead of selecting silently.
+`second-opinion` launches either provider. Explicit provider names win: Claude, Anthropic, Sonnet, Opus, or Fable requests launch the Claude CLI; Codex, OpenAI, sol, or astra requests launch the Codex CLI. If a user only asks for a third-party review and has not delegated the choice, ask which provider instead of selecting silently.
