@@ -1,5 +1,11 @@
 # Stack と version policy
 
+## 最新 version の原則
+
+新規 project には、作業当日に解決した最新の stable version を入れる。version、compatibility date、設定の schema を、記憶や過去の project から転記しない。同梱の resolver と公式 source で当日に解決し、解決した version と取得日を foundation record に残す。
+
+ここでの「最新」は、cooling period を通過した最も新しい compatible stable release を指す（下の policy）。cooling period のために1つ前の release を選んだ場合は、その事実と、最新の release へ上げる時期を記録する。
+
 ## 解決順序
 
 1. runtime と capability を特定する。
@@ -37,18 +43,31 @@ module resolution は runtime に合わせる。
 - application の dependency は exact version を優先する。公開 library は compatible peer range を使ってよいが、lockfile で exact resolved version も test する。
 - `minimumReleaseAgeStrict`、`blockExoticSubdeps`、狭い lifecycle-script/build allowlist を設定する。
 
-## Default stack と切替条件
+## Default stack
 
-| Capability | Default | 切り替える条件 |
-|---|---|---|
-| HTTP API | Hono | runtime/framework requirement と実質的に衝突する。 |
-| Trust-boundary validation | Zod | 既存 contract system が runtime validation を所有している。 |
-| Relational data | Drizzle | relational store がない、または platform-native access layer が明確に優れる。 |
-| SPA | React + Vite | SSR/streaming/native requirement が別 architecture を要求する。 |
-| Tests | Vitest | runtime 固有の公式 harness が別 runner を要求する。 |
-| Lint/format | oxlint + oxfmt | 必要な file coverage/rule が不足する、または Biome が既存標準である。 |
-| Dead-code analysis | Knip | package shape に適用できない。除外は狭く記録する。 |
-| Hooks | Lefthook | 既存 cross-platform hook runner が contract を所有している。 |
+この表が default の正本である。`SKILL.md` と resolver の profile はこの表に従う。
+
+| Capability | Default | なぜ既定か | 切り替える条件 | 既定を見直す時 |
+|---|---|---|---|---|
+| Package manager | pnpm | cooling period、lifecycle script の allowlist、exotic な取得元の遮断を設定で強制できる | 既存の標準が別の manager で、同等の supply-chain 設定を強制できる | 必要な設定が廃止・改名された |
+| HTTP API | Hono | Web 標準の Request・Response に依存し、Workers と Node で同じ route が動く。runtime を替えても書き直しが少ない | runtime や framework の要件と実質的に衝突する | 対象 runtime の公式 adapter が保守されなくなった |
+| Trust-boundary validation | Zod | 1つの schema から runtime の検証と TypeScript の型の両方を得られる | 既存の contract の仕組みが runtime の検証を所有している | 計測した bundle size や検証の速度が要件を満たさない |
+| Relational data | Drizzle | SQL に近い型付きの query と versioned な migration を持ち、edge の runtime でも動く | relational な保存先が無い、または platform 固有の access 層が明確に優れる | 対象の database・driver への公式対応が切れた |
+| SPA | React + Vite | 公式 starter と platform の plugin が揃い、client-rendered な SPA に server の前提を持ち込まない | SSR・streaming・native の要件が別の architecture を求める | 採用する platform の公式 starter が別の構成へ移った |
+| Tests | Vitest | Vite と設定を共有し、ESM と TypeScript をそのまま実行でき、runtime 固有の pool がある | runtime 固有の公式 harness が別の runner を求める | 対象 runtime の公式 harness が別の runner へ移った |
+| Lint/format | oxlint + oxfmt | 実行が速く、hook と CI で毎回全体に掛けられる。lint と format の所有者を1つの toolchain にできる | 必要な file の種類や rule が不足する、または Biome が既存の標準である | project が必要とする rule を提供できない状態が続く |
+| Dead-code analysis | Knip | 使われていない export・file・依存を1つの tool で検出できる | package の形に適用できない。除外は狭く記録する | 採用する framework の entry を解釈できない |
+| Hooks | Lefthook | 単体の binary で動き、並列実行と staged な file の絞り込みを持つ | 既存の cross-platform な hook runner が contract を所有している | 必要な platform で動かなくなった |
+
+### 既定そのものの見直し
+
+version だけでなく、default の選択も作業のたびに確かめる。新規 project を作る時に、各 default について次を公式 documentation と release notes で確認する。
+
+1. 保守が続いているか（直近の release、deprecated の表示）。
+2. 対象の runtime を公式に support しているか。
+3. 表の「切り替える条件」「既定を見直す時」に当たっていないか。
+
+当たっていれば、表ではなく当日の証拠に従って選び、判断と根拠を foundation record に残す。同じ理由が続くなら、この表の更新を提案する。
 
 Oxc、Biome、ESLint、Prettier を重複 owner として install しない。1つの file type は1つの formatter が所有する。lint tool が type-aware rule を持っていても type authority は `tsc` とする。
 

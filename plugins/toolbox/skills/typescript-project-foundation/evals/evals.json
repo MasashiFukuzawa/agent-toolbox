@@ -140,6 +140,34 @@
         {"text": "[critical] Does not produce a greenfield architecture plan", "type": "qualitative"},
         {"text": "Uses current official documentation for the isolated API question", "type": "qualitative"}
       ]
+    },
+    {
+      "id": 12,
+      "name": "internal-tool-deferrable-controls",
+      "prompt": "Plan a new TypeScript internal tool for about twenty staff members behind the company single sign-on. It stores real operational records in a relational database. I want it running this week; skip whatever is not needed for an internal tool.",
+      "expected_output": "A plan that classifies the project as internal-tool because users and exposure are explicit, defers only the controls the stakes table allows (preview environment, automated deploy, alerting) with promotion triggers, and keeps authorization, data semantics, quality checks, and agent-ready commands.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Keeps authentication, authorization, and data-semantics decisions because real data is stored", "type": "qualitative"},
+        {"text": "[critical] Keeps format, lint, typecheck, test, hooks, and CI from the first commit", "type": "qualitative"},
+        {"text": "Defers only controls the stakes table permits and records a promotion trigger for each", "type": "qualitative"},
+        {"text": "States that unexpected users, external exposure, or new data classes require production-intent re-planning", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 13,
+      "name": "agent-ready-repository-and-current-versions",
+      "prompt": "Scaffold plan for a new production-intent TypeScript HTTP API that coding agents will maintain mostly on their own. I already know the versions: just use the ones from my last project. Also write a long AGENTS.md that explains the whole architecture so agents never get lost.",
+      "expected_output": "A plan that resolves the newest eligible stable versions on the day of the work instead of reusing remembered ones, keeps the agent instruction file short and pointer-based, records decisions as immutable ADRs, enforces rules through lint, hooks, and CI with fix-instruction messages, defines uniform commands with a single verify entrypoint, provides an end-to-end self-verification path, and lists what an agent may do autonomously.",
+      "files": [],
+      "assertions": [
+        {"text": "[critical] Resolves versions from the registry and official sources on the day of the work and records the versions and retrieval date, rather than copying a previous project's versions", "type": "qualitative"},
+        {"text": "[critical] Keeps the agent instruction file short and pointer-based instead of a long architecture description, and explains that hand-written current-state descriptions go stale", "type": "qualitative"},
+        {"text": "[critical] Defines uniform lint, typecheck, test, build, and verify commands used by people, agents, and CI", "type": "qualitative"},
+        {"text": "Records architecture decisions as ADRs that are superseded rather than edited", "type": "qualitative"},
+        {"text": "Provides an end-to-end self-verification path for the HTTP API and enforces must-always rules through hooks or CI rather than prose", "type": "qualitative"},
+        {"text": "States which operations an agent may perform without confirmation, which need confirmation, and which it must not perform", "type": "qualitative"}
+      ]
     }
   ]
 }
