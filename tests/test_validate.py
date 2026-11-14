@@ -253,6 +253,50 @@ def test_claude_manifest_without_skills_directory_is_valid(tmp_path: Path, monke
     assert not any("Claude skills path escapes plugin" in error for error in errors)
 
 
+def _write_host_manifests(root: Path, hosts: tuple[str, ...]) -> None:
+    directories = {"Codex": ".codex-plugin", "Claude": ".claude-plugin"}
+    manifests = {
+        "Codex": '{"name":"sample","version":"1.0.0","skills":"./skills/"}',
+        "Claude": '{"name":"sample","version":"1.0.0"}',
+    }
+    skill = root / "plugins/sample/skills/sample/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("---\nname: sample\ndescription: sample\n---\n")
+    for host in hosts:
+        manifest_dir = root / "plugins/sample" / directories[host]
+        manifest_dir.mkdir(parents=True)
+        (manifest_dir / "plugin.json").write_text(manifests[host])
+    entry = '{"plugins":[{"name":"sample","source":"./plugins/sample"}]}'
+    empty = '{"plugins":[]}'
+    (root / ".agents/plugins").mkdir(parents=True)
+    (root / ".agents/plugins/marketplace.json").write_text(entry if "Codex" in hosts else empty)
+    (root / ".claude-plugin").mkdir()
+    (root / ".claude-plugin/marketplace.json").write_text(entry if "Claude" in hosts else empty)
+
+
+@pytest.mark.parametrize(("published", "missing"), [(("Claude",), "Codex"), (("Codex",), "Claude")])
+def test_plugin_published_for_one_host_only_is_reported(
+    tmp_path: Path, monkeypatch, published: tuple[str, ...], missing: str
+) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    _write_host_manifests(tmp_path, published)
+
+    errors: list[str] = []
+    _validate_manifests(errors)
+
+    assert f"plugin is missing its {missing} manifest: plugins/sample" in errors
+
+
+def test_plugin_published_for_both_hosts_passes_manifest_validation(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
+    _write_host_manifests(tmp_path, ("Codex", "Claude"))
+
+    errors: list[str] = []
+    _validate_manifests(errors)
+
+    assert not any("is missing its" in error for error in errors)
+
+
 def test_plugin_boundary_allows_internal_resource_symlink(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
     plugin_dir = tmp_path / "plugins/sample"
@@ -771,7 +815,11 @@ def test_manifest_symlink_is_rejected_even_when_parent_is_git_ignored(tmp_path: 
     errors: list[str] = []
     _validate_manifests(errors)
 
-    assert not any("manifest" in error for error in errors)
+    # The ignored manifest is not read, so the only manifest finding is that the plugin
+    # is published for one host.
+    assert [error for error in errors if "manifest" in error] == [
+        "plugin is missing its Codex manifest: plugins/sample"
+    ]
 
 
 def test_manifest_inside_ignored_symlinked_parent_is_not_read(tmp_path: Path, monkeypatch) -> None:

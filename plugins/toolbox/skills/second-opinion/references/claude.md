@@ -64,7 +64,7 @@ SECOND_OPINION_PROMPT
 - `--permission-mode acceptEdits`は、作業directoryの中のファイル編集を確認なしで通す。
 - `--allowedTools`には、依頼文の「動かし方」に書いたコマンドの接頭辞だけを並べる（例: `"Bash(uv run *)" "Bash(npm *)"`）。可変長の引数なので、依頼文は最初の引数に置く。非対話の実行では、許可していないコマンドは実行されない。
 - **Claude CLIは、Bashの書き込み先を既定ではOSの水準で制限しない。** 写しの外へ書かせないことは、作業directory、許可するコマンドの絞り込み、依頼文の3つで担保する。OSの水準で止める必要がある対象では、Codexを検証役に選ぶか、Claude CLIのsandboxの設定をその時点の公式資料で確かめてから有効にする。
-- 終了後に、写しの側の`git status`に加えて、本体のツリーの`git status --porcelain`が起動前と同じであることを確かめる。
+- 終了後に、写しの側の`git status`に加えて、本体のツリーに第三者の実行による変更が無いことを`git status --porcelain`で確かめる。待ち時間に自分や並行作業が加えた変更は除いて比べる。
 
 ## 依頼文の渡し方
 

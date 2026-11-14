@@ -70,7 +70,7 @@ SECOND_OPINION_PROMPT
 
 - `-s workspace-write`は、書き込みを作業root（写し）とsandboxが許す一時領域に限る。`--add-dir`は書き込める場所を増やすので付けない。`danger-full-access`と`--dangerously-bypass-approvals-and-sandbox`は使わない。
 - このsandboxでは、ネットワークが既定で使えないことがある。依存の導入にネットワークが要るときは、許可する設定をその時点の`codex exec --help`と公式資料で確かめる。確かめられなければ、導入済みの環境で動かせる範囲だけを確かめさせ、残りを「確かめられず」として返させる。
-- 終了後に、写しの側の`git status`に加えて、本体のツリーの`git status --porcelain`が起動前と同じであることを確かめる。
+- 終了後に、写しの側の`git status`に加えて、本体のツリーに第三者の実行による変更が無いことを`git status --porcelain`で確かめる。待ち時間に自分や並行作業が加えた変更は除いて比べる。
 
 ## 依頼文の渡し方
 
