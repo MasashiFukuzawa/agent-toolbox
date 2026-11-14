@@ -6,15 +6,15 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 22 | Human-facing reporting, autonomous execution and quality, and design and implementation decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 20 | Human-facing reporting, autonomous execution and quality, and design and implementation decisions | Per-skill; see each `SKILL.md` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
 
 ### Skill catalog
 
-- `toolbox` (22, Claude Code and Codex), in three groups:
-  - Reporting to a human (9): `human-briefing`, `html-artifact`, `owner-board`, `daily-plan`, `progress-report`, `context-handoff`, `human-notify`, `ascii-diagram`, and `rephrase`.
+- `toolbox` (20, Claude Code and Codex), in three groups:
+  - Reporting to a human (7): `human-briefing`, `html-artifact`, `progress-report`, `context-handoff`, `human-notify`, `ascii-diagram`, and `rephrase`.
   - Autonomous execution and quality (5): `autopilot`, `second-opinion`, `model-selection`, `git-worktrees`, and `step-back`.
   - Design and implementation (8): `ai-native-engineering`, `behavioral-testing`, `adr`, `codebase-audit`, `browser-operations`, `e2e-capability-verification`, `typescript-project-foundation`, and `cloudflare-data-pipeline`.
 - `done` (1, Claude Code and Codex): `done`.
@@ -23,17 +23,17 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 `step-back` and `rephrase` run only when named: `/toolbox:<name>` in Claude Code, `$<name>` in Codex. `rephrase` restates the previous message from its background in the `human-briefing` rows when an explanation did not land.
 
-Autopilot delegates bounded work while the controller retains artifact review and shipping-quality responsibility. Model selection is shared by autopilot and `second-opinion`; install the complete toolbox plugin rather than copying one skill alone. Done accepts revision-bound evidence rather than repeating worker checks. Runtime servicing uses actual host task state, not a separate snapshot checker. No daemon or automatic host restart is installed; see the [runtime contract](plugins/toolbox/skills/autopilot/references/controller-runtime.md) for these limits.
+`autopilot` carries one goal from investigation to acceptance: one session at a time, and one local HTML goal page that the human reads. The goal, its numbered acceptance conditions, the limits, and the delegated scope are agreed once. Inside that scope the session decides, proceeds, and records what it decided on the page; it asks only about decisions outside it, and it does not weaken the acceptance conditions on its own. When it stops, the page carries a stop state (done, waiting for a decision, waiting for a human action, waiting on something external, or interrupted) with the condition for resuming, and a later session resumes from the page after checking it against the actual branch, pull request, and CI state. Model selection is shared by autopilot and `second-opinion`; install the complete toolbox plugin rather than copying one skill alone. Done accepts revision-bound evidence rather than repeating checks that already passed on the same tree.
+
+The toolbox plugin ships hooks for the hosts' `Stop` and `PermissionRequest` events, and for Claude Code's `StopFailure` (a turn that ends on an API error). They raise a desktop notice when the session that carries a goal mark stops or waits for permission. The hooks are passive: in a worktree without a goal mark, and for other sessions in a marked worktree, they do nothing, so ordinary conversations never notify. No daemon or automatic host restart is installed. Codex runs plugin hooks only after you review and trust them with `/hooks`.
 
 `second-opinion` launches the Claude or Codex CLI as an independent instance, from either host. It reviews a diff or a design against named viewpoints (missing, not asked for, implemented wrongly, documented-rule violations) and asks for a failure scenario with every finding. For a change whose behavior is visible from outside and whose gate tier is the deepest, the third party first runs the change on a fixed snapshot and checks the acceptance criteria. The caller acts only on findings that were reproduced or would be costly to miss.
-
-## Install
 
 ### Progress report formats
 
 `progress-report` accepts natural-language instructions to focus the report without requiring scope flags. Add `--ascii` for in-chat diagrams, `--html` for a saved visual HTML report, or both for an in-chat summary plus HTML. The report skill owns the facts and decision context; `ascii-diagram` and `html-artifact` own presentation. Install the complete toolbox plugin to use these integrations. HTML output does not authorize publishing or uploading it.
 
-Human-facing HTML from `html-artifact`, `progress-report`, `owner-board`, and `daily-plan` is saved under `~/Documents/agent-artifacts/<project>/` (override with `AGENT_ARTIFACTS_DIR`), named `YYYY-MM-DD_<kind>_<slug>`, so Finder or Explorer can find output from either host in one place. `<project>` is the main repository name, also from a worktree. Sandboxed hosts need that directory allowed for writing: Codex `sandbox_workspace_write.writable_roots`, Claude Code `permissions.additionalDirectories`. Machine-read records such as review runs and handoffs stay in each skill's state directory.
+Human-facing HTML from `html-artifact`, `progress-report`, and `autopilot` (goal pages) is saved under `~/Documents/agent-artifacts/<project>/` (override with `AGENT_ARTIFACTS_DIR`), named `YYYY-MM-DD_<kind>_<slug>`, so Finder or Explorer can find output from either host in one place. `<project>` is the main repository name, also from a worktree. Machine-read records such as review runs, handoffs, and goal marks stay in each skill's state directory under `${XDG_STATE_HOME:-~/.local/state}`. Sandboxed hosts need both locations allowed for writing: Codex `sandbox_workspace_write.writable_roots`, Claude Code `permissions.additionalDirectories`. Codex's default sandbox also keeps the Git directory read-only, so committing from an unattended session needs a permission setting that allows it.
 
 ```text
 progress-report --ascii Focus on blockers and dependencies
@@ -42,24 +42,26 @@ progress-report --html Focus on the release outlook
 
 ### Human briefing
 
-`human-briefing` is the single definition of how the skills write to a human, in chat or in a saved page. A request or report has four rows: background, problem, goal, and the ask (or what was done, when nothing is asked). A request carries one decision with one recommendation and its deciding reason, a figure placed before the options, and the checks an owner asks before replying: how large the change is, whether daily work changes, whether it can be undone, and why any waiting period exists. `html-artifact`, `owner-board`, `progress-report`, `context-handoff`, `daily-plan`, and `autopilot` point to it instead of restating the format.
+`human-briefing` is the single definition of how the skills write to a human, in chat or in a saved page. A request or report has four rows: background, problem, goal, and the ask (or what was done, when nothing is asked). A request carries one decision with one recommendation and its deciding reason, a figure placed before the options, and the checks an owner asks before replying: how large the change is, whether daily work changes, whether it can be undone, and why any waiting period exists. `html-artifact`, `progress-report`, `context-handoff`, and `autopilot` point to it instead of restating the format.
 
-### Owner board
+### Goal page
 
-`owner-board` keeps one continuously updated local HTML board of decisions and tasks for a human owner. It opens with the current milestone and what is blocked, lists open requests, and writes each request in the `human-briefing` format — background, problem, goal, and the ask, with a figure before the options of every decision — with fixed question IDs and an archive page for answers, follow-ups, and relays. Agents edit the HTML directly from a self-contained example; there is no runtime dependency. Operational boards stay outside public repositories; creating a board does not authorize publishing it or adding external messaging. General presentation and the save location use `html-artifact`, progress context uses `progress-report`, and execution authority stays with `autopilot`.
+`autopilot` keeps one local HTML page per goal, edited only by the session that carries the goal. From the top it shows the state and current position against the acceptance conditions, what changed since the human last looked, what is left to the human (each item in the `human-briefing` format with a fixed question ID), the decisions made inside the delegated scope with how to undo them, results with evidence bound to the checked revision, the agreement, and the information another session needs to take over. A fixed entry page per project links to the goal in progress. Agents edit the HTML directly from a self-contained example with no script; real pages stay outside public repositories. When a goal page exists, `progress-report` takes its facts from it and links to it, and `context-handoff` hands the goal over through it.
 
 ### Human notifications
 
-`human-notify` delivers urgent local requests through a macOS dialog and speech routed to a configured audio device. Every notification identifies its repository. It runs asynchronously, suppresses duplicate requests, and serializes delivery across repositories. Dialog dismissal is never approval. Device configuration and delivery state stay in user-local directories; remote delivery and unattended reminders are not provided.
+`human-notify` has two local channels, and every notification identifies its repository.
 
-### Daily plan
+- Stop notice: `scripts/waiting_notify.py` is what the toolbox hooks call. The session that carries a goal marks its worktree with the goal and its page (`mark`) and updates the state as it changes; marking the goal done announces it and removes the mark. A declared stop (any state other than in progress) is announced after about 20 seconds of quiet, an undeclared one after about 2 minutes, and a permission request or an API failure at once. It appears as a desktop banner on macOS (allow notifications for the script runner) and through `notify-send` on Linux. Marks and one JSON line per delivered, withdrawn, or failed notice are kept under `${XDG_STATE_HOME:-~/.local/state}/human-notify/`; nothing is written into the repository.
+- Urgent request: a macOS dialog and speech routed to a configured audio device. It runs asynchronously, suppresses duplicate requests, and serializes delivery across repositories. Dialog dismissal is never approval.
 
-
-`daily-plan` agrees on up to 24 hours of work with a human — a working day, or an overnight run — and tracks it on one local HTML page per plan. The page shows overall and per-task progress with each task's next step, time windows to protect, changes to the plan, each task's steps, and the gap to the period's goals. A bundled standard-library Python script renders the page from a JSON plan, judges step states from GitHub (`gh`) or a watched file, and with `--watch` re-renders on an interval until the plan ends. Agreeing to a plan does not approve merges, applies, or production jobs inside it; requests to humans stay on the `owner-board` and are linked by question ID.
+Device configuration and delivery state stay in user-local directories; remote delivery and unattended reminders are not provided.
 
 ### Step back
 
 `step-back` re-examines the decision an agent has just made when its view has narrowed, for example a recommendation to revert a change made for a purpose, or to act before the cause is known. It splits the goal into constraints to keep, the function to restore and its deadline, and the chosen means; checks cause hypotheses against primary sources read-only; and rebuilds the options with reversibility, impact, and fit with the goal before stating a recommendation. It starts one read-only third-party review from the opposite provider through `second-opinion` (a Claude host launches Codex, a Codex host launches Claude) and reports any disagreement with the observation that would settle it. It runs only when invoked explicitly and does not delay an approved emergency rollback.
+
+## Install
 
 ### Claude Code
 
@@ -77,7 +79,7 @@ Use `/plugin` to update or uninstall a plugin. Claude Code discovers the marketp
 
 Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release.
 
-The `done` Stop hook is Claude Code-specific. In Codex, invoke the `done` skill before reporting repository changes complete.
+Codex loads a plugin's `hooks/hooks.json` once you review and trust the hooks with `/hooks`. The `done` Stop hook has been exercised on Claude Code only; in Codex, invoke the `done` skill before reporting repository changes complete.
 
 ### Global instructions (optional)
 

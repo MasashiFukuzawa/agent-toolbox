@@ -14,8 +14,8 @@ description: >-
 ## Step 1: 要否判断（作る前に必ず）
 
 worktree はファイルを分離するだけであり、別実装との意味論上の競合や二重着手を防がない。作成前に
-autopilotスキルが定義する共通collaboration preflightを完了する。重複時の正本候補化・記録・
-エスカレーションをこのスキルで再定義しない。worktreeを分ければ安全という判断は禁止する。
+autopilotスキルが定義する共通collaboration preflightを完了する。重複を見つけた時の扱い・記録・
+人への確認をこのスキルで再定義しない。worktreeを分ければ安全という判断は禁止する。
 
 | 状況 | 判断 |
 |---|---|

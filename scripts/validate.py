@@ -359,9 +359,14 @@ def _scan_public_content(errors: list[str]) -> None:
         "removed skill reference": re.compile(
             r"worktree-flow|write-meaningful-tests|documentation-lookup|research-first"
             r"|technical-research|structured-text-parsing|cloudflare-worker-cd"
+            r"|daily-plan|owner-board"
         ),
     }
-    exclusions = {ROOT / "scripts/validate.py", ROOT / "docs/skill-conventions.md"}
+    exclusions = {
+        ROOT / "scripts/validate.py",
+        ROOT / "tests/test_validate.py",
+        ROOT / "docs/skill-conventions.md",
+    }
     for path in iter_public_files(ROOT):
         if _is_root_excluded(path):
             continue

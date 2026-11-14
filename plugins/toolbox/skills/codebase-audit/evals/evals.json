@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "/codebase-audit",
-      "expected_output": "Controller asks 3 questions in one message: (1) repo paths, (2) additional domains with 9 defaults listed, (3) scan depth. Does NOT dispatch or start analysis without repo paths.",
+      "expected_output": "The agent asks 3 questions in one message: (1) repo paths, (2) additional domains with 9 defaults listed, (3) scan depth. Does NOT dispatch or start analysis without repo paths.",
       "files": [],
       "assertions": [
         {
@@ -32,23 +32,23 @@
     {
       "id": 2,
       "prompt": "コードベースを全部レビューして改善点を洗い出してほしい。$HOME/projects/project-a だけでいい。quickで頼む。",
-      "expected_output": "Controller recognizes path=$HOME/projects/project-a and depth=quick. Either asks only about additional domains (the one unknown param), or proceeds directly to analysis. Does NOT ask for params already specified.",
+      "expected_output": "The agent recognizes path=$HOME/projects/project-a and depth=quick. Either asks only about additional domains (the one unknown param), or proceeds directly to analysis. Does NOT ask for params already specified.",
       "files": [],
       "assertions": [
         {
-          "text": "Controller recognizes $HOME/projects/project-a as the target path",
+          "text": "The agent recognizes $HOME/projects/project-a as the target path",
           "type": "qualitative"
         },
         {
-          "text": "Controller recognizes quick as the scan depth",
+          "text": "The agent recognizes quick as the scan depth",
           "type": "qualitative"
         },
         {
-          "text": "Controller does NOT re-ask for path or depth",
+          "text": "The agent does NOT re-ask for path or depth",
           "type": "qualitative"
         },
         {
-          "text": "Controller either starts analysis or only asks about additional domains",
+          "text": "The agent either starts analysis or only asks about additional domains",
           "type": "qualitative"
         }
       ]
@@ -56,7 +56,7 @@
     {
       "id": 3,
       "prompt": "/codebase-audit\n\nパス: $HOME/projects/project-a, $HOME/projects/project-b\n追加領域: パフォーマンス・スケーラビリティ設計\n深度: deep",
-      "expected_output": "All params provided. Controller begins analysis (or confirms and begins). Analysis uses the A×B framework with パフォーマンス・スケーラビリティ設計 as domain 10, depth=deep. Output format follows the markdown template with per-repo sections + cross-repo analysis.",
+      "expected_output": "All params provided. The agent begins analysis (or confirms and begins). Analysis uses the A×B framework with パフォーマンス・スケーラビリティ設計 as domain 10, depth=deep. Output format follows the markdown template with per-repo sections + cross-repo analysis.",
       "files": [],
       "assertions": [
         {

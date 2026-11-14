@@ -60,8 +60,8 @@
     },
     {
       "id": 6,
-      "prompt": "autopilotの後続Issueを作って。元のworker報告は英語で、repoに言語規約はない。",
-      "expected_output": "タイトル/本文は日本語で起票する。英語のworker報告や既存Issueを言語指定とみなさず、識別子・引用ログは保持する。",
+      "prompt": "autopilotの後続Issueを作って。元になった補助の報告は英語で、repoに言語規約はない。",
+      "expected_output": "タイトル/本文は日本語で起票する。英語の報告や既存Issueを言語指定とみなさず、識別子・引用ログは保持する。",
       "files": []
     },
     {

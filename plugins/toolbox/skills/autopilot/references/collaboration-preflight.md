@@ -16,5 +16,5 @@ task-source の状態だけを「他者が作業していない」根拠にし�
 正本が不明な場合だけ人間へエスカレーションする。
 
 結果と未確認範囲は、書込み可能なdurable journalがあれば`## Collaboration preflight`として記録する。
-trackerやchange requestがない場合はrun reportへ記録し、記録先を作るためのshadow Issueやsynthetic statusは
+trackerやchange requestがない場合はゴールのページへ記録し、記録先を作るためのshadow Issueやsynthetic statusは
 作らない。claimを伴うadapterは、衝突なしの根拠を記録した後だけclaimする。

@@ -1,4 +1,4 @@
-# Task source と作業journal
+# タスクの取り方と、タスクに残す記録
 
 Autopilotはtask trackingを1つの役割として扱う。設定されたtask sourceが、タスクの選択・再開、
 durableな書込面がある場合の作業journal、対応可能な状態遷移をまとめて担う。選択と記録を同じadapterへ
@@ -15,51 +15,20 @@ durableな書込面がある場合の作業journal、対応可能な状態遷移
 Escalationは第4の状態ではなくjournal entryである。task source固有のqueue状態は持てるが、
 orchestratorはそれを別sourceへ再現しない。
 
-## 作業journalの慣習
+## タスクに残す記録
 
-task sourceにdurableな追記面がある場合、作業の進行に合わせて次のMarkdown entryを残す。
-これは人間が読める慣習であり、機械可読なevent schemaではない。
+人が読む進み具合と判断は、ゴールのページに書く。task sourceに追記できる場所（Issueのコメントなど）には、
+ほかの人や別のセッションが照合に使う、最小の記録だけを残す。
 
-### `## Plan`
+- **着手**: claim直後に`goal-run: <ゴールの識別子>`、task identity、担当worktree、開始時刻を記録する。
+  再開時は元の識別子と照合する。claimに成功して記録に失敗した時は、再claimせず照合して補う。
+  記録の前は、編集も委任もしない。セッションが替わる時は、前のセッションが止まった根拠と新しい識別子を追記する。
+- **止まった時**: 何を待っているかと、再開の条件を短く書く（ページと同じ内容）。
+- **完了**: 利用できるようになったこと、PRまたは同等の変更の参照、検査した版と（異なれば）最終のmerge版、
+  重要な検査の結果、残した制約。
 
-- 確認した事実と受入条件
-- 検討した選択肢と採用案
-- scopeとnon-goal
-- 検証計画
-
-### `## Review — round N`
-
-- reviewerと固定されたreview対象
-- 動作確認の結果（行った場合）と、直した指摘
-- 直さないと決めた、損害の大きい指摘とその理由（命名・将来の拡張・文言の好みは1件ずつ記録しない）
-- 必要だった場合の再review結果
-
-### `## Decision`
-
-PlanやReviewだけでは明確にならない重要な選択に限って使う。選択肢、判断、理由、影響、再検討条件を
-残す。複数タスクへ影響するdurableなarchitecture判断は、repoにADR運用があればそちらにも記録する。
-
-### `## Progress`
-
-claim直後は`controller-run: <run_id>`、task identity、担当worktree、開始時刻を必ず記録する。再開時は元run IDと照合する。claim成功/記録失敗は再claimせず照合して補完し、記録前は委任・編集しない。交代時は旧所有者の停止/引継ぎ根拠と新run IDを追記する。
-
-重要な観測、前提の変更、外部から確認可能なcheckpointに使う。日常的なcommand logは転記しない。
-
-### `## Escalation`
-
-blocking condition、安全に実施済みの確認、不足している権限または判断、最短の再開手順を残す。
-
-### `## Completion evidence`
-
-- 利用可能になった能力
-- PRまたは同等の変更参照
-- 検証したsource revisionと、異なる場合は最終merge/release revision
-- quality-gate署名と重要なtest結果
-- 必要なdeploy/runtime検証
-- 既知制約とdurableなfollow-up
-
-日常的なentry追記と3つの状態遷移は通常のautopilot実行であり、entryごとの人間承認は不要である。
-既存のmerge/deploy gateと、解除不能な破壊操作ルールをauthority境界として維持する。
+着手・完了の追記と3つの状態遷移は通常の実行であり、追記ごとの人の承認は要らない。
+merge/deployの決まりと、解除できない破壊操作の決まりは、権限の境界として保つ。
 
 ## Source能力
 
@@ -80,13 +49,13 @@ synthetic statusを作らない。
 - adapterは単一repositoryのqueueだけを扱う。共有Projectではcanonical Issue URLから別repositoryと確認できる
   itemを候補選択前に除外し、選択したIssueのowner/repo/numberはclaim前にconfigと完全一致しなければ
   fail loudlyとする。repositoryを安全に判定できないdraft・不正URLは除外で隠さない。
-- Plan、Reviewの採否、Decision、Progress、Escalation、Completion evidenceを選択したIssueへ追記する。
+- 着手の記録、止まった時の記録、完了の記録を、選択したIssueへ追記する。
   Issue comment面を持たないdraft itemはclaim前にfail loudlyとする。
 - `review`と`complete`は設定された`statusNames`を使う。省略時は従来の`In Progress`、
   `In Review`、`Done`を使う。
 - 全書込はmain skillのrepo・Project identity guardを維持する。GitHub認証とIDを汎用契約へ持ち込まない。
 - draft itemで停止した場合はIssueへ変換してdurable journalを与えるか、そのrunでitem IDを`--exclude`し、
-  理由をEnd-of-run Reportへ残す。journal無しでclaimする回避はしない。
+  理由をゴールのページへ残す。journal無しでclaimする回避はしない。
 
 ## `plan-doc` adapter
 

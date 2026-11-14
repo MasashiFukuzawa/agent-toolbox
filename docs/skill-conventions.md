@@ -11,6 +11,7 @@ Renames in this repository:
 - `write-meaningful-tests` → `behavioral-testing`
 - `html-thinking` → `html-artifact`
 - `claude-review` + `codex-review` → `second-opinion`
+- `daily-plan` + `owner-board` → `autopilot` (folded into its goal page: the agreement, the current position, what is left to the human, and results with evidence live on one page per goal)
 
 Removed, with the one rule each still carried moved into `global-instructions/AGENTS.md`: `technical-research` (confirm APIs, versions, limits, and recommended procedures against primary sources) and `structured-text-parsing` (process input with a defined format by deterministic means). `cloudflare-worker-cd` was removed because `typescript-project-foundation` carries the same deploy-safety sequence. Validation rejects references to removed names.
 

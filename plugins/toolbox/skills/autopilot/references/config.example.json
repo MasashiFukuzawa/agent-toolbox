@@ -42,8 +42,8 @@
       "codex",
       "claude"
     ],
-    "_autoNote": "auto = 開始契約で許可されたproviderからcontrollerがmodel-selectionに従って選ぶ。未許可providerへの送信を許可する値ではない",
-    "_note": "controllerが読むreview providerの指定。board adapterはレビューを起動しない。codex/claudeの明示値を尊重し、無人時は開始契約で利用可能なproviderを確認する"
+    "_autoNote": "auto = 任せる範囲で許可されたproviderから、ゴールを進めるセッションがmodel-selectionに従って選ぶ。未許可providerへの送信を許可する値ではない",
+    "_note": "ゴールを進めるセッションが読むreview providerの指定。board adapterはレビューを起動しない。codex/claudeの明示値を尊重し、無人時は合意の時に利用可能なproviderを確認する"
   },
   "baseBranch": "main",
   "_baseBranchNote": "PR のマージ先ブランチ。main 以外（master / develop 等）の場合は変更する。",
