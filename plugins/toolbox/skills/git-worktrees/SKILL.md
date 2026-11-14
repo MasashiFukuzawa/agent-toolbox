@@ -8,7 +8,7 @@ description: >-
 ## ガードレール（必須）
 
 1. **削除系は必ず一覧提示 → 確認**: `git worktree remove` / `branch -D` は、対象の一覧と未コミット変更・未push コミットの有無を提示し、ユーザー確認を得てから実行する（自律実行モードでも、未コミット変更が残る worktree は勝手に消さない）
-2. worktree は **`~/.claude/skills/` や設定ディレクトリ配下に作らない**。作成先は repo の隣（例: `$HOME/projects/<repo>-<topic>`）
+2. worktree は **`~/.claude/skills/` や設定ディレクトリ配下に作らない**。作成先は repo の隣（repo の親 directory の直下の `<repo名>-<topic>`）
 3. 元 repo（main worktree）のチェックアウト状態を勝手に変えない（別ブランチ作業は必ず worktree 側で）
 
 ## Step 1: 要否判断（作る前に必ず）
@@ -22,28 +22,31 @@ autopilotスキルが定義する共通collaboration preflightを完了する。
 | 別セッション/エージェントが同じ repo で並列作業中 | **worktree 必須** |
 | 自分の作業ブランチを保持したまま別タスクに着手 | worktree 推奨 |
 | 現在の作業ツリーが clean で、1タスクずつ順番に進む | **ブランチ切替で十分**（worktree 不要） |
-| main からの緊急修正（現作業を中断できない） | worktree 推奨 |
+| base からの緊急修正（現作業を中断できない） | worktree 推奨 |
 
 迷ったら判断根拠とともにユーザーに1問だけ確認する（過去の運用で要否の指定揺れが頻発しているため）。
 
 ## Step 2: 作成
 
 ```bash
-git -C <repo> fetch -q origin main
-git -C <repo> worktree add <repo>-<topic> -b <branch> origin/main
+git -C <repo> fetch -q origin <base>
+git -C <repo> worktree add ../<repo名>-<topic> -b <branch> origin/<base>
 ```
+
+- `<base>` は作業の起点にする branch。repo の規約や autopilot の設定（`baseBranch`）が定めていればそれを使い、無ければ既定 branch を `git -C <repo> symbolic-ref --short refs/remotes/origin/HEAD` で確かめる。`main` と決めつけない
+- `git -C <repo>` の相対 path は `<repo>` が基準になるので、`../<repo名>-<topic>` で repo の隣に作られる
 
 - 命名: ディレクトリ `<repo>-<topic>`、ブランチはリポジトリの規約（feat/fix/chore + issue番号等）に従う
 - 作成後の注意: **node_modules / venv は共有されない**。ビルド・lint が必要なら依存インストールから（pre-commit hook が依存を要求する repo では特に）
 
-## Step 3: 最新 main の取り込み（並列作業中の定期同期）
+## Step 3: 最新の base の取り込み（並列作業中の定期同期）
 
 ```bash
-git fetch origin main
-git rebase origin/main   # 公開済みブランチなら merge を選ぶ
+git fetch origin <base>
+git rebase origin/<base>   # 公開済みブランチなら merge を選ぶ
 ```
 
-- コンフリクト時: 機械的に解決せず、**相手側の変更意図を `git log origin/main --oneline -10` で確認してから**解決する
+- コンフリクト時: 機械的に解決せず、**相手側の変更意図を `git log origin/<base> --oneline -10` で確認してから**解決する
 - 別セッションが同じファイルを触っている兆候（同一ファイルの頻繁な conflict）があれば、作業分担の見直しをユーザーに提案する
 
 ## Step 4: クリーンアップ（マージ後）

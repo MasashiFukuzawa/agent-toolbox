@@ -1,4 +1,3 @@
-import copy
 import json
 import subprocess
 from pathlib import Path
@@ -16,15 +15,12 @@ from scripts.plugin_paths import (
 from scripts.validate import (
     SEMVER,
     _has_symlink_parent,
-    _host_publishes_skill,
     _path_within_plugin,
     _plugin_boundary_errors,
     _skill_paths,
     _validate_manifests,
     _validate_markdown_links,
-    _validate_registry,
     _validate_repo_skill_mirror,
-    _validate_results,
     _validate_skill_file,
     validate,
 )
@@ -166,35 +162,6 @@ def test_every_published_host_manifest_uses_semver() -> None:
     assert versions
 
 
-@pytest.mark.parametrize("manifest_path", ["./../..", "./../other/skills"])
-def test_codex_manifest_cannot_publish_skills_outside_its_plugin(tmp_path: Path, manifest_path: str) -> None:
-    plugin_dir = tmp_path / "plugins/sample"
-    manifest_dir = plugin_dir / ".codex-plugin"
-    manifest_dir.mkdir(parents=True)
-    (manifest_dir / "plugin.json").write_text(json.dumps({"skills": manifest_path}))
-    sibling_skill = tmp_path / "plugins/other/skills/sample/SKILL.md"
-    sibling_skill.parent.mkdir(parents=True)
-    sibling_skill.write_text("---\nname: sample\n---\n")
-    skill_dir = plugin_dir / "skills/sample"
-    skill_dir.parent.mkdir(parents=True)
-    skill_dir.symlink_to(sibling_skill.parent, target_is_directory=True)
-    skill = skill_dir / "SKILL.md"
-
-    assert not _host_publishes_skill(skill, "codex")
-
-
-def test_codex_manifest_publishes_skill_inside_its_plugin(tmp_path: Path) -> None:
-    plugin_dir = tmp_path / "plugins/sample"
-    manifest_dir = plugin_dir / ".codex-plugin"
-    manifest_dir.mkdir(parents=True)
-    (manifest_dir / "plugin.json").write_text('{"skills":"./skills/"}')
-    skill = plugin_dir / "skills/sample/SKILL.md"
-    skill.parent.mkdir(parents=True)
-    skill.write_text("---\nname: sample\n---\n")
-
-    assert _host_publishes_skill(skill, "codex")
-
-
 def test_codex_manifest_validator_rejects_skills_path_outside_plugin(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
     plugin_dir = tmp_path / "plugins/sample"
@@ -266,18 +233,6 @@ def test_claude_manifest_validator_rejects_external_skill_symlink(tmp_path: Path
     _validate_manifests(errors)
 
     assert any("Claude skill path escapes plugin" in error for error in errors)
-
-
-def test_claude_manifest_publishes_skill_inside_its_plugin(tmp_path: Path) -> None:
-    plugin_dir = tmp_path / "plugins/sample"
-    manifest_dir = plugin_dir / ".claude-plugin"
-    manifest_dir.mkdir(parents=True)
-    (manifest_dir / "plugin.json").write_text('{"name":"sample","version":"1.0.0"}')
-    skill = plugin_dir / "skills/sample/SKILL.md"
-    skill.parent.mkdir(parents=True)
-    skill.write_text("---\nname: sample\n---\n")
-
-    assert _host_publishes_skill(skill, "claude-code")
 
 
 def test_claude_manifest_without_skills_directory_is_valid(tmp_path: Path, monkeypatch) -> None:
@@ -372,18 +327,18 @@ def test_git_ignored_local_directory_symlinks_are_outside_publication_boundary(t
     assert not any(".claude" in path.parts for path in iter_public_files(tmp_path))
 
 
-def test_git_ignored_distribution_paths_are_excluded_from_skill_and_result_discovery(
+def test_git_ignored_distribution_paths_are_excluded_from_skill_and_file_discovery(
     tmp_path: Path, monkeypatch
 ) -> None:
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
-    (tmp_path / ".gitignore").write_text("*-workspace/\nevals/results/latest.json\n")
+    (tmp_path / ".gitignore").write_text("*-workspace/\nreports/latest.json\n")
     published_skill = tmp_path / "plugins/toolbox/skills/sample/SKILL.md"
     published_skill.parent.mkdir(parents=True)
     published_skill.write_text("---\nname: sample\ndescription: valid\n---\n")
     local_skill = tmp_path / "plugins/sample-workspace/skills/local/SKILL.md"
     local_skill.parent.mkdir(parents=True)
     local_skill.write_text("local")
-    latest_result = tmp_path / "evals/results/latest.json"
+    latest_result = tmp_path / "reports/latest.json"
     latest_result.parent.mkdir(parents=True)
     latest_result.write_text("local result")
     monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
@@ -391,7 +346,7 @@ def test_git_ignored_distribution_paths_are_excluded_from_skill_and_result_disco
     assert [path.relative_to(tmp_path).as_posix() for path in _skill_paths()] == [
         "plugins/toolbox/skills/sample/SKILL.md"
     ]
-    assert public_paths(tmp_path, list((tmp_path / "evals/results").glob("*.json"))) == []
+    assert public_paths(tmp_path, list((tmp_path / "reports").glob("*.json"))) == []
 
 
 @pytest.mark.parametrize("ignore_relative", [".gitignore", "nested/.gitignore"])
@@ -456,7 +411,7 @@ def test_broken_git_metadata_symlink_is_not_treated_as_a_non_git_copy(tmp_path: 
     with pytest.raises(ValueError, match="cannot determine Git-ignored paths"):
         git_ignored_entries(tmp_path)
     with pytest.raises(ValueError, match="cannot verify Git tracking status"):
-        is_tracked_file(tmp_path, tmp_path / "evals/results/baseline.json")
+        is_tracked_file(tmp_path, tmp_path / "docs/required.json")
 
 
 def test_public_plugin_symlink_cannot_target_git_ignored_file(tmp_path: Path) -> None:
@@ -496,14 +451,14 @@ def test_non_git_public_discovery_excludes_local_state(tmp_path: Path) -> None:
     from scripts.plugin_paths import require_public_file
 
     (tmp_path / ".gitignore").write_text(
-        "*-workspace/\nplugins/**/private-drafts/\nevals/results/latest.json\n"
+        "*-workspace/\nplugins/**/private-drafts/\nreports/latest.json\n"
     )
     (tmp_path / ".claude/skills/local").mkdir(parents=True)
     (tmp_path / ".claude/skills/local/SKILL.md").write_text("private")
     workspace_skill = tmp_path / "plugins/sample-workspace/skills/local/SKILL.md"
     workspace_skill.parent.mkdir(parents=True)
     workspace_skill.write_text("private")
-    latest = tmp_path / "evals/results/latest.json"
+    latest = tmp_path / "reports/latest.json"
     latest.parent.mkdir(parents=True)
     latest.write_text("private")
     ignored_skill = tmp_path / "plugins/toolbox/skills/private-drafts/SKILL.md"
@@ -633,7 +588,7 @@ def test_non_git_nested_ignore_can_unignore_file_in_visible_directory(tmp_path: 
 
 
 def test_non_git_public_paths_do_not_hide_unignored_workspaces_directory(tmp_path: Path) -> None:
-    (tmp_path / ".gitignore").write_text("evals/workspaces/\n*-workspace/\n")
+    (tmp_path / ".gitignore").write_text("scratch-workspaces/\n*-workspace/\n")
     public_file = tmp_path / "plugins/toolbox/skills/sample/references/workspaces/guide.md"
     public_file.parent.mkdir(parents=True)
     public_file.write_text("public")
@@ -689,14 +644,14 @@ def test_required_public_file_handles_root_symlink_alias(tmp_path: Path) -> None
     public_file = tmp_path / "docs/public.md"
     public_file.parent.mkdir()
     public_file.write_text("public")
-    ignored_file = tmp_path / "evals/results/latest.json"
+    ignored_file = tmp_path / "reports/latest.json"
     ignored_file.parent.mkdir(parents=True)
     ignored_file.write_text("local")
-    (tmp_path / ".gitignore").write_text("evals/results/latest.json\n")
+    (tmp_path / ".gitignore").write_text("reports/latest.json\n")
     root_alias = tmp_path.parent / f"{tmp_path.name}-alias"
     root_alias.symlink_to(tmp_path, target_is_directory=True)
     aliased_file = root_alias / "docs/public.md"
-    aliased_ignored_file = root_alias / "evals/results/latest.json"
+    aliased_ignored_file = root_alias / "reports/latest.json"
 
     assert require_public_file(root_alias, aliased_file) == public_file.resolve()
     assert public_paths(root_alias, [aliased_ignored_file]) == []
@@ -706,10 +661,10 @@ def test_required_public_file_handles_root_symlink_alias(tmp_path: Path) -> None
 def test_required_public_file_rejects_parent_traversal(tmp_path: Path) -> None:
     from scripts.plugin_paths import require_public_file
 
-    latest = tmp_path / "evals/results/latest.json"
+    latest = tmp_path / "reports/latest.json"
     latest.parent.mkdir(parents=True)
     latest.write_text("private")
-    (tmp_path / ".gitignore").write_text("evals/results/latest.json\n")
+    (tmp_path / ".gitignore").write_text("reports/latest.json\n")
 
     with pytest.raises(ValueError, match="parent traversal"):
         require_public_file(tmp_path, tmp_path / "evals/x/../results/latest.json")
@@ -776,7 +731,7 @@ def test_invalid_non_git_ignore_file_fails_closed(tmp_path: Path) -> None:
     assert any("cannot read ignore rules" in error for error in errors)
 
 
-def test_git_root_tracking_failure_does_not_skip_baseline_check(tmp_path: Path, monkeypatch) -> None:
+def test_git_root_tracking_failure_is_reported_for_tracking_checks(tmp_path: Path, monkeypatch) -> None:
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     original_run = subprocess.run
 
@@ -789,7 +744,7 @@ def test_git_root_tracking_failure_does_not_skip_baseline_check(tmp_path: Path, 
     with pytest.raises(ValueError, match="git rev-parse failed"):
         git_ignored_entries(tmp_path)
     with pytest.raises(ValueError, match="cannot verify Git tracking status"):
-        is_tracked_file(tmp_path, tmp_path / "evals/results/baseline.json")
+        is_tracked_file(tmp_path, tmp_path / "docs/required.json")
 
 
 def test_manifest_symlink_is_rejected_even_when_parent_is_git_ignored(tmp_path: Path, monkeypatch) -> None:
@@ -929,18 +884,6 @@ def test_cyclic_symlink_is_reported_as_outside_the_plugin(tmp_path: Path) -> Non
     assert _path_within_plugin(plugin_dir, loop / "SKILL.md") is None
 
 
-def test_publication_check_rejects_cyclic_skill_file_symlink(tmp_path: Path) -> None:
-    plugin_dir = tmp_path / "plugins/sample"
-    manifest_dir = plugin_dir / ".codex-plugin"
-    manifest_dir.mkdir(parents=True)
-    (manifest_dir / "plugin.json").write_text('{"skills":"./skills/"}')
-    skill = plugin_dir / "skills/sample/SKILL.md"
-    skill.parent.mkdir(parents=True)
-    skill.symlink_to(skill)
-
-    assert not _host_publishes_skill(skill, "codex")
-
-
 def test_manifest_validator_reports_cyclic_skill_symlink(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
     plugin_dir = tmp_path / "plugins/sample"
@@ -963,172 +906,6 @@ def test_manifest_validator_reports_cyclic_skill_symlink(tmp_path: Path, monkeyp
     _validate_manifests(errors)
 
     assert any("Codex skills path has no skills" in error for error in errors)
-
-
-def test_registry_supported_hosts_must_match_host_manifests(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs/trigger-registry.yml").write_text(
-        "skills:\n  sample:\n    canonical_name: sample\n    supported_hosts: [codex]\n    nearest_neighbors: []\n"
-    )
-    plugin_dir = tmp_path / "plugins/sample"
-    (plugin_dir / ".codex-plugin").mkdir(parents=True)
-    (plugin_dir / ".codex-plugin/plugin.json").write_text('{"skills":"./skills/published/"}')
-    (plugin_dir / "skills/sample").mkdir(parents=True)
-    (plugin_dir / "skills/sample/SKILL.md").write_text("---\nname: sample\n---\n")
-    (plugin_dir / "skills/published/other").mkdir(parents=True)
-    (plugin_dir / "skills/published/other/SKILL.md").write_text("---\nname: other\n---\n")
-    errors: list[str] = []
-    _validate_registry({"sample": "description"}, errors)
-    assert any("supported_hosts" in error and "plugin manifests" in error for error in errors)
-
-
-def test_nearest_neighbor_must_support_every_host_of_the_skill(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs/trigger-registry.yml").write_text(
-        "skills:\n"
-        "  sample:\n"
-        "    canonical_name: sample\n"
-        "    supported_hosts: [codex]\n"
-        "    nearest_neighbors: [neighbor]\n"
-        "  neighbor:\n"
-        "    canonical_name: neighbor\n"
-        "    supported_hosts: [claude-code]\n"
-        "    nearest_neighbors: []\n"
-    )
-    sample = tmp_path / "plugins/sample"
-    (sample / ".codex-plugin").mkdir(parents=True)
-    (sample / ".codex-plugin/plugin.json").write_text('{"skills":"./skills/"}')
-    (sample / "skills/sample").mkdir(parents=True)
-    (sample / "skills/sample/SKILL.md").write_text("---\nname: sample\n---\n")
-    neighbor = tmp_path / "plugins/neighbor"
-    (neighbor / ".claude-plugin").mkdir(parents=True)
-    (neighbor / ".claude-plugin/plugin.json").write_text("{}")
-    (neighbor / "skills/neighbor").mkdir(parents=True)
-    (neighbor / "skills/neighbor/SKILL.md").write_text("---\nname: neighbor\n---\n")
-    errors: list[str] = []
-    _validate_registry({"sample": "", "neighbor": ""}, errors)
-    assert any("nearest neighbor neighbor from sample lacks required hosts" in error for error in errors)
-
-
-def test_registry_reports_neighbor_missing_from_registry_without_crashing(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs/trigger-registry.yml").write_text(
-        "skills:\n  source:\n    canonical_name: source\n"
-        "    supported_hosts: [codex]\n    nearest_neighbors: [neighbor]\n"
-    )
-    errors: list[str] = []
-    _validate_registry({"source": "", "neighbor": ""}, errors)
-    assert any("neighbor neighbor from source is missing from the trigger registry" in error for error in errors)
-
-
-def test_trigger_result_documents_are_checked_against_published_schema(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
-    (tmp_path / "evals/results").mkdir(parents=True)
-    (tmp_path / "evals/result-schema.json").write_bytes((ROOT / "evals/result-schema.json").read_bytes())
-    (tmp_path / "evals/results/baseline.json").write_bytes((ROOT / "evals/results/baseline.json").read_bytes())
-    valid_document = {
-        "schema_version": 1,
-        "matrix_sha256": "0" * 64,
-        "summary": {"total": 1, "passed": 1, "failed": 0, "not_run": 0},
-        "results": [
-            {
-                "host": "codex",
-                "environment": "isolated",
-                "skill": "sample",
-                "type": "positive",
-                "case_id": 1,
-                "status": "passed",
-            }
-        ],
-    }
-    (tmp_path / "evals/results/valid.json").write_text(json.dumps(valid_document))
-    errors: list[str] = []
-    _validate_results(errors)
-    assert errors == []
-
-    invalid_documents = []
-    invalid = copy.deepcopy(valid_document)
-    invalid["results"][0]["skill"] = {}
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["results"][0]["skill"] = ""
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["results"][0]["type"] = "unregistered"
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["results"][0]["case_id"] = {}
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["results"][0]["case_id"] = 0
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["results"][0]["unexpected"] = True
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["summary"]["unexpected"] = True
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["unexpected"] = True
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["matrix_sha256"] = "not-a-digest"
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["generated_at"] = "yesterday"
-    invalid_documents.append(invalid)
-    invalid = copy.deepcopy(valid_document)
-    invalid["summary"]["total"] = -1
-    invalid_documents.append(invalid)
-
-    for document in invalid_documents:
-        (tmp_path / "evals/results/invalid.json").write_text(json.dumps(document))
-        errors = []
-        _validate_results(errors)
-        assert any("trigger result schema mismatch" in error for error in errors)
-
-
-def test_trigger_baseline_is_required_and_cannot_be_ignored(tmp_path: Path, monkeypatch) -> None:
-    missing_root = tmp_path / "missing"
-    (missing_root / "evals/results").mkdir(parents=True)
-    (missing_root / "evals/result-schema.json").write_bytes((ROOT / "evals/result-schema.json").read_bytes())
-    monkeypatch.setattr("scripts.validate.ROOT", missing_root)
-
-    errors: list[str] = []
-    _validate_results(errors)
-    assert any("required trigger baseline is missing or ignored" in error for error in errors)
-
-
-def test_git_trigger_baseline_must_be_tracked(tmp_path: Path, monkeypatch) -> None:
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
-    (tmp_path / "evals/results").mkdir(parents=True)
-    (tmp_path / "evals/result-schema.json").write_bytes((ROOT / "evals/result-schema.json").read_bytes())
-    (tmp_path / "evals/results/baseline.json").write_bytes((ROOT / "evals/results/baseline.json").read_bytes())
-    monkeypatch.setattr("scripts.validate.ROOT", tmp_path)
-
-    errors: list[str] = []
-    _validate_results(errors)
-
-    assert any("required trigger baseline is not tracked by Git" in error for error in errors)
-
-    ignored_root = tmp_path / "ignored"
-    (ignored_root / "evals/results").mkdir(parents=True)
-    (ignored_root / "evals/result-schema.json").write_bytes((ROOT / "evals/result-schema.json").read_bytes())
-    (ignored_root / ".gitignore").write_text("evals/results/baseline.json\n")
-    baseline = ignored_root / "evals/results/baseline.json"
-    baseline.write_bytes((ROOT / "evals/results/baseline.json").read_bytes())
-    monkeypatch.setattr("scripts.validate.ROOT", ignored_root)
-    errors = []
-    _validate_results(errors)
-    assert any("required trigger baseline is missing or ignored" in error for error in errors)
-
-
-def test_trigger_baseline_covers_every_registered_case() -> None:
-    errors, _warnings = validate()
-    assert "baseline trigger result is stale or incomplete" not in errors
 
 
 def test_semantic_evaluation_matches_current_skill() -> None:
@@ -1177,7 +954,8 @@ def test_explicit_only_skills_must_opt_out_on_both_hosts(
         assert any(expected_fragment in e for e in relevant), relevant
 
 
-def test_step_back_is_explicit_only_on_both_hosts() -> None:
-    skill_dir = ROOT / "plugins/toolbox/skills/step-back"
+@pytest.mark.parametrize("skill", ["step-back", "rephrase"])
+def test_hand_invoked_skills_are_explicit_only_on_both_hosts(skill: str) -> None:
+    skill_dir = ROOT / "plugins/toolbox/skills" / skill
     assert "disable-model-invocation: true" in (skill_dir / "SKILL.md").read_text()
     assert (skill_dir / "agents/openai.yaml").read_text() == CODEX_OPT_OUT

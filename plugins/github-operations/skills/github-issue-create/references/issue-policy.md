@@ -1,8 +1,8 @@
-# Issue policy
+# Issueのpolicy
 
-- Treat the Issue as the task's source of truth and the Project as the cross-repository priority queue.
-- Resolve owner, repository, Project, fields, options, and labels from current GitHub state.
-- Use Japanese for Issue titles and authored descriptions by default, including autonomous follow-ups. Explicit user language requests and explicit target-repository language policies take precedence; resolve conflicts before apply. Preserve template keys, identifiers, labels, and quoted logs. English examples or existing Issues alone do not override the default. The skill's output-language section is canonical.
-- Generate a stable operation fingerprint internally and add it to the body. Never accept a caller-selected fingerprint, and do not rely on search indexing alone for idempotency.
-- Record the created Issue URL before attempting Project registration.
-- A write with an unknown result must be followed by a read and reconciliation, not an unconditional retry.
+- Issueを作業の正本として扱い、Projectをrepositoryをまたぐ優先順位の待ち行列として扱う。
+- owner、repository、Project、field、option、labelは、現在のGitHubの状態から解決する。
+- Issueのタイトルと記述は、自律的に起票する後続課題を含め、既定で日本語にする。ユーザーの明示的な言語の指定と、対象repositoryの明示的な言語の規約を優先し、衝突はapplyの前に解決する。templateのkey、識別子、label、引用したログは原文のまま保つ。英語の例や既存のIssueがあるだけでは、既定を上書きしない。正本はskill本体の「Issueの出力言語」の節である。
+- 安定した操作のfingerprintを内部で生成し、本文に加える。呼び出し側が選んだfingerprintは受け付けない。冪等性を、検索のindexだけに頼らない。
+- Projectへの登録を試みる前に、作成したIssueのURLを記録する。
+- 結果が分からない書き込みの後は、無条件に再試行せず、読み取って突き合わせる。

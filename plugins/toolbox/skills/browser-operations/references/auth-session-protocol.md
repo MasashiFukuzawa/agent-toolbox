@@ -1,56 +1,56 @@
-# Cooperative authentication — protocol details
+# 協調認証 — protocolの詳細
 
-## Why the user's own Chrome can never help
+## ユーザー自身のChromeでは引き継げない理由
 
-Chrome 136+ ignores `--remote-debugging-port` on the default user profile (anti-cookie-theft change), and profile dirs are locked while Chrome runs. So there is **no way** for an agent to see a login the user performed in their daily browser. The only working pattern: **the user logs in inside the browser window the agent opened.** Say this plainly when asking — it prevents the frustrating "I logged in but you still can't see it" loop.
+Chrome 136以降は、既定のユーザーprofileに対する `--remote-debugging-port` を無視する（cookie窃取への対策）。Chromeの起動中はprofile dirもlockされる。そのため、ユーザーが日常のブラウザで行ったログインをエージェントが見る方法は**無い**。成り立つのは、**エージェントが開いたブラウザのウィンドウの中でユーザーがログインする**形だけ。頼む時にこれをはっきり伝えると、「ログインしたのに見えていない」という行き違いを防げる。
 
-## Handoff templates
+## 引き継ぎ文の定型
 
-Opening handoff (after `pwauth <key> open <login-url>`):
+最初の引き継ぎ（`pwauth <key> open <login-url>` の後）:
 
 > 「ログインが必要です。**今エージェントが開いた Chrome ウィンドウの中で**ログインしてください。普段お使いの Chrome でログインしても、仕様上わたしからは見えません。
 > このプロファイルには作業に必要なアカウントだけを入れてください（金融・決済・個人 Google アカウントは入れないでください）。
 > ログインが済んだら「done」等で教えてください。一度ログインすれば記憶されるので、次回以降・他の repo でも再ログインは不要です。」
 
-Session-expired variant:
+sessionが切れていた場合:
 
 > 「<site> のセッションが切れていました（ログイン画面へリダイレクト）。もう一度、エージェントが開いたウィンドウでログインをお願いします。」
 
-Chrome DevTools lane variant (first authenticated debug):
+Chrome DevTools側の場合（認証済みサイトの初回debug）:
 
 > 「デバッグには Chrome DevTools 側のブラウザを使います。こちらは操作用とは別のプロファイルなので、このウィンドウでの初回ログインだけ追加でお願いします。」
 
-## Waiting for login
+## ログインを待つ
 
-- Poll cheaply: check current URL, or `snapshot` a small target (header/account menu), every few seconds — or simply wait for the user's "done".
-- Never snapshot full pages repeatedly while waiting; that is the token-burn pattern this skill exists to stop.
-- After login: verify the **displayed user/tenant** matches expectations before doing anything, especially before state-changing actions.
+- 安く確認する。数秒おきに現在のURLを見るか、小さな対象（header、アカウントメニュー）を `snapshot` する。ユーザーの「done」を待つだけでもよい。
+- 待つ間にページ全体のsnapshotを繰り返さない。tokenを浪費する典型的な動きである。
+- ログイン後は、**表示されているユーザー・テナント**が想定どおりかを確かめてから操作する。状態を変える操作の前は特に確かめる。
 
-## The 30-second cookie-flush trap (verified)
+## cookieの書き出しを待たずに閉じると失う（検証済み）
 
-Chromium writes cookies to the profile's DB asynchronously (~30 s cycle). Verified behavior of `playwright-cli`:
+Chromiumは、cookieをprofileのDBへ非同期に書く（約30秒周期）。`playwright-cli` で確かめた挙動:
 
-- login → immediate `close` → **session lost** (cookies never reached disk)
-- login → ≥40 s of further activity or idle → `close` → session persists and is sent on next open
+- ログイン → すぐ `close` → **sessionを失う**（cookieがdiskへ届いていない）
+- ログイン → 40秒以上の操作または待機 → `close` → sessionが残り、次に開いた時に送られる
 
-Rules:
+規則:
 
-1. After a successful login, do not `close` within ~40 s. Continuing the actual task usually covers this naturally.
-2. If the task finishes immediately after login, wait (`sleep 40`) before `pwauth <key> close`.
-3. If a "remembered" session is unexpectedly gone, the likely cause is an early close right after login — redo the cooperative login once and keep the browser open longer.
+1. ログインに成功した後、約40秒は `close` しない。通常は、続く実作業の時間で足りる。
+2. ログイン直後に作業が終わるなら、`pwauth <key> close` の前に待つ（`sleep 40`）。
+3. 記憶されたはずのsessionが消えていたら、ログイン直後に閉じたことが原因である可能性が高い。協調ログインを1回やり直し、ブラウザを長めに開いておく。
 
-## SSO / MFA / CAPTCHA
+## SSO・MFA・CAPTCHA
 
-- All three are human steps by design — never try to automate or bypass them. The cooperative protocol already handles them: the human completes the challenge in the agent's headed window.
-- SSO via IdP redirect: the profile stores the site session; the IdP session may expire earlier. Re-login goes through the same handoff.
-- Device-trust prompts ("remember this device"): the user may accept them — the profile persists that trust, reducing future MFA prompts.
+- 3つとも、人が行う手順として設計されている。自動化も回避も試みない。協調protocolで扱える。人が、エージェントのheadedウィンドウの中で完了させる。
+- IdPへredirectするSSO：profileに残るのはサイトのsession。IdP側のsessionは先に切れることがある。再ログインは同じ引き継ぎで行う。
+- 端末を信頼する確認（「この端末を記憶する」）：ユーザーは承諾してよい。profileがその信頼を保持し、以後のMFAの回数が減る。
 
-## Failure triage
+## 失敗の切り分け
 
-| Symptom | Action |
+| 症状 | 対応 |
 |---|---|
-| Redirect to login / 401 / 403 on a "remembered" site | One cooperative re-login (session likely expired or was closed too early). Recurs → report, don't loop |
-| `SingletonLock`-style launch error | Another session is using this profile key. Auth needed → report & wait. Never delete lock files |
-| Profile behaves corrupt (crashes, endless login loop) | Delete `~/.mcp/browser-profiles/<key>` only (one site), re-login |
-| `pwauth: playwright-cli が PATH にない` | Follow `references/setup.md` and verify the CLI installation |
-| Login page blocks automation (bot detection) | Report honestly; do not attempt evasion |
+| 記憶済みのサイトで、ログイン画面へのredirect・401・403 | 協調ログインを1回やり直す（sessionが切れたか、早く閉じすぎた）。再発したら、繰り返さずに報告する |
+| `SingletonLock` 系の起動エラー | 別のsessionがこのprofile keyを使っている。認証が必要なら報告して待つ。lockファイルを消さない |
+| profileが壊れている（crash、終わらないログインloop） | `~/.mcp/browser-profiles/<key>` だけ（1サイト分）を消し、再ログインする |
+| `pwauth: playwright-cli が PATH にない` | `references/setup.md` に従い、CLIの導入を確かめる |
+| ログインページが自動操作を拒む（bot検出） | そのまま報告する。回避を試みない |

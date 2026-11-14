@@ -1,25 +1,25 @@
 # Setup — 背景と導入手順
 
-This document describes a portable setup and does not depend on a repository-local script.
+どの環境でも使える導入手順を示す。repository固有のscriptには依存しない。
 
-## What gets installed
+## 導入されるもの
 
-1. `@playwright/cli` — global npm install (`npm install -g @playwright/cli@latest`). Not npx: npx re-resolves on every call, which defeats the CLI's latency/token advantage and pins nothing.
-2. `~/.mcp/browser-profiles/` (chmod 700) — base dir for per-site auth profiles. Site dirs (`github`, `notion`, …) are created by the wrapper on first login.
-3. `~/.local/bin/pwauth` — wrapper that injects, for `open` only: `-s=<key> --persistent --profile=$HOME/.mcp/browser-profiles/<key> --browser=chrome --headed`, and `-s=<key>` for every other command. Rationale: if the LLM must hand-type profile flags, one forgotten flag silently becomes an in-memory profile ("my session vanished"). The wrapper makes the auth path a single fixed name.
+1. `@playwright/cli`：npmのglobal install（`npm install -g @playwright/cli@latest`）。npxは使わない。呼び出しのたびに解決し直すので、CLIの速さとtoken効率の利点が消え、版も固定されない。
+2. `~/.mcp/browser-profiles/`（chmod 700）：サイトごとの認証profileを置く親dir。サイトのdir（`github`、`notion` など）は、初回ログイン時にwrapperが作る。
+3. `~/.local/bin/pwauth`：wrapper。`open` の時だけ `-s=<key> --persistent --profile=$HOME/.mcp/browser-profiles/<key> --browser=chrome --headed` を付け、それ以外のコマンドには `-s=<key>` を付ける。理由：profileのflagをLLMが手で打つ形だと、1つ付け忘れるだけで黙ってin-memory profileになる（「sessionが消えた」）。wrapperにより、認証の経路が1つの固定した名前になる。
 
-## Design decisions (short form)
+## 設計上の判断（要点）
 
-- **MCP configs are untouched** (Claude and Codex). Baking a shared logged-in profile into an MCP server default would carry all cookies into every task including untrusted browsing, and would serialize parallel sessions on one profile lock. The CLI-side wrapper gives cross-repo persistence only when auth is actually needed.
-- **Per-site profile keys** instead of one shared profile: minimal credential exposure per task, and different sites never contend for the same lock.
-- **Fail closed**: verify the CLI exposes `--persistent/--profile/--headed/--browser` before installing a wrapper. If the flag surface changes, stop.
+- **MCPの設定は変えない**（ClaudeもCodexも）。ログイン済みの共有profileをMCP serverの既定に入れると、信頼できないサイトの閲覧を含むすべての作業にcookieを持ち込み、並行sessionが1つのprofile lockで直列になる。CLI側のwrapperなら、認証が実際に要る時だけ、repoをまたぐ永続化が得られる。
+- 共有profile1つではなく、**サイトごとのprofile key**にする。作業ごとの認証情報の露出が最小になり、別のサイト同士が同じlockを取り合わない。
+- **安全側に倒す**：wrapperを導入する前に、CLIが `--persistent/--profile/--headed/--browser` を持つことを確かめる。flagの構成が変わっていたら止める。
 
-## Manual steps (no repo at hand)
+## 手作業の手順（repoが手元に無い場合）
 
 ```bash
 npm install -g @playwright/cli@latest
 mkdir -p ~/.mcp/browser-profiles && chmod 700 ~/.mcp ~/.mcp/browser-profiles
-# then create a local wrapper only after verifying the installed CLI flags
+# 導入したCLIのflagを確かめてから、ローカルのwrapperを作る
 ```
 
 このSkill同梱のinstallerを実行する:
@@ -31,12 +31,12 @@ pwauth --help 2>/dev/null || true
 
 installerはCLIの必須flagを検証してから、`~/.local/bin/pwauth`と権限`0700`のprofile rootを作る。repository固有のhealth-check scriptには依存しない。
 
-## Appendix (opt-in): cross-repo profile for Playwright MCP too
+## 付録（任意）：Playwright MCPでもrepoをまたぐprofileを使う
 
-Not recommended (see design decisions), but if the per-repo fallback profile ever becomes a real pain:
+推奨しない（設計上の判断を参照）。repoごとのfallback profileが実際に負担になった場合だけ行う。手順はhostごとに異なるので、実行時点の各hostの文書とhelpで確かめる。
 
-1. `claude plugin uninstall playwright@claude-plugins-official` (that plugin is MCP-only, no skills are lost; do NOT uninstall chrome-devtools-mcp — it bundles skills).
-2. `claude mcp add --scope user playwright -- npx @playwright/mcp@latest --user-data-dir=$HOME/.mcp/browser-profiles/playwright-mcp --browser chrome`
-3. Codex: edit `[mcp_servers.playwright]` args in `~/.codex/config.toml` the same way.
-4. **Verify the flag actually reaches the child process** — there are reports of npx-wrapped MCP args being dropped (claude-code #24586): after starting a session, `ps aux | grep mcp-server-playwright` must show `--user-data-dir=…`; or check the profile dir's mtime after use. If the arg is dropped, call the installed binary directly instead of via npx.
-5. Accept the trade-offs this skill's default avoids: shared cookies in every MCP browsing task and cross-session lock contention.
+1. Playwright MCP serverの起動引数に `--user-data-dir=$HOME/.mcp/browser-profiles/playwright-mcp --browser chrome` を足す。
+   - Claude Code：既存のPlaywright MCP（pluginで入れたもの）を外してから、user scopeのMCP serverとして登録し直す。skillを同梱するplugin（chrome-devtools-mcpなど）は外さない。
+   - Codex：`~/.codex/config.toml` の `[mcp_servers.playwright]` のargsを同じように書き換える。
+2. **flagが子プロセスまで届いていることを確かめる。** npx経由のMCPで引数が落ちる報告がある。session開始後に `ps aux | grep mcp-server-playwright` で `--user-data-dir=…` が見えること、または使用後にprofile dirのmtimeが変わることを確かめる。落ちているなら、npxを介さず導入済みのbinaryを直接呼ぶ。
+3. このSkillの既定が避けている不利益を受け入れる：すべてのMCP閲覧作業でcookieが共有され、session間でlockを取り合う。

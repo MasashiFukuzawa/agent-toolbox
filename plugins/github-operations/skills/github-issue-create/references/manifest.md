@@ -1,7 +1,6 @@
-# Issue manifest
+# Issueのmanifest
 
-Use a JSON file for a guarded multi-Issue plan. The manifest is embedded in the immutable plan;
-apply and resume do not depend on the source file remaining present.
+複数のIssueを、確認付きの1つのplanにまとめる時はJSONファイルを使う。manifestは不変のplanに埋め込まれるので、applyとresumeは、元のファイルが残っていることに依存しない。
 
 ```json
 {
@@ -20,13 +19,8 @@ apply and resume do not depend on the source file remaining present.
 }
 ```
 
-`key` is optional but recommended. It must be unique within the manifest and becomes the stable
-journal entry identifier. When omitted, the one-based entry position is used.
+`key` は任意だが、付けることを勧める。manifestの中で一意でなければならず、journalのentryを指す安定した識別子になる。省いた場合は、1から始まるentryの位置を使う。
 
-`body`, `labels`, `assignee`, and `priority` are optional. Priority remains explicit-only. Unknown
-fields are rejected. Parent/sub-Issue relationships are not supported by version 1 and must not be
-silently inferred.
+`body`、`labels`、`assignee`、`priority` は任意。Priorityは、明示された場合にだけ設定する。未知のfieldは拒否する。親子（sub-Issue）の関係はversion 1では扱わない。暗黙に推測もしない。
 
-One plan accepts at most 100 entries to keep content-creation limits and partial-failure recovery
-operationally bounded. Apply runs entries serially and stores progress after every external
-mutation. Resume reuses the stored Issue and Project item instead of creating replacements.
+1つのplanが受け付けるのは100 entryまで。内容作成の制限と、途中で失敗した時の復旧を、運用できる範囲に収めるためである。applyはentryを直列に実行し、外部への変更のたびに進み具合を保存する。resumeは、保存済みのIssueとProject itemを再利用し、代わりを作らない。

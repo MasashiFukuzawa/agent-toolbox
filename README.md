@@ -6,17 +6,22 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 24 | Research, review, model selection, testing, visualization, human-facing reporting, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 22 | Human-facing reporting, autonomous execution and quality, and design and implementation decisions | Per-skill; see each `SKILL.md` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
 
 ### Skill catalog
 
-- `toolbox` (24, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `human-briefing`, `human-notify`, `model-selection`, `owner-board`, `progress-report`, `second-opinion`, `step-back`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
+- `toolbox` (22, Claude Code and Codex), in three groups:
+  - Reporting to a human (9): `human-briefing`, `html-artifact`, `owner-board`, `daily-plan`, `progress-report`, `context-handoff`, `human-notify`, `ascii-diagram`, and `rephrase`.
+  - Autonomous execution and quality (5): `autopilot`, `second-opinion`, `model-selection`, `git-worktrees`, and `step-back`.
+  - Design and implementation (8): `ai-native-engineering`, `behavioral-testing`, `adr`, `codebase-audit`, `browser-operations`, `e2e-capability-verification`, `typescript-project-foundation`, and `cloudflare-data-pipeline`.
 - `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.
 - `github-operations` (2, Claude Code and Codex): `github-project-provisioning` and `github-issue-create`.
+
+`step-back` and `rephrase` run only when named: `/toolbox:<name>` in Claude Code, `$<name>` in Codex. `rephrase` restates the previous message from its background in the `human-briefing` rows when an explanation did not land.
 
 Autopilot delegates bounded work while the controller retains artifact review and shipping-quality responsibility. Model selection is shared by autopilot and `second-opinion`; install the complete toolbox plugin rather than copying one skill alone. Done accepts revision-bound evidence rather than repeating worker checks. Runtime servicing uses actual host task state, not a separate snapshot checker. No daemon or automatic host restart is installed; see the [runtime contract](plugins/toolbox/skills/autopilot/references/controller-runtime.md) for these limits.
 
@@ -101,7 +106,7 @@ The installer fetches each skill from its upstream repository and scans it with 
 - Skills never include credentials, personal paths, organization-specific identifiers, or non-public operational details.
 - Browser profiles and Google OAuth data remain outside the repository.
 - `gog` skills permit read-only commands only and wrap untrusted Workspace content.
-- Repository checks validate frontmatter, manifests, local links, trigger metadata, and common secret patterns. CI also runs gitleaks.
+- Repository checks validate frontmatter, manifests, local links, skill evaluation files, and common secret patterns. CI also runs gitleaks.
 - Validation excludes untracked content ignored by repository `.gitignore` rules and local tool state. Tracked shared files remain subject to validation; personal Git excludes do not change the checks. Public symlinks must be relative, point directly to a regular file, and stay within the repository and, for plugin content, within the same plugin. Directory symlinks and chains are rejected. In copies without Git metadata, validation applies `.gitignore` rules and local-state exclusions, but cannot recover which ignored files were originally tracked. Validate the Git checkout before distributing such a copy.
 
 Review a skill's guardrails before using it with authenticated services or write-capable tools.
@@ -115,7 +120,6 @@ uv sync --dev
 uv run ruff check .
 uv run pytest
 uv run python -m scripts.validate
-uv run python -m scripts.trigger_eval --check
 bash -n plugins/done/scripts/quality-gate-stop.sh
 ```
 

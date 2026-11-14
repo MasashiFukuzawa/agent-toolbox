@@ -205,3 +205,16 @@ def test_a_question_number_lives_on_only_one_page():
 
     assert open_ids and archived_ids
     assert open_ids.isdisjoint(archived_ids)
+
+
+def test_an_archived_request_keeps_what_the_owner_was_shown():
+    cards = load(ARCHIVE).cards
+
+    assert cards, "the archive example must show at least one answered or withdrawn request"
+    for card in cards:
+        assert card["labels"] == ["背景", "課題", "目的", "相談事項"], f"{card['id']} lost a row of the request"
+        if card["kind"] == "判断":
+            sequence = card["sequence"]
+            assert "folded-figure" in sequence, f"{card['id']} dropped the figure the owner decided from"
+            assert sequence.index("folded-figure") < sequence.index("options"), f"{card['id']} reordered the request"
+            assert sequence.count("options") == 1 and card["replies"] == 1, f"{card['id']} dropped options or reply"
