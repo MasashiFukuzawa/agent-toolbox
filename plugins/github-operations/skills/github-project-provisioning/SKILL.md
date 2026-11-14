@@ -5,58 +5,58 @@ description: >-
 ---
 # GitHub Project Provisioning
 
-## Safety contract
+## 安全契約
 
-- Start with `inspect` or `plan`. Neither command may mutate GitHub or tracked files.
-- Never run `apply` until the user explicitly approves the displayed plan and exact target.
-- Re-display the authenticated account, owner, repositories, Project title, and every planned mutation before approval.
-- Treat mismatched identity, target, config digest, state digest, missing permissions, and duplicate names as hard failures.
-- Do not delete, rename, archive, or silently repair views/workflows.
-- Do not create a live Organization Project while merely authoring or testing this skill. A user-requested bootstrap is an operational change and still requires the inspect/plan/explicit-approval gate.
-- `--confirm-target` prevents target mix-ups; it is not an authorization mechanism. Human approval remains a host-level interaction requirement. The content-derived `plan_id` prevents an approved plan file from being edited before apply.
+- `inspect` か `plan` から始める。どちらのコマンドも、GitHubや追跡ファイルを変更しない。
+- 表示したplanと正確な対象をユーザーが明示的に承認するまで、`apply` を実行しない。
+- 承認を得る前に、認証済みのアカウント、owner、repository、Projectのタイトル、予定しているすべての変更を、あらためて示す。
+- identity・対象・configのdigest・stateのdigestの不一致、権限の不足、名前の重複は、実行せずに失敗させる。
+- viewやworkflowを、削除・改名・archive・無断で修復しない。
+- このskillを書いたり試したりするだけの目的で、実際のOrganization Projectを作らない。ユーザーが頼んだbootstrapは運用上の変更であり、inspect、plan、明示的な承認の関門を通す。
+- `--confirm-target` は対象の取り違えを防ぐもので、承認の仕組みではない。人の承認は、hostでのやり取りとして必要である。内容から導く `plan_id` が、承認済みのplanファイルがapplyの前に編集されることを防ぐ。
 
-## Prerequisites
+## 実行前提
 
-- Install the complete `github-operations` plugin. A copied skill directory is intentionally unsupported.
-- Require Python 3.11+, `gh`, an authenticated GitHub account, and Project scopes.
-- Use an explicit config or `.agents/github-operations.json` at the current git root. Read [the config contract](references/config.md) before creating one.
+- `github-operations` pluginを丸ごと導入する。skillのdirectoryだけを複製した構成は、意図的に対象外としている。
+- Python 3.11以上、`gh`、認証済みのGitHubアカウント、Projectのscopeが要る。
+- 明示したconfigか、現在のgit rootの `.agents/github-operations.json` を使う。作る前に [configの契約](references/config.md) を読む。
 
-## Workflow
+## 手順
 
-Resolve `scripts/run.py` against this skill directory before executing it; do not run a bare relative path from the target repository's working directory.
+`scripts/run.py` は、実行の前に、このskillのdirectoryを基準に解決する。対象repositoryの作業directoryから、相対pathのまま実行しない。
 
-1. Inspect the target and authentication read-only:
+1. 対象と認証を、読み取りだけで調べる。
 
    ```bash
    python3 <skill-dir>/scripts/run.py inspect --config <config>
    ```
 
-2. Produce the read-only plan:
+2. 読み取りだけのplanを作る。
 
    ```bash
    python3 <skill-dir>/scripts/run.py plan --config <config>
    ```
 
-3. Summarize the returned identity, target, template or `bootstrap`, repositories, operations, browser-required work, `plan_id`, and expiry. Ask for explicit approval.
-4. Only after approval, copy the exact `target` value into `--confirm-target`:
+3. 返されたidentity、対象、templateか `bootstrap` か、repository、操作、ブラウザでの作業が要る項目、`plan_id`、有効期限をまとめ、明示的な承認を求める。
+4. 承認の後にだけ、`target` の値をそのまま `--confirm-target` に写す。
 
    ```bash
    python3 <skill-dir>/scripts/run.py apply --plan-id <id> --confirm-target '<owner/project-title>'
    ```
 
-5. Run `verify`. Treat the API result as partial when it reports browser-required work. Report built-in workflow target statuses, view grouping, and any auto-add configuration separately. Use `browser-operations` for those state changes and obtain confirmation for each change.
+5. `verify` を実行する。ブラウザでの作業が要ると報告されたら、APIの結果は部分的なものとして扱う。組み込みworkflowの遷移先のstatus、viewのgrouping、auto-addの設定は、分けて報告する。それらの状態の変更には `browser-operations` を使い、変更ごとに確認を得る。
 
-If Project bootstrap/copy or repository linking stops partway through, display the journal and current Project, obtain approval, and use `resume` with the original content-derived plan ID. Resume reconciles an already-created Project instead of creating or copying it again.
+Projectのbootstrap・copyや、repositoryのlinkが途中で止まったら、journalと現在のProjectを示して承認を得てから、元の（内容から導いた）plan IDで `resume` を使う。resumeは、作成済みのProjectを作り直したりcopyし直したりせず、差分を埋める。
 
-If apply reports a stale lock, first verify that the recorded process is no longer running. After explicit target confirmation, clear only that target with `run.py unlock --target '<target>' --confirm-target '<target>'`; never delete an active lock.
+applyが古いlockを報告したら、まず、記録されたプロセスがもう動いていないことを確かめる。対象を明示的に確認した後、その対象だけを `run.py unlock --target '<target>' --confirm-target '<target>'` で解除する。動いているlockは消さない。
 
-## Contract behavior
+## 契約としての挙動
 
-- When `project.template` is present, it is resolved uniquely by owner and title and copied without draft items.
-- When `project.template` is omitted, a missing target Project is created from the semantic contract. Never substitute a Project from another Organization merely to satisfy the template requirement.
-- Bootstrap creates/reconciles fields and views through the public API, preserving existing option IDs during field updates. It must not carry over items, repositories, views, workflows, descriptions, or history from another Project.
-- Views and built-in workflows are a verification contract. If the copied structure drifts and the public API cannot safely repair it, stop with manual remediation.
-- The public API verifies workflow names and enabled flags, but not the Status target configured in the browser. Workflow entries may declare `set_status`; this value must be verified manually. The standard contract uses the following transitions: Item added → `Inbox`; Pull request linked to issue → linked Issue `In Review`; Code changes requested → `In Progress`; Pull request merged → `Done`; Item closed → `Done`; Item reopened → `In Progress`. The sub-issue and auto-close workflows are disabled.
-- For bootstrap, view grouping and built-in workflow configuration must be emitted as browser-required operations and completed through `browser-operations` after apply. Do not report full verification until those operations are verified.
-- Repository auto-add is opt-in. Omit `auto_add` to keep it disabled. When requested, configure only the default repository unless the plan explicitly supports additional auto-add workflows; supplement other repositories through Issue Forms, explicit Issue registration, or manual addition.
-- Area labels and repository-specific routing are outside this skill.
+- `project.template` がある場合、ownerとタイトルで一意に解決し、draft itemを含めずにcopyする。
+- `project.template` が無い場合、対象のProjectが無ければ、意味上の契約から作る。templateの要件を満たすためだけに、別のOrganizationのProjectで代用しない。
+- bootstrapは、公開APIでfieldとviewを作成・調整し、fieldの更新では既存のoptionのIDを保つ。別のProjectから、item、repository、view、workflow、説明、履歴を持ち込まない。
+- viewと組み込みworkflowは、検証の契約である。copyした構造がずれていて、公開APIで安全に直せないなら、手作業での対処を示して止まる。
+- 公開APIで確かめられるのは、workflowの名前と有効・無効までで、ブラウザで設定するStatusの遷移先は確かめられない。workflowのentryは `set_status` を宣言できるが、この値は手作業で確かめる。標準の契約の遷移は次のとおり：Item added → `Inbox`、Pull request linked to issue → linkされたIssueを `In Review`、Code changes requested → `In Progress`、Pull request merged → `Done`、Item closed → `Done`、Item reopened → `In Progress`。sub-issueとauto-closeのworkflowは無効にする。
+- bootstrapでは、viewのgroupingと組み込みworkflowの設定を、ブラウザでの作業が要る操作として出力し、applyの後に `browser-operations` で完了させる。それらを確かめるまで、検証が完了したと報告しない。
+- repositoryのauto-addは、指定した時だけ有効にする。無効のままにするなら `auto_add` を省く。頼まれた場合は、planが追加のauto-add workflowを明示的に扱っていない限り、既定のrepositoryだけを設定する。ほかのrepositoryは、Issue Form、明示的なIssueの登録、手作業での追加で補う。
+- areaのlabelと、repository固有のroutingは、このskillの対象外である。

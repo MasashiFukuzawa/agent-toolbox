@@ -1,54 +1,54 @@
-# Tool selection — details
+# tool選択 — 詳細
 
-## The three tools
+## 3つのtool
 
 | | @playwright/cli | Playwright MCP | Chrome DevTools MCP |
 |---|---|---|---|
-| Role | **act** (first choice) | act (fallback) | **observe** (debug/perf) |
-| Invocation | Bash: `playwright-cli` / `pwauth` | MCP tools `browser_*` | MCP tools (snapshot, trace, …) |
-| Token cost | Lowest — results go to `.playwright-cli/` on disk, read selectively | High — snapshot returned into context after most actions | Medium — event-driven, fetch on demand |
-| Auth session | Per-site persistent profile via `pwauth` (shared across repos) | Persistent profile **per repo** (workspace hash) | One shared persistent profile |
-| Headless default | Yes (`--headed` to show; `pwauth open` is always headed) | No (headed) | No (headed) |
-| Cross-browser | chromium/firefox/webkit/chrome/msedge | same | Chrome only |
+| 役割 | **act**（第一選択） | act（fallback） | **observe**（debug・性能） |
+| 呼び出し | Bash：`playwright-cli` / `pwauth` | MCPのtool `browser_*` | MCPのtool（snapshot、traceなど） |
+| tokenの消費 | 最小。結果は `.playwright-cli/` に書かれ、必要なものだけ読む | 多い。ほとんどの操作の後にsnapshotがcontextへ返る | 中程度。必要な時に取りに行く |
+| 認証session | `pwauth` 経由の、サイトごとの永続profile（repo間で共有） | **repoごと**の永続profile（workspaceのhash） | 共有の永続profileが1つ |
+| 既定でheadlessか | はい（`--headed` で表示。`pwauth open` は常にheaded） | いいえ（headed） | いいえ（headed） |
+| 対応browser | chromium/firefox/webkit/chrome/msedge | 同じ | Chromeのみ |
 
-## When to pick what
+## どれを選ぶか
 
-- **Act tasks** — navigate, click, fill forms, scrape content, verify a UI flow, upload/download: `@playwright/cli`. Fall back to Playwright MCP only when Bash/CLI is unavailable (e.g. a sandboxed host without shell).
-- **Observe tasks** — "why is this slow", "what is erroring", Core Web Vitals, request waterfalls, console errors, memory: Chrome DevTools MCP (`performance_start_trace`, `list_network_requests`, `list_console_messages`, `lighthouse_audit`, emulation).
-- **Mixed**: operate with the CLI first; if a failure needs deeper inspection, reproduce it under Chrome DevTools MCP.
+- **actの作業**（移動、click、フォーム入力、内容の抽出、UIの流れの確認、upload/download）：`@playwright/cli`。Playwright MCPへ下がるのは、BashやCLIが使えない時だけ（shellの無いsandboxのhostなど）。
+- **observeの作業**（「なぜ遅いか」「何がエラーか」、Core Web Vitals、requestのwaterfall、consoleのエラー、memory）：Chrome DevTools MCP（`performance_start_trace`、`list_network_requests`、`list_console_messages`、`lighthouse_audit`、emulation）。
+- **両方が要る**：まずCLIで操作し、失敗を深く調べる必要が出たら、Chrome DevTools MCPで再現する。
 
-## @playwright/cli command map (v0.1.x)
+## @playwright/cli のコマンド対応表（v0.1.x）
 
-Core loop:
+基本の流れ:
 
 ```
-playwright-cli open <url>            # or: pwauth <key> open <url>  (auth)
-playwright-cli snapshot              # page snapshot → .playwright-cli/*.yml, elements get refs (e15…)
-playwright-cli click e15             # act on refs from the snapshot
+playwright-cli open <url>            # 認証が要るなら: pwauth <key> open <url>
+playwright-cli snapshot              # ページのsnapshot → .playwright-cli/*.yml。要素にrefが付く（e15…）
+playwright-cli click e15             # snapshotのrefに対して操作する
 playwright-cli fill e20 "text"
 playwright-cli eval "document.title"
-playwright-cli screenshot [target]   # file path is printed, read only if needed
+playwright-cli screenshot [target]   # ファイルのpathが出力される。必要な時だけ読む
 playwright-cli close
 ```
 
-Useful extras:
+役に立つ追加機能:
 
-- Sessions: `-s=<name>` runs several browsers in parallel (`pwauth` sets this to the profile key automatically).
-- `console [min-level]`, `requests`, `request <n>` — lightweight debugging without switching tools.
-- `state-save` / `state-load` — storageState files; treat as credentials, only use when a repo runbook calls for it (that flow belongs to e2e-capability-verification).
-- `install-browser [browser]` if a browser binary is missing.
-- Artifacts land in `.playwright-cli/` under the CWD — credential-like when the page was authenticated; never commit (gitignore it in repos where you use the CLI).
+- session：`-s=<name>` で複数のブラウザを並行して動かす（`pwauth` はこれをprofile keyに自動で設定する）。
+- `console [min-level]`、`requests`、`request <n>`：toolを切り替えずにできる軽いdebug。
+- `state-save` / `state-load`：storageStateのファイル。認証情報として扱い、repoのrunbookが求める時だけ使う（この流れは e2e-capability-verification の担当）。
+- browserのbinaryが無ければ `install-browser [browser]`。
+- 取得物はCWDの `.playwright-cli/` に置かれる。認証済みページのものは認証情報に準じる。commitしない（CLIを使うrepoではgitignoreに入れる）。
 
-Boolean flags take no value (`--headed`, not `--headed=true`; `cookie-set --secure=true` crashes).
+真偽値のflagは値を取らない（`--headed` と書き、`--headed=true` とは書かない。`cookie-set --secure=true` はcrashする）。
 
-## Playwright MCP fallback notes
+## Playwright MCP（fallback）の注意
 
-- Tools are `mcp__…playwright__browser_*` (navigate, click, fill_form, snapshot, …).
-- Its persistent profile is per repo — logins do not carry across repos. If auth is needed here, run the cooperative login protocol inside this browser; the session persists for this repo only.
-- Do not try to point it at the pwauth profiles; profile formats/locks are not shared between lanes.
+- toolはhostのMCP名前空間の下の `browser_*`（navigate、click、fill_form、snapshotなど）。
+- 永続profileはrepoごとで、ログインはrepoをまたいで引き継がれない。認証が要るなら、このブラウザの中で協調ログインを行う。sessionはこのrepoの中でだけ残る。
+- pwauthのprofileへ向けない。profileの形式とlockは、2つの経路の間で共有されない。
 
-## Chrome DevTools MCP notes
+## Chrome DevTools MCPの注意
 
-- Strengths: `performance_start_trace` → `performance_analyze_insight`, `lighthouse_audit`, network/console listing, CPU & network emulation, heap snapshots.
-- Its profile is shared across repos and persists logins by itself — but it is a *different* profile from the pwauth lane: first authenticated debug of a site needs one extra login there.
-- Treat its profile and captured artifacts as credential-like (see SKILL.md guardrails).
+- 得意なこと：`performance_start_trace` → `performance_analyze_insight`、`lighthouse_audit`、networkとconsoleの一覧、CPUとnetworkのemulation、heap snapshot。
+- profileはrepo間で共有され、ログインを自身で保持する。ただしpwauth側とは*別の*profileなので、あるサイトを認証済みで初めてdebugする時は、そちらで1回ログインが要る。
+- profileと取得物は認証情報に準じて扱う（SKILL.mdのガードレール参照）。

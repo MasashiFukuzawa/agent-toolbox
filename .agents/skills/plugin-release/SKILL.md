@@ -23,11 +23,7 @@ description: >-
 
 1. 各ホストの `plugin.json` は、そのホスト向けパッケージの版を表す。両ホストへ出す変更なら両方を、片方だけの変更なら対象ホストだけを進める。版の上げ方はSemVerに従い、公開スキルの削除・別プラグインへの移動など利用者から見た互換性を壊す変更は、1.0.0未満ではminor、1.0.0以降はmajorを上げる。
 2. マーケットプレイスJSONのパスは、プラグインを追加・削除・移動するときだけ更新する。
-3. スキルを変えたなら、`docs/trigger-registry.yml`、各スキルのevals、READMEの一覧・件数を合わせる。trigger matrixやskill descriptionが変わったらbaselineを再生成する。
-
-   ```bash
-   uv run python -m scripts.run_trigger_eval --output evals/results/baseline.json --deterministic
-   ```
+3. スキルを変えたなら、各スキルのevalsと、READMEの一覧・件数を合わせる。
 
 4. 次の検証をすべて通す。失敗は修正し、実行していない検証を成功扱いしない。
 
@@ -35,7 +31,6 @@ description: >-
    uv run ruff check .
    uv run pytest
    uv run python -m scripts.validate
-   uv run python -m scripts.trigger_eval --check
    ```
 
 ## 3. 配布元refへ入れる

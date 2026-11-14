@@ -33,7 +33,6 @@ jobs:
       - run: uv run ruff check .
       - run: uv run pytest
       - run: uv run python -m scripts.validate
-      - run: uv run python -m scripts.trigger_eval --check
       - run: bash -n plugins/done/scripts/quality-gate-stop.sh
       - name: Validate Claude Code plugin manifest
         run: tooling/claude-code/node_modules/.bin/claude plugin validate .

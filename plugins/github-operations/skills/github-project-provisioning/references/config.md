@@ -1,6 +1,6 @@
-# Configuration contract
+# configの契約
 
-Use JSON. Store semantic names, never GraphQL node IDs or option IDs.
+JSONで書く。意味のある名前を保存し、GraphQLのnode IDやoptionのIDは保存しない。
 
 ```json
 {
@@ -58,10 +58,10 @@ Use JSON. Store semantic names, never GraphQL node IDs or option IDs.
 }
 ```
 
-`project.template` is optional. When it is omitted and the target Project does not exist, the plan bootstraps a new Project from the contract instead of copying another Project. A bootstrap contract must define the desired fields and views. The built-in `Status` field is reconciled in place; custom single-select fields such as `Priority` are created with semantic option names.
+`project.template` は任意。省いていて、対象のProjectが存在しない場合、planは別のProjectをcopyせず、契約から新しいProjectをbootstrapする。bootstrapの契約には、望むfieldとviewを定義する。組み込みの `Status` fieldはその場で調整し、`Priority` のような独自のsingle-select fieldは、意味のあるoption名で作る。
 
-The bootstrap path creates fields and views through the GitHub API and links the configured repositories. View grouping and built-in workflow settings remain explicit browser-required operations because the supported public mutations do not provide a complete safe configuration surface for them. `set_status` is the semantic target for a built-in workflow and is carried into the browser-required operation; the public API exposes the workflow name and enabled flag, but not the configured target status. The plan and journal must display these operations separately.
+bootstrapは、GitHub APIでfieldとviewを作り、configにあるrepositoryをlinkする。viewのgroupingと組み込みworkflowの設定は、ブラウザでの作業が要る操作として明示的に残す。公開されている変更APIでは、それらを安全に設定しきれないためである。`set_status` は組み込みworkflowの意味上の遷移先で、ブラウザでの作業が要る操作へ引き継がれる。公開APIで分かるのはworkflowの名前と有効・無効までで、設定された遷移先のstatusは分からない。planとjournalは、これらの操作を分けて表示する。
 
-`auto_add` is optional and opt-in. Omit it to leave repository auto-add disabled. When explicitly requested, use `{"default_repository_only": true}` to configure only the default repository, subject to the plan's workflow limit.
+`auto_add` は任意で、指定した時だけ有効になる。repositoryのauto-addを無効のままにするなら省く。明示的に頼まれた場合は `{"default_repository_only": true}` を使い、planのworkflow数の上限の範囲で、既定のrepositoryだけを設定する。
 
-Do not commit credentials. Organization- or repository-specific configuration can be passed explicitly from any trusted local source.
+認証情報をcommitしない。Organizationやrepositoryに固有の設定は、信頼できるローカルの置き場から明示的に渡せる。

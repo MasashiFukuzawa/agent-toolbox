@@ -1,1 +1,1 @@
-"""Repository validation and trigger-evaluation tooling."""
+"""Repository validation tooling."""

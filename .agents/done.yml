@@ -3,14 +3,13 @@
 
 repo: agent-toolbox
 
-# この repo には git hook が無く、CI (.github/workflows/ci.yml) が同じ4コマンドを実行する。
+# この repo には git hook が無く、CI (.github/workflows/ci.yml) が同じコマンドを実行する。
 # CI は merge の条件なので保証はそちらにあるが、push 前に落とす方が安いので完了時にも走らせる。
 # hook を導入したら `lefthook run pre-push` 等への委譲に置き換える。
 verify:
   - run: uv run ruff check .
   - run: uv run pytest
   - run: uv run python -m scripts.validate
-  - run: uv run python -m scripts.trigger_eval --check
   - when_changed:
       - plugins/done/scripts/
     run: bash -n plugins/done/scripts/quality-gate-stop.sh
@@ -31,11 +30,10 @@ tier_floors:
   quick:
     - "**/*.md"
     - "docs/**"
-    - "evals/results/**"
 
 docs_checks:
   - "README と skill の description が実際の挙動と一致している"
-  - "docs/trigger-registry.yml が skill の追加・削除・境界変更に追随している"
+  - "README の skill 一覧・件数が skill の追加・削除・境界変更に追随している"
 
 review_criteria:
   - "指示が複数解釈を許さないか（実行するエージェントが意図と違う動きをしないか）"

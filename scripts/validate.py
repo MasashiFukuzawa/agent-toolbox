@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate skills, manifests, trigger metadata, and public-content boundaries."""
+"""Validate skills, manifests, skill evaluation files, and public-content boundaries."""
 
 from __future__ import annotations
 
@@ -11,10 +11,8 @@ from pathlib import Path
 from urllib.parse import unquote
 
 import yaml
-from jsonschema import Draft202012Validator, FormatChecker, SchemaError
 
 from scripts.plugin_paths import (
-    is_tracked_file,
     iter_public_files,
     plugin_boundary_errors,
     plugin_path_within,
@@ -31,18 +29,6 @@ SEMVER = re.compile(
     rf"(?:-{SEMVER_IDENTIFIER}(?:\.{SEMVER_IDENTIFIER})*)?"
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\Z"
 )
-REQUIRED_REGISTRY_FIELDS = {
-    "canonical_name",
-    "category",
-    "supported_hosts",
-    "runtime_dependencies",
-    "side_effect_level",
-    "positive_triggers",
-    "nearest_neighbors",
-    "negative_triggers",
-    "ambiguous_precedence",
-}
-HOST_MANIFEST_DIRS = {"codex": ".codex-plugin", "claude-code": ".claude-plugin"}
 REPO_SKILL_DIR = ".agents/skills"
 CLAUDE_REPO_SKILL_DIR = ".claude/skills"
 
@@ -56,12 +42,7 @@ def validate() -> tuple[list[str], list[str]]:
     if errors:
         return errors, warnings
 
-    skills: dict[str, str] = {}
-    for path in _skill_paths():
-        description = _validate_skill_file(path, errors, warnings)
-        if description is not None:
-            skills[path.parent.name] = description
-    for path in _repo_skill_paths():
+    for path in [*_skill_paths(), *_repo_skill_paths()]:
         _validate_skill_file(path, errors, warnings)
     _validate_repo_skill_mirror(errors)
 
@@ -69,9 +50,7 @@ def validate() -> tuple[list[str], list[str]]:
     # and a total cap couples unrelated skills (adding one forces trimming
     # another). See docs/skill-conventions.md "Description budget".
     _validate_manifests(errors)
-    _validate_results(errors)
     _validate_skill_evals(errors)
-    _validate_registry(skills, errors)
     _scan_public_content(errors)
     _validate_markdown_links(errors)
     return errors, warnings
@@ -300,67 +279,6 @@ def _marketplace_source_path(entry: dict, host: str) -> str | None:
     return None
 
 
-def _validate_results(errors: list[str]) -> None:
-    baseline_path = ROOT / "evals/results/baseline.json"
-    try:
-        require_public_file(ROOT, baseline_path)
-        if is_tracked_file(ROOT, baseline_path) is False:
-            raise ValueError("required trigger baseline is not tracked by Git")
-    except ValueError as exc:
-        errors.append(f"required trigger baseline is missing or ignored: {baseline_path.relative_to(ROOT)}: {exc}")
-        return
-
-    schema_path = ROOT / "evals/result-schema.json"
-    try:
-        schema = json.loads(require_public_file(ROOT, schema_path).read_text())
-        Draft202012Validator.check_schema(schema)
-        validator = Draft202012Validator(schema, format_checker=FormatChecker())
-    except (OSError, json.JSONDecodeError, SchemaError, ValueError) as exc:
-        errors.append(f"invalid trigger result schema {schema_path.relative_to(ROOT)}: {exc}")
-        return
-
-    for path in public_paths(ROOT, list((ROOT / "evals/results").glob("*.json"))):
-        try:
-            result = json.loads(require_public_file(ROOT, path).read_text())
-            if schema_errors := list(validator.iter_errors(result)):
-                for schema_error in schema_errors:
-                    location = "/".join(str(part) for part in schema_error.absolute_path) or "$"
-                    errors.append(
-                        f"trigger result schema mismatch: {path.relative_to(ROOT)} at {location}: "
-                        f"{schema_error.message}"
-                    )
-                continue
-            rows, summary = result["results"], result["summary"]
-            if summary["total"] != len(rows):
-                errors.append(f"trigger result total mismatch: {path.relative_to(ROOT)}")
-            for status in ("passed", "failed", "not_run"):
-                if summary[status] != sum(row["status"] == status for row in rows):
-                    errors.append(f"trigger result {status} mismatch: {path.relative_to(ROOT)}")
-            if path.name == "baseline.json":
-                from scripts.trigger_eval import build_matrix
-
-                matrix = build_matrix()
-                from scripts.trigger_eval import matrix_sha256
-
-                if result.get("matrix_sha256") != matrix_sha256(matrix):
-                    errors.append("baseline trigger result is stale or incomplete")
-                expected = {
-                    (host, environment, case["skill"], case["type"], case["id"])
-                    for host in matrix["hosts"]
-                    for environment in matrix["environments"]
-                    for case in matrix["cases"]
-                    if host in case["supported_hosts"]
-                }
-                actual = {
-                    (row["host"], row["environment"], row["skill"], row["type"], row["case_id"])
-                    for row in rows
-                }
-                if actual != expected or len(rows) != len(expected):
-                    errors.append("baseline trigger result is stale or incomplete")
-        except (OSError, KeyError, json.JSONDecodeError, ValueError) as exc:
-            errors.append(f"invalid trigger result {path.relative_to(ROOT)}: {exc}")
-
-
 def _validate_skill_evals(errors: list[str]) -> None:
     eval_paths = [*ROOT.glob("plugins/*/skills/*/evals/evals.json"), *ROOT.glob(f"{REPO_SKILL_DIR}/*/evals/evals.json")]
     for path in public_paths(ROOT, eval_paths):
@@ -400,87 +318,6 @@ def _validate_skill_evals(errors: list[str]) -> None:
             errors.append(f"invalid semantic evaluation {path.relative_to(ROOT)}: {exc}")
 
 
-def _validate_registry(skills: dict[str, str], errors: list[str]) -> None:
-    registry_path = ROOT / "docs/trigger-registry.yml"
-    try:
-        registry = yaml.safe_load(require_public_file(ROOT, registry_path).read_text())["skills"]
-    except (OSError, KeyError, TypeError, yaml.YAMLError, ValueError) as exc:
-        errors.append(f"invalid trigger registry {registry_path.relative_to(ROOT)}: {exc}")
-        return
-    if missing := set(skills) - set(registry):
-        errors.append(f"trigger registry missing: {', '.join(sorted(missing))}")
-    if extra := set(registry) - set(skills):
-        errors.append(f"trigger registry has unknown skills: {', '.join(sorted(extra))}")
-    for name, entry in registry.items():
-        if missing := REQUIRED_REGISTRY_FIELDS - set(entry):
-            errors.append(f"registry fields missing for {name}: {', '.join(sorted(missing))}")
-        if entry.get("canonical_name") != name:
-            errors.append(f"registry canonical_name mismatch: {name}")
-        declared_hosts = set(entry.get("supported_hosts", []))
-        actual_hosts = {
-            host
-            for host in HOST_MANIFEST_DIRS
-            if any(_host_publishes_skill(path, host) for path in _skill_paths() if path.parent.name == name)
-        }
-        if declared_hosts != actual_hosts:
-            errors.append(
-                f"{name}: registry supported_hosts {sorted(declared_hosts)} "
-                f"do not match plugin manifests {sorted(actual_hosts)}"
-            )
-        for neighbor in entry.get("nearest_neighbors", []):
-            if neighbor not in skills:
-                errors.append(f"unknown nearest neighbor {neighbor} from {name}")
-            elif neighbor not in registry:
-                errors.append(f"nearest neighbor {neighbor} from {name} is missing from the trigger registry")
-            elif not declared_hosts <= set(registry[neighbor].get("supported_hosts", [])):
-                errors.append(f"nearest neighbor {neighbor} from {name} lacks required hosts {sorted(declared_hosts)}")
-
-
-def _host_publishes_skill(skill_path: Path, host: str) -> bool:
-    plugin_dir = skill_path.parents[2]
-    manifest_path = plugin_dir / HOST_MANIFEST_DIRS[host] / "plugin.json"
-    if (
-        not public_paths(ROOT, [manifest_path])
-        or manifest_path.is_symlink()
-        or _has_symlink_parent(plugin_dir, manifest_path)
-        or _path_within_plugin(plugin_dir, manifest_path) is None
-        or not manifest_path.is_file()
-    ):
-        return False
-    resolved_skill = _path_within_plugin(plugin_dir, skill_path)
-    if resolved_skill is None:
-        return False
-    if host == "claude-code":
-        skills_root = _path_within_plugin(plugin_dir, plugin_dir / "skills")
-        if skills_root is None:
-            return False
-        try:
-            resolved_skill.relative_to(skills_root)
-            return True
-        except ValueError:
-            return False
-    try:
-        repository_root = plugin_dir.parent.parent
-        manifest = json.loads(require_public_file(repository_root, manifest_path).read_text())
-    except (OSError, json.JSONDecodeError, ValueError):
-        return False
-    paths = manifest.get("skills", [])
-    if isinstance(paths, str):
-        paths = [paths]
-    if not isinstance(paths, list):
-        return False
-    for relative in paths:
-        target = _codex_skill_root(plugin_dir, relative)
-        if target is None:
-            continue
-        try:
-            resolved_skill.relative_to(target)
-            return True
-        except ValueError:
-            continue
-    return False
-
-
 def _codex_skill_root(plugin_dir: Path, relative: object) -> Path | None:
     if not isinstance(relative, str) or not relative.startswith("./"):
         return None
@@ -509,11 +346,12 @@ def _scan_public_content(errors: list[str]) -> None:
         "legacy license/source marker": re.compile(
             r"everything-claude-code|cloudflare-starterkit|\bMIT License\b", re.I
         ),
-        "legacy skill reference": re.compile(
+        "removed skill reference": re.compile(
             r"worktree-flow|write-meaningful-tests|documentation-lookup|research-first"
+            r"|technical-research|structured-text-parsing|cloudflare-worker-cd"
         ),
     }
-    exclusions = {ROOT / "scripts/validate.py", ROOT / "docs/trigger-registry.yml", ROOT / "docs/skill-conventions.md"}
+    exclusions = {ROOT / "scripts/validate.py", ROOT / "docs/skill-conventions.md"}
     for path in iter_public_files(ROOT):
         if _is_root_excluded(path):
             continue
@@ -524,7 +362,7 @@ def _scan_public_content(errors: list[str]) -> None:
         except UnicodeDecodeError:
             continue
         for label, pattern in banned.items():
-            if label == "legacy skill reference" and path in exclusions:
+            if label == "removed skill reference" and path in exclusions:
                 continue
             if pattern.search(content):
                 errors.append(f"{label}: {path.relative_to(ROOT)}")

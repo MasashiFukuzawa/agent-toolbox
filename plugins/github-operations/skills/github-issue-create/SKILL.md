@@ -5,16 +5,16 @@ description: >-
 ---
 # GitHub Issue Create
 
-## Safety contract
+## 安全契約
 
-- Always create a dry-run plan before creating an Issue.
-- Treat an explicit user request to create an Issue as authorization to plan and apply that Issue within the stated scope. Do not ask for a second approval merely because the dry-run plan now exists.
-- Pause before apply only when the user requested plan/dry-run/review without execution, a material choice remains unresolved, or the observed identity, target, fields, or operations do not match the authorized request and repository policy.
-- Fail closed on identity changes, target mismatch, stale plans, missing labels, ambiguous Project fields, or permissions.
-- Never infer and write Priority from urgency prose alone. Set it only when the user explicitly selected it or repository policy deterministically supplies it; otherwise omit it. Do not ask solely to populate an optional Priority.
-- On partial failure, resume the existing Issue; never create a replacement automatically.
-- Apply repository-specific Issue policy when one exists. This skill must not invent routing or labels.
-- `--confirm-target` prevents repository mix-ups; it is not an authorization mechanism. Authorization comes from the user's mutation request, while the content-derived `plan_id` rejects edits between plan and apply.
+- Issueを作る前に、必ずdry-runのplanを作る。
+- ユーザーがIssueの作成を明示的に頼んだなら、述べられた範囲でそのIssueをplanしapplyする承認として扱う。dry-runのplanができたというだけで、2回目の承認を求めない。
+- applyの前に止まるのは次の場合だけ：ユーザーが実行なしのplan・dry-run・レビューを頼んだ、重要な選択が未解決、確認できたidentity・対象・field・操作が、承認された依頼とrepositoryのpolicyに一致しない。
+- identityの変化、対象の不一致、古いplan、labelの欠落、Projectのfieldの曖昧さ、権限の不足があれば、実行せずに失敗させる。
+- 緊急度を述べた文章だけからPriorityを推測して書き込まない。ユーザーが明示的に選んだ場合か、repositoryのpolicyが決定的に与える場合だけ設定し、それ以外は省く。任意のPriorityを埋めるためだけに質問しない。
+- 途中で失敗したら、既存のIssueを再開する。代わりのIssueを自動で作らない。
+- repository固有のIssue policyがあれば適用する。このskillはroutingやlabelを創作しない。
+- `--confirm-target` はrepositoryの取り違えを防ぐもので、承認の仕組みではない。承認は、ユーザーの変更依頼から来る。内容から導く `plan_id` が、planとapplyの間の編集を拒む。
 
 ## Issueの出力言語
 
@@ -26,16 +26,16 @@ description: >-
 
 ## 実行前提
 
-- Install the complete `github-operations` plugin. A copied skill directory is intentionally unsupported.
-- Require Python 3.11+, `gh`, and an explicit config or `.agents/github-operations.json`.
-- When using an explicit config from another installed resource, resolve that file to an absolute path and pass it with `--config`.
+- `github-operations` pluginを丸ごと導入する。skillのdirectoryだけを複製した構成は、意図的に対象外としている。
+- Python 3.11以上、`gh`、明示したconfigか `.agents/github-operations.json` が要る。
+- 別の導入済みresourceにあるconfigを明示して使う時は、そのファイルを絶対pathに解決し、`--config` で渡す。
 
-## Workflow
+## 手順
 
-Resolve `scripts/run.py` against this skill directory before executing it.
+`scripts/run.py` は、実行の前に、このskillのdirectoryを基準に解決する。
 
-1. Draft the Issue using the target repository's `AGENTS.md`, templates, and available labels. Apply the output-language policy above before creating the plan; verify title and body language during dry-run inspection.
-2. Write a long body to a temporary file outside the repository, then plan:
+1. 対象repositoryの `AGENTS.md`、template、使えるlabelをもとに、Issueを下書きする。planを作る前に上の出力言語の方針を当てはめ、dry-runの確認でタイトルと本文の言語を確かめる。
+2. 長い本文はrepositoryの外の一時ファイルに書き、planを作る。
 
    ```bash
    python3 <skill-dir>/scripts/run.py plan \
@@ -48,10 +48,9 @@ Resolve `scripts/run.py` against this skill directory before executing it.
      --priority '<exact-option-name>'
    ```
 
-   Omit label, assignee, or Priority when not explicitly justified.
+   label、assignee、Priorityは、明示的な根拠が無ければ省く。
 
-   For multiple Issues, create a version 1 JSON manifest using
-   [`references/manifest.md`](references/manifest.md), then plan once:
+   複数のIssueは、[`references/manifest.md`](references/manifest.md) に従ってversion 1のJSON manifestを作り、1回でplanする。
 
    ```bash
    python3 <skill-dir>/scripts/run.py plan \
@@ -59,32 +58,29 @@ Resolve `scripts/run.py` against this skill directory before executing it.
      --manifest <manifest.json>
    ```
 
-   Do not combine `--manifest` with single-Issue flags. Inspect the distinct repository list,
-   entry count, every operation, and the generated fingerprints before apply.
+   `--manifest` と、単一Issue用のflagを併用しない。applyの前に、repositoryの一覧（重複なし）、件数、すべての操作、生成されたfingerprintを確かめる。
 
-3. Inspect all returned fields, operations, `plan_id`, target, authenticated identity, and expiry. If they match the authorized request and repository policy, apply in the same turn without another approval prompt. If the user requested a dry-run only, display the plan and stop.
-4. Apply the matching plan:
+3. 返されたすべてのfield、操作、`plan_id`、対象、認証済みのidentity、有効期限を確かめる。承認された依頼とrepositoryのpolicyに一致していれば、追加の承認を求めず、同じターンでapplyする。ユーザーがdry-runだけを頼んだなら、planを示して止まる。
+4. 一致するplanをapplyする。
 
    ```bash
    python3 <skill-dir>/scripts/run.py apply --plan-id <id> --confirm-target '<target-from-plan>'
    ```
 
-5. If creation succeeded but Project registration or field editing failed, show the existing Issue URL and remaining steps. Resume the same plan without recreating the Issue when the original request still authorizes the remaining operations:
+5. 作成は成功したがProjectへの登録やfieldの編集が失敗したら、既存のIssueのURLと残りの手順を示す。元の依頼が残りの操作も承認しているなら、Issueを作り直さず、同じplanを再開する。
 
    ```bash
    python3 <skill-dir>/scripts/run.py resume --plan-id <id> --confirm-target '<target-from-plan>'
    ```
 
-   A manifest apply can return exit code `1` after partial success. Treat its stdout JSON as the
-   durable per-entry result, report completed entries, and resume the same plan. Exit code `2`
-   means the operation was rejected before it could be proven safe.
+   manifestのapplyは、一部が成功した後に終了コード `1` を返すことがある。stdoutのJSONを、entryごとの確定した結果として扱い、完了したentryを報告して、同じplanを再開する。終了コード `2` は、安全だと確かめる前に操作が拒否されたことを表す。
 
-If apply reports a stale lock, verify that its process is no longer running, then clear only the confirmed target with `run.py unlock --target '<owner/repo>' --confirm-target '<owner/repo>'`.
+applyが古いlockを報告したら、そのプロセスがもう動いていないことを確かめてから、確認した対象だけを `run.py unlock --target '<owner/repo>' --confirm-target '<owner/repo>'` で解除する。
 
-## Output contract
+## 出力契約
 
-- Requested dry-run: identity, repo, title, body, labels, assignee, Project, Status, Priority, and every mutation; do not apply.
-- Success: Issue URL, Project item ID, applied fields, and verification result.
-- Partial failure: existing Issue URL, completed steps, remaining steps, and safe resume command.
-- Manifest success: plan ID, target guard, total/completed counts, and per-entry Issue URL, Project item ID, and state.
-- Manifest partial failure: the same machine-readable summary on stdout plus an actionable error on stderr.
+- dry-runを頼まれた時：identity、repo、タイトル、本文、label、assignee、Project、Status、Priority、すべての変更操作。applyはしない。
+- 成功：IssueのURL、Project itemのID、適用したfield、検証結果。
+- 途中の失敗：既存のIssueのURL、完了した手順、残りの手順、安全な再開コマンド。
+- manifestの成功：plan ID、対象の確認値、全体と完了の件数、entryごとのIssueのURL・Project itemのID・状態。
+- manifestの途中の失敗：同じ機械可読の要約をstdoutに、対処できるエラーをstderrに出す。

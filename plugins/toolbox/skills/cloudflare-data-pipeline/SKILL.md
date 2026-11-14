@@ -1,7 +1,7 @@
 ---
 name: cloudflare-data-pipeline
 description: >-
-  D1、Vectorize、Queues、Workers をまたぐデータパイプラインの整合性と失敗処理を設計・レビューする。複数サービスの結合部に使う。単一 API の使い方には使わない。「Queue再処理」「D1とVectorizeの不整合」を正のトリガーとし、単一Workerのdeploy安全性には cloudflare-worker-cd を使う。
+  Cloudflare の D1・Vectorize・Queues・Workers をまたぐ取り込みパイプラインの整合性と失敗処理を設計・レビューする。D1への大量書き込み、Vectorizeの更新・削除、Queue consumer、DLQの滞留と再投入（redrive）、再配信、部分失敗からの復旧を扱う時に使う。「取り込みパイプラインを設計して」「DLQを再処理して」「D1とVectorizeの不整合を直して」を正のトリガーとする。単一APIの使い方やWorkerのdeploy手順だけの相談には使わない。
 ---
 # Cloudflare Data Pipeline — 結合部の設計・レビューガードレール
 
