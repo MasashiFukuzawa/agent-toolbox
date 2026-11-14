@@ -46,7 +46,7 @@
     {
       "id": 8,
       "prompt": "Claudeの第三者レビュー を回している間に、別 worktree で次のタスクを実装しておきたい",
-      "expected_output": "待ち時間に対象リポジトリを触るため references/review-snapshot.md のスナップショット起動を選ぶ。実ツリーと index に触れずに untracked を含む状態を固定し、依頼文では対象を HEAD~1..HEAD の差分と伝える。汚染チェックはスナップショット worktree 側で行う（メインツリーは並行作業で変化するため偽陽性になる）。スナップショットを取らない場合は対象ツリーと index・参照 ref（fetch/pull しない）・共有 .git/config と hooks の3つを凍結する。依存変更のmergeはレビュー結果処理後とし、独立変更はcontrollerの承認と共有資源条件で判断する。委譲先にも同じ制約と再帰起動の禁止を伝える"
+      "expected_output": "待ち時間に対象リポジトリを触るため references/review-snapshot.md のスナップショット起動を選ぶ。実ツリーと index に触れずに untracked を含む状態を固定し、依頼文では、依頼された対象に合う範囲を伝える（未コミットの変更なら HEAD~1..HEAD、ブランチ差分なら <base>...HEAD）。汚染チェックはスナップショット worktree 側で行う（メインツリーは並行作業で変化するため偽陽性になる）。スナップショットを取らない場合は対象ツリーと index・参照 ref（fetch/pull しない）・共有 .git/config と hooks の3つを凍結する。依存変更のmergeはレビュー結果処理後とし、独立変更はcontrollerの承認と共有資源条件で判断する。委譲先にも同じ制約と再帰起動の禁止を伝える"
     },
     {
       "id": 9,

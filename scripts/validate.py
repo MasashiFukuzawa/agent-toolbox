@@ -176,6 +176,7 @@ def _validate_manifests(errors: list[str]) -> None:
     host_names = {"Codex": [], "Claude": []}
     for plugin_dir in plugin_dirs:
         found_manifest = False
+        present_hosts: set[str] = set()
         for host, directory in (("Codex", ".codex-plugin"), ("Claude", ".claude-plugin")):
             path = plugin_dir / directory / "plugin.json"
             if _has_symlink_parent(plugin_dir, path):
@@ -192,6 +193,7 @@ def _validate_manifests(errors: list[str]) -> None:
                 errors.append(f"manifest path escapes plugin: {path.relative_to(ROOT)}")
                 continue
             found_manifest = True
+            present_hosts.add(host)
             try:
                 manifest = json.loads(require_public_file(ROOT, path).read_text())
                 if manifest.get("name") != plugin_dir.name:
@@ -241,6 +243,14 @@ def _validate_manifests(errors: list[str]) -> None:
                 errors.append(f"invalid or missing manifest {path.relative_to(ROOT)}: {exc}")
         if not found_manifest:
             errors.append(f"plugin has no host manifest: {plugin_dir.relative_to(ROOT)}")
+        else:
+            # Every plugin ships for both hosts; a manifest dropped on one side would
+            # otherwise pass, because each marketplace is only compared with its own host.
+            errors.extend(
+                f"plugin is missing its {host} manifest: {plugin_dir.relative_to(ROOT)}"
+                for host in ("Codex", "Claude")
+                if host not in present_hosts
+            )
     pairs = (
         (ROOT / ".agents/plugins/marketplace.json", "Codex"),
         (ROOT / ".claude-plugin/marketplace.json", "Claude"),

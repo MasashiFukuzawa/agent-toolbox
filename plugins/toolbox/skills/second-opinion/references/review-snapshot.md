@@ -14,7 +14,16 @@ SNAP=$(git commit-tree "$TREE" -p HEAD -m "review snapshot")
 git -c core.hooksPath=/dev/null worktree add --detach <リポジトリ外のパス> "$SNAP"
 ```
 
-レビュアーには作成した worktree のパスを渡し、依頼文では対象を **`HEAD~1..HEAD` の差分**と伝える。`SNAP` の親が元の `HEAD` なので、これがそのまま未コミット差分になる。
+レビュアーには作成した worktree のパスを渡す。`SNAP` の親が元の `HEAD` なので、写しの中では範囲が次のようになる。依頼された対象に合うものを依頼文で伝える。
+
+| 依頼された対象 | 写しの中での範囲 |
+|---|---|
+| 未コミットの変更 | `HEAD~1..HEAD` |
+| ブランチ差分（未コミット分を含める） | `<base>...HEAD` |
+| ブランチ差分（コミット済みだけ） | `<base>...HEAD~1` |
+| 特定のcommit | そのSHA |
+
+作業ツリーがcleanなら `HEAD~1..HEAD` は空になる。コミット済みの変更を見せたいときに、この範囲を伝えない。
 
 ## 性質
 
