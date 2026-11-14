@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "matrix_sha256": "87a3f323ffe60abb340d66da5bded2a761c6ed4bb69e74271bb59c68671cb7b8",
+  "matrix_sha256": "8706bb4f540592ad7a86c0c374198ad643051a6c9fe52696c6bfa74028e1ebe2",
   "summary": {
-    "total": 1488,
+    "total": 1568,
     "passed": 0,
     "failed": 0,
-    "not_run": 1488
+    "not_run": 1568
   },
   "results": [
     {
@@ -2041,6 +2041,206 @@
     {
       "host": "claude-code",
       "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "isolated",
       "skill": "daily-plan",
       "type": "positive",
       "case_id": 1,
@@ -5761,6 +5961,206 @@
     {
       "host": "claude-code",
       "environment": "superset",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "claude-code",
+      "environment": "superset",
       "skill": "daily-plan",
       "type": "positive",
       "case_id": 1,
@@ -9481,6 +9881,206 @@
     {
       "host": "codex",
       "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "isolated",
       "skill": "daily-plan",
       "type": "positive",
       "case_id": 1,
@@ -13192,6 +13792,206 @@
       "host": "codex",
       "environment": "superset",
       "skill": "owner-board",
+      "type": "negative_trigger",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "positive",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "nearest_negative",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 3,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 4,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 5,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "ambiguous",
+      "case_id": 6,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "explicit",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "no_skill_negative",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 1,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
+      "type": "negative_trigger",
+      "case_id": 2,
+      "status": "not_run",
+      "actual": null,
+      "error": "no evaluator command supplied"
+    },
+    {
+      "host": "codex",
+      "environment": "superset",
+      "skill": "human-briefing",
       "type": "negative_trigger",
       "case_id": 3,
       "status": "not_run",

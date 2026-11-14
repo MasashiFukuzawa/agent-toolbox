@@ -78,7 +78,7 @@ code, .mono { font-family: var(--font-mono); font-size: .92em; letter-spacing: 0
 .rows .row.act { background: var(--accent-tint); box-shadow: inset 3px 0 0 var(--accent); border-radius: 0 0 11px 11px; }
 .rows .row.act > .label { color: var(--accent-text); }
 .rows .label { padding-top: 3px; }
-.act p + p, .act p + table, .act table + p, .act ol + p { margin-top: 10px; }
+.act p + p, .act p + table, .act table + p, .act ol + p, .act .fig + table { margin-top: 10px; }
 .opts { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px; overflow: visible; font-size: 15px; }
 .opts th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border-strong); }
 .opts td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -88,6 +88,8 @@ code, .mono { font-family: var(--font-mono); font-size: .92em; letter-spacing: 0
 .kv { display: grid; grid-template-columns: 9em minmax(0,1fr); gap: 4px 12px; margin-top: 12px; }
 .kv dt { font-size: 14px; font-weight: 600; color: var(--text-2); padding-top: 1px; }
 .kv dd { margin: 0; }
+.sub { margin-top: 14px; font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--text-2); }
+.checks { margin-top: 4px; }
 .reply { margin-top: 12px; display: inline-block; background: var(--surface); border: 1px solid var(--accent-border); border-radius: 8px; padding: 4px 12px; }
 .reply .mono { font-weight: 600; }
 .steps { margin: 0; padding-left: 1.4em; }
@@ -97,7 +99,7 @@ pre { margin: 6px 0 0; padding: 10px 14px; background: var(--surface); border: 1
 details { border-top: 1px solid var(--border); padding: 10px 24px; }
 details > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-2); }
 details[open] > summary { margin-bottom: 10px; }
-.fig { overflow-x: auto; }
+.fig { overflow-x: auto; margin-top: 10px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
 .fig svg { display: block; width: 100%; min-width: 720px; height: auto; }
 svg text { font-family: var(--font-sans); fill: var(--text); }
 .later { padding: 0; }
@@ -149,12 +151,33 @@ svg text { font-family: var(--font-sans); fill: var(--text); }
     <h3 id="Q12-h">社内試用を、少人数から始めるか、全部署で一斉に始めるか</h3>
   </header>
   <div class="rows">
-    <div class="row"><span class="label">背景</span><p>新しい検索の実装は 11/5 に終わり、公開前の「社内試用」に入ります。社内試用は、社員に実際の業務で使ってもらい、検索結果のずれや使い方の分かりにくさを公開前に見つける工程です。</p></div>
+    <div class="row"><span class="label">背景</span><p>新しい検索は実装が終わり（11/5）、公開前の「社内試用」に入ります。社員に実際の業務で使ってもらい、検索結果のずれを公開前に見つける工程です。</p></div>
     <div class="row"><span class="label">課題</span><p>試用する人を決めないと、案内文の送り先と問い合わせ窓口の人数が決まらず、準備が止まります。1 日遅れるごとに、公開日までの余裕（推定 3 営業日）が 1 日ずつ減ります。</p></div>
     <div class="row"><span class="label">目的</span><p>11/20 までに、公開してよいかを判断できるだけの不具合と改善点を集め終えること。</p></div>
     <div class="row act"><span class="label">相談事項</span>
       <div>
-        <p>試用の始め方を 1 か 2 で選んでください。</p>
+        <p>試用の始め方を 1 か 2 で選んでください。推奨は 1（少人数から）です。</p>
+        <div class="fig">
+          <svg viewBox="0 0 760 150" role="img" aria-labelledby="q12-fig-t">
+            <title id="q12-fig-t">案 1 は 11/11〜11/13 に営業部で試用し、11/14 に修正、11/17〜11/20 に全部署。案 2 は 11/11〜11/20 を全部署で試用。どちらも 11/20 に試用を終える。</title>
+            <g font-size="13" fill="#4b5563">
+              <text x="180" y="20">11/11</text><text x="342" y="20">11/14</text><text x="442" y="20">11/17</text><text x="648" y="20">11/20</text>
+            </g>
+            <line x1="180" y1="28" x2="700" y2="28" stroke="#e5e7eb"/>
+            <text x="0" y="62" font-size="14" font-weight="600">1. 少人数から</text>
+            <rect x="180" y="44" width="150" height="30" rx="6" fill="#eff4ff" stroke="#2563eb" stroke-width="1.5"/>
+            <text x="192" y="64" font-size="13">営業部 10 名</text>
+            <rect x="340" y="44" width="90" height="30" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+            <text x="352" y="64" font-size="13">修正</text>
+            <rect x="440" y="44" width="260" height="30" rx="6" fill="#eff4ff" stroke="#2563eb" stroke-width="1.5"/>
+            <text x="452" y="64" font-size="13">全部署 約 300 名</text>
+            <text x="0" y="112" font-size="14" font-weight="600">2. 全部署で一斉に</text>
+            <rect x="180" y="94" width="520" height="30" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+            <rect x="180" y="94" width="110" height="30" rx="6" fill="#fff4ec" stroke="#c2410c" stroke-width="1.5"/>
+            <text x="192" y="114" font-size="13" fill="#9a3412">問い合わせ集中</text>
+            <text x="302" y="114" font-size="13">全部署 約 300 名</text>
+          </svg>
+        </div>
         <table class="opts">
           <thead><tr><th scope="col" class="label">選択肢</th><th scope="col" class="label">良い点</th><th scope="col" class="label">欠点</th></tr></thead>
           <tbody>
@@ -167,34 +190,17 @@ svg text { font-family: var(--font-sans); fill: var(--text); }
           <dt>回答後に起きること</dt><dd>1 なら今日中に営業部 10 名へ案内を送り、11/11 から試用開始。2 なら全社向けの案内を 11/11 朝に送る</dd>
           <dt>決めない場合</dt><dd>試用開始が延び、公開日の余裕が 1 日ずつ減る</dd>
         </dl>
+        <p class="sub">先回りの確認</p>
+        <dl class="kv checks">
+          <dt>変更の大きさ</dt><dd>変わるのは案内文の送り先（10 名か約 300 名か）だけ。検索機能そのものは変えない</dd>
+          <dt>日々の使い勝手</dt><dd>試用に入っていない社員の業務は変わらない。試用中の社員も、従来の検索へいつでも切り替えられる</dd>
+          <dt>戻せるか</dt><dd>戻せる。途中で全部署へ広げるのも少人数へ絞るのも、案内を送り直すだけ（当日中）</dd>
+          <dt>待ち時間の根拠</dt><dd>営業部だけで 3 日置くのは、前回の社内試用で不具合報告の約 8 割が最初の 3 日に集まったため。報告が 1 日 2 件未満に落ち着けば 2 日に短縮できる</dd>
+        </dl>
         <p class="reply">返信：<span class="mono">Q12: 1</span></p>
       </div>
     </div>
   </div>
-  <details>
-    <summary>2 つの案の日程を比べる</summary>
-    <div class="fig">
-      <svg viewBox="0 0 760 150" role="img" aria-labelledby="q12-fig-t">
-        <title id="q12-fig-t">案 1 は 11/11〜11/13 に営業部で試用し、11/14 に修正、11/17〜11/20 に全部署。案 2 は 11/11〜11/20 を全部署で試用。どちらも 11/20 に試用を終える。</title>
-        <g font-size="13" fill="#4b5563">
-          <text x="180" y="20">11/11</text><text x="342" y="20">11/14</text><text x="442" y="20">11/17</text><text x="648" y="20">11/20</text>
-        </g>
-        <line x1="180" y1="28" x2="700" y2="28" stroke="#e5e7eb"/>
-        <text x="0" y="62" font-size="14" font-weight="600">1. 少人数から</text>
-        <rect x="180" y="44" width="150" height="30" rx="6" fill="#eff4ff" stroke="#2563eb" stroke-width="1.5"/>
-        <text x="192" y="64" font-size="13">営業部 10 名</text>
-        <rect x="340" y="44" width="90" height="30" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
-        <text x="352" y="64" font-size="13">修正</text>
-        <rect x="440" y="44" width="260" height="30" rx="6" fill="#eff4ff" stroke="#2563eb" stroke-width="1.5"/>
-        <text x="452" y="64" font-size="13">全部署 約 300 名</text>
-        <text x="0" y="112" font-size="14" font-weight="600">2. 全部署で一斉に</text>
-        <rect x="180" y="94" width="520" height="30" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
-        <rect x="180" y="94" width="110" height="30" rx="6" fill="#fff4ec" stroke="#c2410c" stroke-width="1.5"/>
-        <text x="192" y="114" font-size="13" fill="#9a3412">問い合わせ集中</text>
-        <text x="302" y="114" font-size="13">全部署 約 300 名</text>
-      </svg>
-    </div>
-  </details>
 </article>
 
 <article class="card ask-card" id="Q13" aria-labelledby="Q13-h">

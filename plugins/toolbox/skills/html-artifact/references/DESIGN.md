@@ -21,7 +21,7 @@
 
 - **Accent** (`#2563eb`): 矢印・強調枠・番号丸など、意味のある線と面。白に対して5.17:1
 - **Accent Text** (`#1d4ed8`): Accent Tint上の文字。白に対して6.70:1、Tintに対して6.08:1
-- **Accent Tint** (`#eff4ff`): 推奨列・実施事項・ToBeの面
+- **Accent Tint** (`#eff4ff`): 推奨列・相談事項・ToBeの面
 - **Accent Border** (`#bfd3fe`): Accent Tintの面の枠（装飾）
 
 ### Caution（注意・リスク・AsIsの問題）
@@ -104,8 +104,8 @@ word-break: normal;
 
 ### 結論ブロック
 
-- 1枚のカードに3行（課題・目的・実施事項）。左に104px幅の行名（Label、Text Secondary）、右に本文（Body）。行の間は1px Borderで区切る。
-- 実施事項の行だけ Accent Tint の面にし、左端に3px の Accent の帯を付ける。行名は Accent Text。面はカードの左右と下の端まで伸ばす。このためカードの上下余白は0にし、余白は各行に持たせる（下のベースCSSの `.conclusion`）。
+- 1枚のカードに4行（背景・課題・目的・相談事項。依頼が無ければ4行目は実施事項）。左に104px幅の行名（Label、Text Secondary）、右に本文（Body）。行の間は1px Borderで区切る。
+- 4行目（相談事項または実施事項）だけ Accent Tint の面にし、左端に3px の Accent の帯を付ける。行名は Accent Text。面はカードの左右と下の端まで伸ばす。このためカードの上下余白は0にし、余白は各行に持たせる（下のベースCSSの `.conclusion`）。
 - 直下に重大なリスクと推奨を覆す条件を Callout で置く。
 
 ### Callout（重大なリスク・注意）
