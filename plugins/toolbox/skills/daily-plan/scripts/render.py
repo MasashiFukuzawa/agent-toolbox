@@ -30,7 +30,6 @@ STATE_LABELS = {
 }
 GhRunner = Callable[[list[str]], "str | None"]
 REF_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]*")
-TIME_PATTERN = re.compile(r"(\d{1,2}):(\d{2})")
 
 
 class PlanError(ValueError):
@@ -127,14 +126,6 @@ def judge(step: dict, *, repo: str | None, base: pathlib.Path, gh: GhRunner) -> 
 DAY = 24 * 60
 
 
-def _clock(value: str, where: str) -> int:
-    """HH:MM を 0 時からの分にする。"""
-    match = TIME_PATTERN.fullmatch(str(value))
-    if not match or int(match[1]) > 24 or int(match[2]) > 59 or int(match[1]) * 60 + int(match[2]) > DAY:
-        raise PlanError(f"{where}: 時刻は HH:MM で書く（受け取った値: {value!r}）")
-    return int(match[1]) * 60 + int(match[2])
-
-
 def _datetime(value: str, where: str) -> dt.datetime:
     try:
         parsed = dt.datetime.fromisoformat(str(value))
@@ -146,7 +137,7 @@ def _datetime(value: str, where: str) -> dt.datetime:
 
 
 class Period:
-    """計画の期間（最大24時間）。HH:MM は開始以降で最初に来るその時刻として読む。"""
+    """計画の期間（最大24時間）。"""
 
     def __init__(self, day: dict) -> None:
         for key in ("start", "end"):
@@ -157,20 +148,6 @@ class Period:
         self.span = int((self.end - self.start).total_seconds() // 60)
         if not 0 < self.span <= DAY:
             raise PlanError("end は start より後で、24時間以内にする")
-        self.origin = self.start.hour * 60 + self.start.minute
-
-    def offset(self, value: str, where: str) -> int:
-        """開始からの分。"""
-        return (_clock(value, where) - self.origin) % DAY
-
-    def interval(self, start: str, end: str, where: str) -> tuple[int, int]:
-        a = self.offset(start, f"{where}.start")
-        b = self.offset(end, f"{where}.end")
-        return a, b if b > a else b + DAY
-
-    def now_offset(self, now: dt.datetime) -> int | None:
-        minutes = (now - self.start).total_seconds() / 60
-        return int(minutes) if 0 <= minutes <= self.span else None
 
 
 def _validate(day: dict, goals: dict | None) -> None:
@@ -322,119 +299,21 @@ def render_goals(goals: dict, lanes: list[dict]) -> str:
     )
 
 
-# ---------- タイムライン ----------
+# ---------- 時間制約と計画の変更 ----------
 
 
-def render_timeline(day: dict, lanes: list[dict], period: Period, now_min: int | None) -> str:
-    span = period.span
+def render_constraints(day: dict) -> str:
+    """守る時間制約を、見出しのすぐ下に文字で出す。"""
+    items = [f"{c['label']} {c['start']}–{c['end']}" for c in day.get("constraints", [])]
+    return f'<p class="constraints">守る時間制約：{esc("、".join(items))}</p>' if items else ""
 
-    def pos(minute: int) -> float:
-        return min(max(minute, 0), span) / span * 100
 
-    def band(cls: str, a: int, b: int, title: str) -> str:
-        left, right = pos(a), pos(b)
-        if right <= left:
-            return ""
-        return (
-            f'<span class="tl-bar {cls}" style="left:{left:.3f}%;width:{right - left:.3f}%" '
-            f'title="{esc(title)}"></span>'
-        )
-
-    def span_text(item: dict, where: str, open_end: int | None) -> tuple[int, int, str] | None:
-        if not item or not item.get("start"):
-            return None
-        if item.get("end"):
-            a, b = period.interval(item["start"], item["end"], where)
-            return a, b, f"{item['start']}–{item['end']}"
-        a = period.offset(item["start"], f"{where}.start")
-        b = open_end if open_end is not None else a
-        return a, max(a, b), f"{item['start']}–"
-
-    # 目盛りは長い期間ほど間引き、ラベルが重ならないようにする。
-    step = 60 if span <= 8 * 60 else 120 if span <= 16 * 60 else 180
-    first_hour = (60 - period.origin % 60) % 60
-    ticks = []
-    for minute in range(first_hour, span + 1, step):
-        at = period.start + dt.timedelta(minutes=minute)
-        text = f"{at.month}/{at.day} 0:00" if at.hour == 0 else f"{at.hour}:00"
-        edge = " at-start" if minute == 0 else " at-end" if minute == span else ""
-        ticks.append(f'<span class="tick{edge}" style="left:{pos(minute):.3f}%">{text}</span>')
-    overlay, constraint_texts = [], []
-    for i, c in enumerate(day.get("constraints", [])):
-        constraint_texts.append(f"{c['label']} {c['start']}–{c['end']}")
-        a, b = period.interval(c["start"], c["end"], f"constraints[{i}]")
-        # 制約は毎日繰り返す。期間の開始より前に始まった回も、期間に掛かる分を描く。
-        for shift in (-DAY, 0):
-            left, right = pos(a + shift), pos(b + shift)
-            if right > left:
-                overlay.append(
-                    f'<span class="tl-constraint" style="left:{left:.3f}%;width:{right - left:.3f}%" '
-                    f'title="{esc(constraint_texts[-1])}"></span>'
-                )
-    if now_min is not None:
-        now_text = f"{period.start + dt.timedelta(minutes=now_min):%H:%M}"
-        overlay.append(f'<span class="tl-now" style="left:{pos(now_min):.3f}%"><span>現在 {now_text}</span></span>')
-    end = span
-
-    rows = []
-    for index, lane in enumerate(lanes):
-        where = f"lanes[{index}]"
-        plan = span_text(lane.get("plan") or {}, f"{where}.plan", None)
-        # 実績は中断と再開を表せるよう、区間の配列でも書ける。
-        raw = lane.get("actual") or []
-        raw = raw if isinstance(raw, list) else [raw]
-        actuals = [
-            interval
-            for i, item in enumerate(raw)
-            if (interval := span_text(item or {}, f"{where}.actual[{i}]", now_min))
-        ]
-        if not plan and not actuals:
-            continue
-        bars, texts = [], []
-        if plan:
-            bars.append(band("tl-plan", plan[0], plan[1], f"予定 {plan[2]}"))
-            texts.append(f"予定 {plan[2]}")
-        for actual in actuals:
-            bars.append(band("tl-actual", actual[0], actual[1], f"実績 {actual[2]}"))
-        if actuals:
-            texts.append("実績 " + "、".join(a[2] for a in actuals))
-        rows.append(
-            f'<div class="tl-row"><div class="tl-label"><a href="#{lane_anchor(index)}">{esc(lane["name"])}</a>'
-            f'<span class="tl-time">{esc("・".join(texts))}</span></div>'
-            f'<div class="tl-track">{"".join(bars)}</div></div>'
-        )
-    board = day.get("ownerBoard")
-    for index, wait in enumerate(day.get("waits", [])):
-        item = span_text(wait, f"waits[{index}]", end)
-        if not item:
-            continue
-        rows.append(
-            f'<div class="tl-row"><div class="tl-label"><span class="pill caution">待ち</span> {esc(wait["label"])}'
-            f'{ref_link(wait.get("ref"), board)}<span class="tl-time">{esc(item[2])}</span></div>'
-            f'<div class="tl-track">{band("tl-wait", item[0], item[1], "待ち " + item[2])}</div></div>'
-        )
-    if not rows and not constraint_texts:
-        return ""
-    constraint_html = (
-        f'<p class="constraints"><span class="label">守る時間制約</span> {esc("、".join(constraint_texts))}</p>'
-        if constraint_texts
-        else ""
-    )
+def render_changes(day: dict) -> str:
     changes = day.get("changes", [])
-    change_html = ""
-    if changes:
-        items = "".join(f'<li><span class="num">{esc(c["at"])}</span> {esc(c["text"])}</li>' for c in changes)
-        change_html = f'<h3>計画の変更</h3><ul class="changes">{items}</ul>'
-    return (
-        f"<h2>タイムライン（{esc(period_label(period))}）</h2>"
-        f'<div class="card scroll tl-card"><div class="tl">'
-        f'<div class="tl-row tl-axis"><div class="tl-label"></div><div class="tl-track">{"".join(ticks)}</div></div>'
-        f'<div class="tl-body"><div class="tl-overlay"><div class="tl-label"></div><div class="tl-track">'
-        f"{''.join(overlay)}</div></div>{''.join(rows)}</div></div>"
-        '<p class="legend"><span class="key tl-plan">予定</span><span class="key tl-actual">実績</span>'
-        '<span class="key tl-wait">待ち（外部要因）</span><span class="key tl-constraint-key">守る時間制約</span>'
-        f"縦線は現在時刻</p>{constraint_html}{change_html}</div>"
-    )
+    if not changes:
+        return ""
+    items = "".join(f'<li><span class="num">{esc(c["at"])}</span> {esc(c["text"])}</li>' for c in changes)
+    return f'<h2>計画の変更</h2><div class="card"><ul class="changes">{items}</ul></div>'
 
 
 # ---------- 作業の進捗 ----------
@@ -543,14 +422,13 @@ table{width:100%;border-collapse:collapse}
 th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle}
 thead th{font-size:13px;font-weight:600;color:var(--text-2);border-bottom-color:var(--border-strong)}
 .legend{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:13px;color:var(--text-2);margin:12px 0 0}
-.chip,.pill{display:inline-block;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:600;
+.chip{display:inline-block;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:600;
 text-align:center;white-space:nowrap;border:1px solid transparent}
 .s-done{background:var(--accent);color:#fff}
 .s-doing{background:var(--accent-tint);color:var(--accent-text);border-color:var(--accent-border)}
 .s-waiting{background:var(--caution-tint);color:var(--caution-text);border-color:var(--caution-border)}
 .s-blocked{background:var(--caution);color:#fff}
 .s-todo{background:var(--neutral-tint);color:var(--neutral-text);border-color:var(--border-strong)}
-.pill.caution{background:var(--caution-tint);color:var(--caution-text)}
 .bar{display:flex;width:100%;background:var(--neutral-tint);border-radius:999px;overflow:hidden}
 .seg{display:block;height:100%}.seg.s-doing{background:var(--accent-border)}.seg.s-waiting{background:var(--caution-border)}
 .seg.s-todo{background:var(--border-strong)}
@@ -573,31 +451,8 @@ box-shadow:inset 0 0 0 1px var(--node-border)}.g-out{background:var(--neutral-ti
 .target{display:block;font-size:12px;font-weight:600}.g-done .target{color:#fff}
 .today{display:block;font-size:12px;font-weight:600;color:var(--caution-text)}.g-done .today{color:#fff}
 .key{display:inline-block;border-radius:6px;padding:0 8px;font-size:12px;font-weight:600}
-.tl{min-width:900px}.tl-row{display:grid;grid-template-columns:240px 1fr;gap:12px;align-items:center;min-height:40px}
-.tl-label{font-size:14px;line-height:1.5}.tl-time{display:block;font-size:12px;color:var(--text-2)}
-.tl-track{position:relative;height:28px}
-.tl-axis .tl-track{height:20px;border-bottom:1px solid var(--line)}
-.tick{position:absolute;bottom:2px;transform:translateX(-50%);font-size:12px;color:var(--text-2);white-space:nowrap}
-.tick.at-start{transform:none}.tick.at-end{transform:translateX(-100%)}
-.tl-body{position:relative;margin-bottom:20px}
-.tl-overlay{position:absolute;inset:0;display:grid;grid-template-columns:240px 1fr;gap:12px;
-pointer-events:none}
-.tl-overlay .tl-track{height:100%}
-.tl-bar{position:absolute;top:4px;height:20px;border-radius:4px}
-.tl-plan{background:var(--surface);border:1.5px dashed var(--line)}
-.tl-actual{top:9px;height:10px;background:var(--accent)}
-.tl-wait{background:var(--caution-tint);border:1.5px solid var(--caution)}
-.tl-constraint,.tl-constraint-key{
-background:repeating-linear-gradient(135deg,var(--caution-border) 0 2px,transparent 2px 8px)}
-.tl-constraint{position:absolute;top:0;bottom:0;border-left:1px solid var(--caution-border);
-border-right:1px solid var(--caution-border)}
-.tl-now{position:absolute;top:0;bottom:-20px;border-left:2px solid var(--text)}
-.tl-now>span{position:absolute;bottom:0;left:4px;font-size:12px;font-weight:600;background:var(--surface);padding:0 4px;
-white-space:nowrap}
-.key.tl-plan,.key.tl-wait{position:static}.key.tl-actual{position:static;height:auto;color:#fff}
-.key.tl-constraint-key{color:var(--caution-text)}
-.changes{margin:0;padding-left:20px;font-size:14px}.tl-card h3{margin-top:16px}
-.constraints{font-size:14px;margin:8px 0 0;color:var(--caution-text)}
+.changes{margin:0;padding-left:20px;font-size:14px}
+.constraints{font-size:14px;margin:0 0 8px;color:var(--caution-text)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 """
 
@@ -641,9 +496,10 @@ def render(
         '<!doctype html><html lang="ja"><head><meta charset="utf-8">',
         f'<meta name="color-scheme" content="light"><title>{esc(title)}</title><style>{CSS}</style></head><body><main>',
         f'<h1>{esc(title)}</h1><p class="meta">{meta}</p>',
+        render_constraints(day),
         # 開いてすぐ見たいのは今回の進捗なので先頭に置き、取り組み全体の目標は最後に回す。
         hero,
-        render_timeline(day, day["lanes"], period, period.now_offset(now)),
+        render_changes(day),
         "<h2>作業ごとの手順</h2>",
         sections,
         render_goals(goals, day["lanes"]) if goals else "",
