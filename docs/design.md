@@ -48,7 +48,7 @@ When a session stops it says how: done, waiting for a decision, waiting for a hu
 
 ## Which skill owns what
 
-Each rule lives in one skill. `autopilot` owns how a goal proceeds and hands the rest to its neighbors.
+Each rule lives in one skill. `autopilot` owns how a goal proceeds, including checks bound to a revision and honest reporting of what is not finished, and hands the rest to its neighbors.
 
 | Skill | Owns | Leaves to |
 |---|---|---|
@@ -56,7 +56,6 @@ Each rule lives in one skill. `autopilot` owns how a goal proceeds and hands the
 | `human-briefing` | How a request or report to a person is written | Where it is shown |
 | `html-artifact` | Look and location of one-off pages | The page that follows a goal (`autopilot`) |
 | `human-notify` | Delivering a notice and recording whether it went out | When and what to notify (`autopilot`) |
-| `done` | The completion gate a repository defines, bound to a revision | The acceptance conditions (the agreement) |
 | `second-opinion` | Review by another model and triage of its findings | When a review is required (the delegated scope) |
 | `model-selection` | Which model and effort a helper uses | Whether to use a helper |
 | `progress-report`, `context-handoff` | Reports and handovers for work that has no goal page | The goal page, when one exists |

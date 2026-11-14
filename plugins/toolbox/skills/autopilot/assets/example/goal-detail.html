@@ -1,0 +1,176 @@
+<!doctype html>
+<!-- ゴールのページの子ページの見本。内容はすべて架空。詳細はここへ分け、状態・進捗・質問はゴールのページだけに置く。 -->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>A1 再送の検査の詳細 — 予約確認メールの自動再送</title>
+<style>
+:root {
+  color-scheme: light;
+  --accent: #2563eb; --accent-text: #1d4ed8; --accent-tint: #eff4ff; --accent-border: #bfd3fe;
+  --caution: #c2410c; --caution-text: #9a3412; --caution-tint: #fff4ec; --caution-border: #fed7aa;
+  --text: #1f2937; --text-2: #4b5563; --text-3: #6b7280; --line: #64748b;
+  --border: #e5e7eb; --border-strong: #d1d5db; --node-border: #cbd5e1;
+  --neutral-tint: #f3f4f6; --bg: #f6f7f9; --surface: #ffffff;
+  --shadow-1: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.75 var(--font-sans);
+  letter-spacing: .02em; line-break: strict; overflow-wrap: anywhere; -webkit-font-smoothing: antialiased; }
+main { max-width: 1160px; margin: 0 auto; padding: 28px 40px 80px; }
+h1, h2, h3 { font-feature-settings: "palt"; text-wrap: balance; letter-spacing: .01em; }
+h1 { font-size: 28px; line-height: 1.35; margin: 0 0 4px; }
+h2 { font-size: 20px; line-height: 1.45; margin: 40px 0 12px; }
+h3 { font-size: 16px; line-height: 1.5; margin: 0 0 8px; }
+p, li, dd { text-wrap: pretty; }
+code { font-family: var(--font-mono); font-size: .92em; letter-spacing: 0; }
+a { color: var(--accent-text); }
+.meta { margin: 0 0 16px; font-size: 14px; color: var(--text-2); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow-1); padding: 20px 24px; }
+.card + .card { margin-top: 12px; }
+.label { font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--text-2); }
+.pill { display: inline-block; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.p-acc { background: var(--accent-tint); color: var(--accent-text); }
+.p-cau { background: var(--caution-tint); color: var(--caution-text); }
+.p-neu { background: var(--neutral-tint); color: #374151; }
+.kv { display: grid; grid-template-columns: 104px 1fr; gap: 6px 16px; margin: 0; }
+.kv dt { font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--text-2); padding-top: 3px; }
+.kv dd { margin: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th { text-align: left; font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--text-2);
+  padding: 8px 12px; border-bottom: 1px solid var(--border-strong); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.t { white-space: nowrap; font-weight: 600; }
+tr.rec td { background: var(--accent-tint); }
+.ask { padding: 0 24px; }
+.ask > header { padding: 16px 0 4px; }
+.ask > header p { margin: 0; font-size: 13px; color: var(--text-2); }
+.ask .rows .row { display: grid; grid-template-columns: 104px 1fr; gap: 16px; padding: 12px 0; border-top: 1px solid var(--border); }
+.ask .rows .row.act { margin: 0 -24px; padding: 14px 24px; background: var(--accent-tint);
+  box-shadow: inset 3px 0 0 var(--accent); border-radius: 0 0 11px 11px; }
+.ask .rows .row.act .label { color: var(--accent-text); }
+.ask figure { margin: 12px 0; }
+.ask figcaption { font-size: 13px; color: var(--text-2); }
+.checks { margin: 12px 0 0; }
+.note { margin: 8px 0 0; font-size: 13px; color: var(--text-2); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+ul.plain { margin: 0; padding-left: 20px; }
+details { margin-top: 12px; font-size: 15px; }
+summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-2); }
+svg { display: block; width: 100%; height: auto; }
+svg text { font-family: var(--font-sans); fill: var(--text); }
+.sub { margin: 0; color: var(--text-2); font-size: 15px; }
+.h2row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.h2row .count { font-size: 14px; color: var(--text-2); }
+.callout { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; padding: 10px 16px; border-radius: 10px;
+  background: var(--caution-tint); border: 1.5px solid var(--caution); font-size: 15px; }
+.callout b { color: var(--caution-text); white-space: nowrap; }
+.place { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 0; padding: 0; font-size: 13px; color: var(--text-2); }
+.place li { border: 1px solid var(--node-border); border-radius: 999px; padding: 1px 10px; background: var(--surface); }
+.place li + li::before { content: "›"; margin: 0 8px 0 -22px; position: relative; left: -4px; color: var(--line); }
+.place li.past { background: var(--neutral-tint); }
+.place li.here { border: 2px solid var(--accent); color: var(--accent-text); font-weight: 700; background: var(--accent-tint); }
+.prog { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center; margin: 14px 0 6px; }
+.pct { font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.stack { display: flex; height: 18px; border-radius: 9px; overflow: hidden; background: #d1d5db; }
+.stack i { display: block; height: 100%; }
+td .stack { height: 10px; border-radius: 5px; min-width: 200px; }
+.s-done { background: var(--accent); } .s-doing { background: #bfd3fe; } .s-wait { background: #fed7aa; }
+.s-stop { background: var(--caution); } .s-todo { background: #d1d5db; }
+.prog p { margin: 6px 0 0; font-size: 14px; color: var(--text-2); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 4px; font-size: 12px; font-weight: 600; }
+.legend span { border-radius: 999px; padding: 1px 10px; border: 1px solid transparent; }
+.legend .s-done { color: #fff; } .legend .s-stop { color: #fff; }
+.legend .s-doing { color: var(--accent-text); } .legend .s-wait { color: var(--caution-text); } .legend .s-todo { color: #374151; }
+.conds td { padding: 8px 12px; font-size: 14px; vertical-align: middle; }
+.conds td.num { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.band { margin: 10px 0 8px; }
+.diffs { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; padding: 0; }
+.diffs li { border: 1px solid var(--node-border); border-radius: 8px; padding: 8px 12px; font-size: 14px; line-height: 1.5; }
+.diffs li.new { border: 1.5px solid var(--caution); background: var(--caution-tint); }
+.diffs b { margin-right: 8px; }
+.diffs .from { color: var(--text-3); text-decoration: line-through; }
+.diffs .to { font-weight: 600; }
+.diffs small { display: block; color: var(--text-2); font-size: 12px; }
+.stat { display: inline-flex; align-items: baseline; gap: 6px; border: 1px solid var(--node-border); border-radius: 8px;
+  padding: 2px 10px; margin: 6px 8px 0 0; background: var(--surface); font-size: 13px; color: var(--text-2); }
+.stat b { font-size: 20px; color: var(--text); font-variant-numeric: tabular-nums; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 0; }
+.opt { border: 1px solid var(--node-border); border-radius: 10px; padding: 12px 14px; background: var(--surface); font-size: 14px; line-height: 1.6; }
+.opt.rec { border: 2px solid var(--accent); }
+.opt h4 { margin: 0 0 6px; font-size: 16px; }
+.opt ul { list-style: none; margin: 0; padding: 0; }
+.opt li { display: grid; grid-template-columns: 20px 1fr; }
+.opt li span { font-weight: 700; }
+.tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 12px 0 0; }
+.tiles > div { border: 1px solid var(--node-border); border-radius: 8px; padding: 8px 10px; background: var(--surface); font-size: 14px; line-height: 1.5; }
+.tiles dt { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--text-2); }
+.tiles dd { margin: 0; }
+.tiles .reply { border: 2px solid var(--accent); }
+.tiles .reply code { font-size: 18px; font-weight: 700; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.dec { border: 1px solid var(--node-border); border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.6; }
+.dec h3 { margin: 0 0 4px; }
+.dec .undo { margin: 6px 0 0; color: var(--text-2); font-size: 13px; }
+.st { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.st i { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--node-border);
+  font-style: normal; font-size: 11px; font-weight: 700; line-height: 1; }
+.st.ok i { background: var(--line); border-color: var(--line); color: #fff; }
+.st.doing i { border-color: var(--accent); background: var(--accent-tint); color: var(--accent-text); }
+.st.hold i { border-color: var(--caution); background: var(--caution-tint); color: var(--caution-text); }
+td svg { max-width: 360px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.conclusion { padding: 0 24px; }
+.conclusion .row { display: grid; grid-template-columns: 104px 1fr; gap: 16px; padding: 12px 0; }
+.conclusion .row + .row { border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<main>
+<p class="meta"><a href="goal-page.html">← 予約確認メールの自動再送（ゴールのページ）へ戻る</a></p>
+<h1>A1 再送の検査の詳細</h1>
+<p class="meta">検査した版 <code>3f9c2ab</code> ・ 2026-04-14 14:40 JST</p>
+
+<section class="card conclusion" aria-label="結論">
+  <div class="row"><div class="label">課題</div><div>送信に失敗したメールは、変更前は1件も再送されなかった。</div></div>
+  <div class="row"><div class="label">目的</div><div>失敗したメールが、10分以内に再送されること（受け入れの条件 A1）。</div></div>
+  <div class="row"><div class="label">実施事項</div><div>なし（共有のみ）。失敗させた3件が、3件とも10分以内に再送された。</div></div>
+</section>
+
+<section class="card" aria-labelledby="t-h" style="margin-top:12px">
+  <h2 id="t-h" style="margin-top:0">3件とも、10分以内に届いた</h2>
+  <svg viewBox="0 0 1080 150" role="img" aria-labelledby="t-fig">
+    <title id="t-fig">1件目は1分後の再送で届いた。2件目は5分後の再送で届いた。3件目は10分後の再送で届いた。</title>
+    <g font-size="12">
+      <g style="fill:#4b5563"><text x="160" y="16" text-anchor="middle">失敗</text><text x="250" y="16" text-anchor="middle">1分</text><text x="610" y="16" text-anchor="middle">5分</text><text x="1060" y="16" text-anchor="middle">10分</text></g>
+      <g stroke="#e5e7eb"><path d="M160 24V140M250 24V140M610 24V140M1060 24V140"/></g>
+      <text x="0" y="50">1件目</text><path d="M160 46H250" stroke="#64748b" stroke-width="2"/>
+      <circle cx="160" cy="46" r="6" fill="#fff4ec" stroke="#c2410c" stroke-width="2"/><circle cx="250" cy="46" r="7" fill="#2563eb"/><text x="262" y="50" font-weight="600">届いた</text>
+      <text x="0" y="90">2件目</text><path d="M160 86H610" stroke="#64748b" stroke-width="2"/>
+      <circle cx="160" cy="86" r="6" fill="#fff4ec" stroke="#c2410c" stroke-width="2"/><circle cx="250" cy="86" r="6" fill="#fff4ec" stroke="#c2410c" stroke-width="2"/><circle cx="610" cy="86" r="7" fill="#2563eb"/><text x="622" y="90" font-weight="600">届いた</text>
+      <text x="0" y="130">3件目</text><path d="M160 126H1060" stroke="#64748b" stroke-width="2"/>
+      <circle cx="160" cy="126" r="6" fill="#fff4ec" stroke="#c2410c" stroke-width="2"/><circle cx="250" cy="126" r="6" fill="#fff4ec" stroke="#c2410c" stroke-width="2"/><circle cx="610" cy="126" r="6" fill="#fff4ec" stroke="#c2410c" stroke-width="2"/><circle cx="1060" cy="126" r="7" fill="#2563eb"/><text x="1048" y="112" text-anchor="end" font-weight="600">届いた</text>
+    </g>
+  </svg>
+  <p class="note">白い丸は送信の失敗、青い丸は届いた送信。検査では、送信サービスの代わりに、指定した回数だけ失敗する相手を使った。</p>
+</section>
+
+<section class="card" aria-labelledby="c-h">
+  <h2 id="c-h" style="margin-top:0">確かめた場合</h2>
+  <table>
+    <thead><tr><th scope="col">場合</th><th scope="col">変更前</th><th scope="col">変更後</th></tr></thead>
+    <tbody>
+      <tr><td class="t">1回失敗して、次で届く</td><td>再送されない</td><td>1分後に届く</td></tr>
+      <tr><td class="t">2回失敗して、次で届く</td><td>再送されない</td><td>5分後に届く</td></tr>
+      <tr><td class="t">3回失敗して、次で届く</td><td>再送されない</td><td>10分後に届く</td></tr>
+    </tbody>
+  </table>
+</section>
+</main>
+</body>
+</html>

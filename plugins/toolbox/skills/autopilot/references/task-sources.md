@@ -61,7 +61,7 @@ synthetic statusを作らない。
 
 PR mergeで必須受入が成立するタスクでは、tracked checklistのcheck更新を実装変更と同じtask PRに含める。merge後の配備・実機受入が必須なら先にcheckせず、承認されたtracking方法を決める。このadapterだけで未対応の完了管理を捏造しない。feature branch上では先にcheck済みに
 見えてもbase branchは未完了のままであり、merge時に初めて実際の完了状態が反映される。check更新後の
-treeをdoneで検証し、未検証のtracking-only変更を出荷しない。
+treeを案件の検査で確かめ、未検証のtracking-only変更を出荷しない。
 
 各runの開始時はbase branchをcheckoutせず、fetch後の`origin/<base>:<plan path>`をqueueの正として
 項目を選ぶ。同じ項目に対応するbranchやPRがある場合は状態を確認する。local branchだけなら再開、

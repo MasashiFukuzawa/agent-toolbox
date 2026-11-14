@@ -57,7 +57,6 @@ A skill-local `evals/evals.json` uses the Claude plugin evaluation shape: a `ski
 ## Placement
 
 - `toolbox`: general engineering workflows
-- `done`: quality-gate core and host adapters
 - `gog`: skills whose runtime dependency is `gog`
 - `github-operations`: guarded GitHub Project and Issue operations that share one script library
 

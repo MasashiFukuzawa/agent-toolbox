@@ -4,6 +4,34 @@ Changes that people who installed the plugins need to know about. Each plugin (`
 
 After updating a plugin, restart running sessions: a session keeps the plugin version it started with.
 
+## toolbox 0.20.0 (2026-11-15) — Breaking
+
+**Breaking**
+
+- The `done` plugin is retired. In local session records it almost never failed a change, and its one rule that mattered (a change that needs a deeper look is not complete until a second model has reviewed it) duplicated what `autopilot` and `second-opinion` already do. The rule now lives in the project's delegated scope, and the Stop hook and the `quality-gate` signature are gone.
+
+**Changed**
+
+- `autopilot` owns completion: checks bound to the revision, reuse of a result from CI or a helper on the same revision, reading the diff itself, and reporting what is unfinished as unfinished.
+- The delegated-scope template has two new lines under checks and merge: which changes need a deeper look, and what a review must always look at.
+- The example goal page shows overall progress as a percentage with a stacked bar, each acceptance condition with its own bar and next step, and where the goal sits in the larger objective. A detail that would crowd the goal page goes to a child page in the same design.
+
+**Migrating from 0.19**
+
+1. Uninstall the `done` plugin on each host (`/plugin` in Claude Code, the plugin list in Codex) and restart running sessions.
+2. In each repository that has `.agents/done.yml`, move its content into the delegated-scope section of the project instruction file, then delete the file. Both spellings that the gate accepted are listed:
+
+   | In `done.yml` | Goes to |
+   |---|---|
+   | `verify` commands | "Checks". A command with `when_changed` becomes a conditional line, for example "also run `<command>` when `<paths>` change" |
+   | `verify` given per tier (`quick`, `standard`, `full`) | "Checks", written as conditions: what always runs, and what also runs for the changes that need a deeper look |
+   | `tier_floors.full`, `full_conditions` | "Changes that need a deeper look" |
+   | `tier_floors.quick` | Drop it, or say which changes need only the basic checks |
+   | `review_criteria` or `review.criteria`, `docs_checks` or `docs.checks` | "Always review" |
+   | `external_review` or `review.external` | Name the provider in the deeper-look line, or leave the choice to the session |
+
+3. Remove every instruction that tells an agent to run the `done` skill or to emit a `quality-gate:` line, and replace it with "run the checks in the delegated scope on the final revision".
+
 ## toolbox 0.19.2 (2026-11-15)
 
 - The example goal page that `autopilot` copies now leads with figures: a progress track, a time band against the limit, before/after tiles, option cards, and evidence shown as before/after. The page rules ask for a figure, table, or card as the main element of every section.

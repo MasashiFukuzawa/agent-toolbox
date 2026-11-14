@@ -9,7 +9,6 @@ For the idea behind the skills and how they fit together, see [docs/design.md](d
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
 | `toolbox` | 20 | Human-facing reporting, autonomous execution and quality, and design and implementation decisions | Per-skill; see each `SKILL.md` |
-| `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
 
@@ -19,17 +18,16 @@ For the idea behind the skills and how they fit together, see [docs/design.md](d
   - Reporting to a human (7): `human-briefing`, `html-artifact`, `progress-report`, `context-handoff`, `human-notify`, `ascii-diagram`, and `rephrase`.
   - Autonomous execution and quality (5): `autopilot`, `second-opinion`, `model-selection`, `git-worktrees`, and `step-back`.
   - Design and implementation (8): `ai-native-engineering`, `behavioral-testing`, `adr`, `codebase-audit`, `browser-operations`, `e2e-capability-verification`, `typescript-project-foundation`, and `cloudflare-data-pipeline`.
-- `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.
 - `github-operations` (2, Claude Code and Codex): `github-project-provisioning` and `github-issue-create`.
 
 `step-back` and `rephrase` run only when named: `/toolbox:<name>` in Claude Code, `$<name>` in Codex. `rephrase` restates the previous message from its background in the `human-briefing` rows when an explanation did not land.
 
-`autopilot` carries one goal from investigation to acceptance: one session at a time, and one local HTML goal page that the human reads. The goal, its numbered acceptance conditions, the limits, and the delegated scope are agreed once. Inside that scope the session decides, proceeds, and records what it decided on the page; it asks only about decisions outside it, and it does not weaken the acceptance conditions on its own. When it stops, the page carries a stop state (done, waiting for a decision, waiting for a human action, waiting on something external, or interrupted) with the condition for resuming, and a later session resumes from the page after checking it against the actual branch, pull request, and CI state. When a goal ends, the session removes what it created for that goal (worktrees, branches, containers, temporary files) from the record on the page, and leaves anything with uncommitted work, data, or an unknown owner for the human to decide; it also proposes a delegated-scope rule for questions that a written rule would have made unnecessary. Model selection is shared by autopilot and `second-opinion`; install the complete toolbox plugin rather than copying one skill alone. Done accepts revision-bound evidence rather than repeating checks that already passed on the same tree.
+`autopilot` carries one goal from investigation to acceptance: one session at a time, and one local HTML goal page that the human reads. The goal, its numbered acceptance conditions, the limits, and the delegated scope are agreed once. Inside that scope the session decides, proceeds, and records what it decided on the page; it asks only about decisions outside it, and it does not weaken the acceptance conditions on its own. When it stops, the page carries a stop state (done, waiting for a decision, waiting for a human action, waiting on something external, or interrupted) with the condition for resuming, and a later session resumes from the page after checking it against the actual branch, pull request, and CI state. When a goal ends, the session removes what it created for that goal (worktrees, branches, containers, temporary files) from the record on the page, and leaves anything with uncommitted work, data, or an unknown owner for the human to decide; it also proposes a delegated-scope rule for questions that a written rule would have made unnecessary. Model selection is shared by autopilot and `second-opinion`; install the complete toolbox plugin rather than copying one skill alone. Checks are bound to the revision they ran on; a result from CI or a helper on the same revision is reused after reading it, and a change the project marks as needing a deeper look is not reported complete until a second model has reviewed it.
 
 The toolbox plugin ships hooks for the hosts' `Stop` and `PermissionRequest` events, and for Claude Code's `StopFailure` (a turn that ends on an API error). They raise a desktop notice when the session that carries a goal mark stops or waits for permission. The hooks are passive: in a worktree without a goal mark, and for other sessions in a marked worktree, they do nothing, so ordinary conversations never notify. No daemon or automatic host restart is installed. Codex runs plugin hooks only after you review and trust them with `/hooks`.
 
-`second-opinion` launches the Claude or Codex CLI as an independent instance, from either host. It reviews a diff or a design against named viewpoints (missing, not asked for, implemented wrongly, documented-rule violations) and asks for a failure scenario with every finding. For a change whose behavior is visible from outside and whose gate tier is the deepest, the third party first runs the change on a fixed snapshot and checks the acceptance criteria. The caller acts only on findings that were reproduced or would be costly to miss.
+`second-opinion` launches the Claude or Codex CLI as an independent instance, from either host. It reviews a diff or a design against named viewpoints (missing, not asked for, implemented wrongly, documented-rule violations) and asks for a failure scenario with every finding. For a change whose behavior is visible from outside and that the project marks as needing a deeper look, the third party first runs the change on a fixed snapshot and checks the acceptance criteria. The caller acts only on findings that were reproduced or would be costly to miss.
 
 ### Progress report formats
 
@@ -48,7 +46,7 @@ progress-report --html Focus on the release outlook
 
 ### Goal page
 
-`autopilot` keeps one local HTML page per goal, edited only by the session that carries the goal. From the top it shows the state and current position against the acceptance conditions, what changed since the human last looked, what is left to the human (each item in the `human-briefing` format with a fixed question ID), the decisions made inside the delegated scope with how to undo them, results with evidence bound to the checked revision, the agreement, and the information another session needs to take over. A fixed entry page per project links to the goal in progress. Agents edit the HTML directly from a self-contained example with no script; real pages stay outside public repositories. When a goal page exists, `progress-report` takes its facts from it and links to it, and `context-handoff` hands the goal over through it.
+`autopilot` keeps one local HTML page per goal, edited only by the session that carries the goal. From the top it shows the state and current position against the acceptance conditions, what changed since the human last looked, what is left to the human (each item in the `human-briefing` format with a fixed question ID), the decisions made inside the delegated scope with how to undo them, results with evidence bound to the checked revision, the agreement, and the information another session needs to take over. The page leads with figures: overall progress as a percentage with a stacked bar, each acceptance condition with its own bar and next step, and a time band against the limit. Detail that would crowd it goes to a child page in the same design. A fixed entry page per project links to the goal in progress. Agents edit the HTML directly from a self-contained example with no script; real pages stay outside public repositories. When a goal page exists, `progress-report` takes its facts from it and links to it, and `context-handoff` hands the goal over through it.
 
 ### Human notifications
 
@@ -70,7 +68,6 @@ Device configuration and delivery state stay in user-local directories; remote d
 ```text
 /plugin marketplace add MasashiFukuzawa/agent-toolbox
 /plugin install toolbox@agent-toolbox
-/plugin install done@agent-toolbox
 /plugin install gog@agent-toolbox
 /plugin install github-operations@agent-toolbox
 ```
@@ -79,9 +76,9 @@ Use `/plugin` to update or uninstall a plugin. Claude Code discovers the marketp
 
 ### Codex
 
-Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `done`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release.
+Add this Git repository as a plugin marketplace in Codex, then install `toolbox`, `gog`, or `github-operations` from the `agent-toolbox` marketplace. Codex reads `.agents/plugins/marketplace.json`; the exact UI or CLI command depends on the installed Codex release.
 
-Codex loads a plugin's `hooks/hooks.json` once you review and trust the hooks with `/hooks`. The `done` Stop hook has been exercised on Claude Code only; in Codex, invoke the `done` skill before reporting repository changes complete.
+Codex loads a plugin's `hooks/hooks.json` once you review and trust the hooks with `/hooks`.
 
 ### Global instructions (optional)
 
@@ -124,7 +121,6 @@ uv sync --dev
 uv run ruff check .
 uv run pytest
 uv run python -m scripts.validate
-bash -n plugins/done/scripts/quality-gate-stop.sh
 ```
 
 Maintainer-only skills live in this repository instead of a plugin. Each is a file under `.agents/skills/<name>/` (read by Codex) with a `.claude/skills/<name>/SKILL.md` symlink to it (read by Claude Code), so both hosts load it when working in this repository. `plugin-release` releases these plugins to both marketplaces; it is no longer distributed as a Codex plugin, so uninstall `plugin-release@agent-toolbox` if you installed it.
