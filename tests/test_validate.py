@@ -1017,6 +1017,7 @@ def test_public_content_must_not_reference_removed_skills(tmp_path: Path, monkey
     history = tmp_path / "docs/skill-conventions.md"
     history.parent.mkdir()
     history.write_text(f"`{removed}` was removed.\n")
+    (tmp_path / "CHANGELOG.md").write_text(f"- `{removed}` is removed.\n")
 
     errors: list[str] = []
     _scan_public_content(errors)

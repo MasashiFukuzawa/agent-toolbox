@@ -183,7 +183,8 @@ def test_the_mark_belongs_to_one_worktree(desk: Desk) -> None:
     desk.hook("Stop", cwd=desk.repo)
     desk.hook("Stop", cwd=worktree)
 
-    desk.wait_for(desk.delivered, "the worktree's notification")
+    # The record is written after the notifier returns, so wait for the record, not the banner.
+    desk.wait_for(lambda: desk.logged("delivered"), "the worktree's notification to be recorded")
     assert len(desk.delivered()) == 1
     assert [entry["event"] for entry in desk.log()] == ["delivered"]
 

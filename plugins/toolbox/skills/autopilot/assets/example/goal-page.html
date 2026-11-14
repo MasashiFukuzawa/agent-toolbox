@@ -69,6 +69,57 @@ details { margin-top: 12px; font-size: 15px; }
 summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-2); }
 svg { display: block; width: 100%; height: auto; }
 svg text { font-family: var(--font-sans); fill: var(--text); }
+.sub { margin: 0; color: var(--text-2); font-size: 15px; }
+.h2row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.h2row .count { font-size: 14px; color: var(--text-2); }
+.track { list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); margin: 16px 0 4px; padding: 0; }
+.track li { position: relative; padding: 0 8px; text-align: center; font-size: 13px; line-height: 1.45; }
+.track li::before { content: ""; position: absolute; top: 15px; left: -50%; width: 100%; height: 3px; background: var(--border-strong); }
+.track li:first-child::before { display: none; }
+.track li[data-status="通過"]::before { background: var(--line); }
+.track .mark { position: relative; display: grid; place-items: center; width: 32px; height: 32px; margin: 0 auto 6px;
+  border-radius: 50%; border: 2px solid var(--node-border); background: var(--surface); font-size: 15px; font-weight: 700; line-height: 1; }
+.track li[data-status="通過"] .mark { background: var(--line); border-color: var(--line); color: #fff; }
+.track li[data-status="作業中"] .mark { border-color: var(--accent); background: var(--accent-tint); color: var(--accent-text); box-shadow: 0 0 0 4px var(--accent-tint); }
+.track li[data-status="作業中"] .mark::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.track li[data-status="保留"] .mark { border-color: var(--caution); background: var(--caution-tint); color: var(--caution-text); }
+.track b { display: block; font-size: 12px; letter-spacing: .04em; color: var(--text-2); }
+.band { margin: 10px 0 8px; }
+.diffs { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; padding: 0; }
+.diffs li { border: 1px solid var(--node-border); border-radius: 8px; padding: 8px 12px; font-size: 14px; line-height: 1.5; }
+.diffs li.new { border: 1.5px solid var(--caution); background: var(--caution-tint); }
+.diffs b { margin-right: 8px; }
+.diffs .from { color: var(--text-3); text-decoration: line-through; }
+.diffs .to { font-weight: 600; }
+.diffs small { display: block; color: var(--text-2); font-size: 12px; }
+.stat { display: inline-flex; align-items: baseline; gap: 6px; border: 1px solid var(--node-border); border-radius: 8px;
+  padding: 2px 10px; margin: 6px 8px 0 0; background: var(--surface); font-size: 13px; color: var(--text-2); }
+.stat b { font-size: 20px; color: var(--text); font-variant-numeric: tabular-nums; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 0; }
+.opt { border: 1px solid var(--node-border); border-radius: 10px; padding: 12px 14px; background: var(--surface); font-size: 14px; line-height: 1.6; }
+.opt.rec { border: 2px solid var(--accent); }
+.opt h4 { margin: 0 0 6px; font-size: 16px; }
+.opt ul { list-style: none; margin: 0; padding: 0; }
+.opt li { display: grid; grid-template-columns: 20px 1fr; }
+.opt li span { font-weight: 700; }
+.tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 12px 0 0; }
+.tiles > div { border: 1px solid var(--node-border); border-radius: 8px; padding: 8px 10px; background: var(--surface); font-size: 14px; line-height: 1.5; }
+.tiles dt { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--text-2); }
+.tiles dd { margin: 0; }
+.tiles .reply { border: 2px solid var(--accent); }
+.tiles .reply code { font-size: 18px; font-weight: 700; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.dec { border: 1px solid var(--node-border); border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.6; }
+.dec h3 { margin: 0 0 4px; }
+.dec .undo { margin: 6px 0 0; color: var(--text-2); font-size: 13px; }
+.st { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.st i { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--node-border);
+  font-style: normal; font-size: 11px; font-weight: 700; line-height: 1; }
+.st.ok i { background: var(--line); border-color: var(--line); color: #fff; }
+.st.doing i { border-color: var(--accent); background: var(--accent-tint); color: var(--accent-text); }
+.st.hold i { border-color: var(--caution); background: var(--caution-tint); color: var(--caution-text); }
+td svg { max-width: 360px; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 </style>
 </head>
@@ -76,32 +127,46 @@ svg text { font-family: var(--font-sans); fill: var(--text); }
 <main>
 
 <h1>予約確認メールの自動再送</h1>
-<p class="meta">更新 2026-04-14 15:20 JST ・ 案件 booking-site ・ 状態 <span class="pill p-acc" id="state">進行中</span>（あなたへの質問 1件。その作業だけ保留）  ・ 返事は、この案件のセッションへ</p>
+<p class="meta">更新 2026-04-14 15:20 JST ・ 案件 booking-site ・ 状態 <span class="pill p-acc" id="state">進行中</span> ・ あなたへの質問 1件（その作業だけ保留） ・ 返事は、この案件のセッションへ</p>
 
 <section id="now" class="card" aria-labelledby="now-h">
-  <h2 id="now-h" style="margin-top:0">現在地</h2>
-  <p style="margin:0">目的：送信に失敗した予約確認メールが10分以内に自動で再送され、「予約できたか分からない」という問い合わせが減る。</p>
-  <ol class="conds" aria-label="受け入れの条件の進み具合">
-    <li data-status="通過"><b>A1 通過</b>失敗したメールを再送する</li>
-    <li data-status="通過"><b>A2 通過</b>再送は3回で打ち切る</li>
-    <li data-status="作業中"><b>A3 作業中</b>失敗を記録に残す</li>
-    <li data-status="未着手"><b>A4 未着手</b>管理画面で失敗を見られる</li>
-    <li data-status="保留"><b>A5 保留</b>本番で動いている（Q1の返事待ち）</li>
+  <div class="h2row"><h2 id="now-h" style="margin:0">現在地</h2><span class="count">受け入れの条件 5つのうち 2つ通過</span></div>
+  <p class="sub">目的：失敗した予約確認メールが10分以内に自動で再送され、「予約できたか分からない」という問い合わせが減る。</p>
+  <ol class="track" aria-label="受け入れの条件の進み具合">
+    <li data-status="通過"><span class="mark" aria-hidden="true">✓</span><b>A1 通過</b>失敗したメールを再送する</li>
+    <li data-status="通過"><span class="mark" aria-hidden="true">✓</span><b>A2 通過</b>再送は3回で打ち切る</li>
+    <li data-status="作業中"><span class="mark" aria-hidden="true"></span><b>A3 作業中</b>失敗を記録に残す</li>
+    <li data-status="未着手"><span class="mark" aria-hidden="true"></span><b>A4 未着手</b>管理画面で失敗を見られる</li>
+    <li data-status="保留"><span class="mark" aria-hidden="true">‖</span><b>A5 保留</b>本番で動いている（Q1待ち）</li>
   </ol>
+  <figure class="band" style="margin-left:0;margin-right:0">
+    <svg viewBox="0 0 1080 66" role="img" aria-labelledby="band-t">
+      <title id="band-t">合意は11:05、いまは15:20、Q1の期限は18:00、A4まで終わる見込みは20:00頃（推定）、上限は24:00。</title>
+      <rect x="40" y="30" width="1000" height="10" rx="5" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <rect x="40" y="30" width="329" height="10" rx="5" fill="#64748b"/>
+      <text x="40" y="20" font-size="12" style="fill:#4b5563">合意 11:05</text>
+      <circle cx="369" cy="35" r="7" fill="#2563eb" stroke="#fff" stroke-width="2"/>
+      <text x="369" y="20" font-size="13" font-weight="700" text-anchor="middle" style="fill:#1d4ed8">いま 15:20</text>
+      <path d="M575 26V44" stroke="#c2410c" stroke-width="2.5"/>
+      <text x="575" y="60" font-size="12" text-anchor="middle" style="fill:#9a3412">Q1の期限 18:00</text>
+      <path d="M730 24V46" stroke="#2563eb" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="730" y="20" font-size="12" text-anchor="middle" style="fill:#1d4ed8">A4まで終わる見込み 20:00頃（推定）</text>
+      <text x="1040" y="20" font-size="12" text-anchor="end" style="fill:#4b5563">上限 24:00</text>
+    </svg>
+  </figure>
   <dl class="kv">
-    <dt>やっていること</dt><dd>失敗の記録（A3）を実装している。</dd>
-    <dt>次にやること</dt><dd>管理画面の表示（A4）。</dd>
-    <dt>見通し</dt><dd>A4までは今日中に終わる（推定）。A5はQ1の返事のあと。</dd>
+    <dt>やっていること</dt><dd>失敗の記録（A3）の実装。</dd>
+    <dt>次にやること</dt><dd>管理画面の表示（A4）。A5は、Q1の返事のあと。</dd>
   </dl>
 </section>
 
 <section id="changes" class="card" aria-labelledby="changes-h">
-  <h2 id="changes-h" style="margin-top:0">前回の確認から変わったこと</h2>
-  <ul class="plain">
-    <li>再送の仕組み（A1）と、3回で打ち切る上限（A2）が検査を通った。</li>
-    <li>本番への反映の時刻について、あなたの判断が必要になった（Q1）。</li>
+  <div class="h2row"><h2 id="changes-h" style="margin:0 0 8px">前回の確認から変わったこと</h2><span class="count">前回の確認：2026-04-14 11:05 JST（合意の時）</span></div>
+  <ul class="diffs">
+    <li><b>A1</b><span class="from">未着手</span> → <span class="to">通過</span><small>失敗したメールを再送する</small></li>
+    <li><b>A2</b><span class="from">未着手</span> → <span class="to">通過</span><small>再送は3回で打ち切る</small></li>
+    <li class="new"><b>Q1</b><span class="to">新しい質問</span><small>本番への反映の時刻（今日 18:00 まで）</small></li>
   </ul>
-  <p class="note">前回の確認：2026-04-14 11:05 JST（合意の時）</p>
 </section>
 
 <section id="asks" aria-labelledby="asks-h">
@@ -121,37 +186,40 @@ svg text { font-family: var(--font-sans); fill: var(--text); }
       <h3 id="Q1-h">本番への反映を、今夜と明朝のどちらにするか</h3>
     </header>
     <div class="rows">
-      <div class="row"><div class="label">背景</div><div>再送の仕組みを本番で動かすには、メールを送るサーバーの設定を1か所変える。反映の間、約1分メールの送信が止まる。</div></div>
-      <div class="row"><div class="label">課題</div><div>反映するまで、失敗したメールは再送されない。先週は1日平均40件が失敗し、問い合わせが1日12件来ている。</div></div>
+      <div class="row"><div class="label">背景</div><div>本番で動かすには、送信サーバーの設定を1か所変える。その間、約1分メールが止まる。</div></div>
+      <div class="row"><div class="label">課題</div><div>反映するまで、失敗したメールは再送されない。<br>
+        <span class="stat"><b>40</b>件／日 送信に失敗（先週の平均）</span><span class="stat"><b>12</b>件／日 問い合わせ</span></div></div>
       <div class="row"><div class="label">目的</div><div>利用者への影響が最も小さい時間に、1回で反映する。</div></div>
       <div class="row act"><div class="label">相談事項</div><div>
-        <p style="margin:0">反映の時刻を選んでほしい。推奨は「1 今夜 23:00」。決め手は、予約がほとんど無い時間帯で、送信が止まる1分の影響が最も小さいこと。</p>
+        <p style="margin:0">反映の時刻を選んでほしい。決め手は、メールが止まる1分の間に来る予約が最も少ないこと。</p>
         <figure>
-          <svg viewBox="0 0 760 120" role="img" aria-labelledby="Q1-fig">
+          <svg viewBox="0 0 760 96" role="img" aria-labelledby="Q1-fig">
             <title id="Q1-fig">直近7日の1時間あたりの予約件数。23時台は平均2件、9時台は平均35件。</title>
-            <text x="0" y="34" font-size="13">23時台（案1）</text>
-            <rect x="120" y="18" width="24" height="22" rx="3" fill="#2563eb"/>
-            <text x="152" y="34" font-size="13" font-weight="600">平均2件</text>
-            <text x="0" y="78" font-size="13">9時台（案2）</text>
-            <rect x="120" y="62" width="420" height="22" rx="3" fill="#64748b"/>
-            <text x="548" y="78" font-size="13" font-weight="600">平均35件</text>
-            <text x="120" y="110" font-size="12" style="fill:#4b5563">直近7日の、1時間あたりの予約件数（予約の記録から集計）</text>
+            <text x="0" y="30" font-size="13">23時台（案1）</text>
+            <rect x="120" y="14" width="24" height="22" rx="3" fill="#2563eb"/>
+            <text x="152" y="30" font-size="13" font-weight="600">平均2件</text>
+            <text x="0" y="66" font-size="13">9時台（案2）</text>
+            <rect x="120" y="50" width="420" height="22" rx="3" fill="#64748b"/>
+            <text x="548" y="66" font-size="13" font-weight="600">平均35件</text>
+            <text x="120" y="92" font-size="12" style="fill:#4b5563">1時間あたりの予約件数（直近7日の予約の記録から集計）</text>
           </svg>
-          <figcaption>送信が止まる1分の間に来る予約は、案1の方が少ない。</figcaption>
         </figure>
-        <table>
-          <thead><tr><th scope="col">選択肢</th><th scope="col">良い点</th><th scope="col">欠点</th></tr></thead>
-          <tbody>
-            <tr class="rec"><td class="t">1 今夜 23:00 <span class="pill p-acc">推奨</span></td><td>予約が少ない。今夜の失敗分から再送される</td><td>問題が出たら、夜間に対応する</td></tr>
-            <tr><td class="t">2 明朝 9:00</td><td>人がいる時間に対応できる</td><td>予約が多い。今夜の失敗分は再送されない</td></tr>
-          </tbody>
-        </table>
-        <dl class="kv checks">
-          <dt>戻せるか</dt><dd>設定を元に戻せば、5分で戻る（手順は確認済み）。</dd>
-          <dt>変更の大きさ</dt><dd>設定1か所。利用者の画面は変わらない。</dd>
-          <dt>決めない場合</dt><dd>明朝 9:00 に、あなたの確認を待ってから反映する。</dd>
-          <dt>返事のあと</dt><dd>選ばれた時刻に反映し、失敗が再送されることを確かめて、A5を通過にする。</dd>
-          <dt>返信例</dt><dd><code>Q1: 1</code></dd>
+        <div class="opts">
+          <div class="opt rec">
+            <h4>1 今夜 23:00 <span class="pill p-acc">推奨</span></h4>
+            <ul><li><span>＋</span>予約が少ない</li><li><span>＋</span>今夜の失敗分から再送される</li><li><span>−</span>問題が出たら、夜間に対応する</li></ul>
+          </div>
+          <div class="opt">
+            <h4>2 明朝 9:00</h4>
+            <ul><li><span>＋</span>人がいる時間に対応できる</li><li><span>−</span>予約が多い</li><li><span>−</span>今夜の失敗分は再送されない</li></ul>
+          </div>
+        </div>
+        <dl class="tiles">
+          <div><dt>戻せるか</dt><dd>戻せる。設定を戻して5分（手順は確認済み）</dd></div>
+          <div><dt>変更の大きさ</dt><dd>設定1か所。利用者の画面は変わらない</dd></div>
+          <div><dt>決めない場合</dt><dd>明朝 9:00 に、確認を待ってから反映する</dd></div>
+          <div><dt>返事のあと</dt><dd>選ばれた時刻に反映し、再送を確かめてA5を通過にする</dd></div>
+          <div class="reply"><dt>返信例</dt><dd><code>Q1: 1</code></dd></div>
         </dl>
       </div></div>
     </div>
@@ -159,65 +227,94 @@ svg text { font-family: var(--font-sans); fill: var(--text); }
 </section>
 
 <section id="decisions" class="card" aria-labelledby="decisions-h">
-  <h2 id="decisions-h" style="margin-top:0">決めたこと</h2>
-  <p class="note" style="margin:0 0 8px">任された範囲の中で決めて、進めたもの。返事は要らない。違うものがあれば、番号で伝えてほしい（例「D2 はやめて」）。</p>
-  <table>
-    <thead><tr><th scope="col">番号</th><th scope="col">決めたこと</th><th scope="col">なぜ</th><th scope="col">戻し方</th></tr></thead>
-    <tbody>
-      <tr><td class="t">D1</td><td>再送は3回までにした</td><td>4回目以降に成功した例が、過去30日の記録に無い</td><td>設定値を1つ変える</td></tr>
-      <tr><td class="t">D2</td><td>再送の間隔を、1分・5分・10分にした</td><td>送信サービスの案内に合わせた</td><td>設定値を1つ変える</td></tr>
-    </tbody>
-  </table>
-  <p class="note">ここに載せるのは、利用者の見え方・制約・費用に効くものだけ。実装の手段はPRに書いている。</p>
+  <div class="h2row"><h2 id="decisions-h" style="margin:0 0 8px">決めたこと</h2><span class="count">返事は要らない。違うものは番号で（例「D2 はやめて」）</span></div>
+  <div class="grid2">
+    <div class="dec">
+      <h3>D1 再送は3回までにした</h3>
+      <svg viewBox="0 0 480 112" role="img" aria-labelledby="D1-fig">
+        <title id="D1-fig">過去30日で、1回目の再送で届いたのは212件、2回目は31件、3回目は6件、4回目以降は0件。</title>
+        <g font-size="12">
+          <text x="0" y="16">1回目</text><rect x="80" y="4" width="300" height="16" rx="3" fill="#64748b"/><text x="388" y="16">212件</text>
+          <text x="0" y="42">2回目</text><rect x="80" y="30" width="44" height="16" rx="3" fill="#64748b"/><text x="132" y="42">31件</text>
+          <text x="0" y="68">3回目</text><rect x="80" y="56" width="9" height="16" rx="3" fill="#64748b"/><text x="97" y="68">6件</text>
+          <text x="0" y="94">4回目以降</text><rect x="80" y="82" width="16" height="16" rx="3" fill="#fff4ec" stroke="#c2410c" stroke-dasharray="3 2"/><text x="104" y="94" style="fill:#9a3412" font-weight="600">0件</text>
+        </g>
+      </svg>
+      <p class="undo">何回目の再送で届いたか（過去30日の記録）。戻し方：設定値を1つ変える</p>
+    </div>
+    <div class="dec">
+      <h3>D2 再送の間隔を、1分・5分・10分にした</h3>
+      <svg viewBox="0 0 480 112" role="img" aria-labelledby="D2-fig">
+        <title id="D2-fig">送信に失敗してから1分後、5分後、10分後に再送する。</title>
+        <path d="M30 56H450" stroke="#64748b" stroke-width="2"/>
+        <g font-size="12" text-anchor="middle">
+          <circle cx="30" cy="56" r="7" fill="#fff4ec" stroke="#c2410c" stroke-width="2"/><text x="30" y="34" style="fill:#9a3412">失敗</text><text x="30" y="84" style="fill:#4b5563">0分</text>
+          <circle cx="72" cy="56" r="7" fill="#2563eb"/><text x="76" y="34">再送1</text><text x="72" y="84" style="fill:#4b5563">1分</text>
+          <circle cx="240" cy="56" r="7" fill="#2563eb"/><text x="240" y="34">再送2</text><text x="240" y="84" style="fill:#4b5563">5分</text>
+          <circle cx="450" cy="56" r="7" fill="#2563eb"/><text x="446" y="34">再送3</text><text x="446" y="84" style="fill:#4b5563">10分</text>
+        </g>
+      </svg>
+      <p class="undo">送信サービスの案内に合わせた。戻し方：設定値を1つ変える</p>
+    </div>
+  </div>
 </section>
 
 <section id="evidence" class="card" aria-labelledby="evidence-h">
   <h2 id="evidence-h" style="margin-top:0">成果と証拠</h2>
   <table>
-    <thead><tr><th scope="col">条件</th><th scope="col">状態</th><th scope="col">証拠</th></tr></thead>
+    <thead><tr><th scope="col">条件</th><th scope="col">状態</th><th scope="col">確かめた結果</th><th scope="col">検査した版</th></tr></thead>
     <tbody>
-      <tr><td class="t">A1</td><td>通過</td><td>変更前は「失敗したメールが再送されない」テストが落ち、変更後は3件とも再送されて通る。検査した版：<code>3f9c2ab</code></td></tr>
-      <tr><td class="t">A2</td><td>通過</td><td>4回目を送らないことをテストで確認。検査した版：<code>3f9c2ab</code></td></tr>
-      <tr><td class="t">A3</td><td>作業中</td><td>まだ無い</td></tr>
-      <tr><td class="t">A4</td><td>未着手</td><td>まだ無い</td></tr>
-      <tr><td class="t">A5</td><td>保留</td><td>Q1の返事待ち</td></tr>
+      <tr><td class="t">A1</td><td><span class="st ok"><i>✓</i>通過</span></td><td>
+        <svg viewBox="0 0 360 44" role="img" aria-labelledby="A1-fig"><title id="A1-fig">変更前は失敗した3件が1件も再送されず、変更後は3件とも再送された。</title>
+          <g font-size="12"><text x="0" y="16" style="fill:#4b5563">変更前</text><text x="0" y="38" style="fill:#4b5563">変更後</text>
+          <g fill="#fff4ec" stroke="#c2410c" stroke-dasharray="3 2"><rect x="56" y="4" width="16" height="16" rx="3"/><rect x="78" y="4" width="16" height="16" rx="3"/><rect x="100" y="4" width="16" height="16" rx="3"/></g>
+          <text x="126" y="16">再送 0／3件</text>
+          <g fill="#2563eb"><rect x="56" y="26" width="16" height="16" rx="3"/><rect x="78" y="26" width="16" height="16" rx="3"/><rect x="100" y="26" width="16" height="16" rx="3"/></g>
+          <text x="126" y="38" font-weight="600">再送 3／3件</text></g></svg></td><td><code>3f9c2ab</code></td></tr>
+      <tr><td class="t">A2</td><td><span class="st ok"><i>✓</i>通過</span></td><td>
+        <svg viewBox="0 0 360 22" role="img" aria-labelledby="A2-fig"><title id="A2-fig">3回再送したあと、4回目は送らなかった。</title>
+          <g font-size="12"><g fill="#2563eb"><rect x="56" y="3" width="16" height="16" rx="3"/><rect x="78" y="3" width="16" height="16" rx="3"/><rect x="100" y="3" width="16" height="16" rx="3"/></g>
+          <rect x="122" y="3" width="16" height="16" rx="3" fill="#f3f4f6" stroke="#64748b"/><path d="M125 6l10 10M135 6l-10 10" stroke="#64748b" stroke-width="1.5"/>
+          <text x="148" y="15" font-weight="600">3回で止まり、4回目は送らない</text></g></svg></td><td><code>3f9c2ab</code></td></tr>
+      <tr><td class="t">A3</td><td><span class="st doing"><i>●</i>作業中</span></td><td>まだ無い</td><td>—</td></tr>
+      <tr><td class="t">A4</td><td><span class="st"><i></i>未着手</span></td><td>まだ無い</td><td>—</td></tr>
+      <tr><td class="t">A5</td><td><span class="st hold"><i>‖</i>保留</span></td><td>Q1の返事待ち</td><td>—</td></tr>
     </tbody>
   </table>
 </section>
 
 <section id="agreement" class="card" aria-labelledby="agreement-h">
   <h2 id="agreement-h" style="margin-top:0">合意</h2>
-  <div class="two">
-    <dl class="kv">
-      <dt>目標</dt><dd>送信に失敗した予約確認メールを、10分以内に自動で再送する。</dd>
-      <dt>今日の到達点</dt><dd>A1〜A4を終え、A5の時刻を決める。</dd>
-      <dt>上限</dt><dd>今日 24:00 まで。超えそうなら、止めて知らせる。</dd>
-      <dt>このゴールだけの許可</dt><dd>検証用の環境への反映は、聞かずに行ってよい。</dd>
-      <dt>次の候補</dt><dd>再送の結果を、利用者にも知らせる。</dd>
-      <dt>合意した時</dt><dd>2026-04-14 11:05 JST。任せる範囲の版：<code>main@8d21e07</code></dd>
-    </dl>
-    <figure style="margin:0">
-      <svg viewBox="0 0 520 190" role="img" aria-labelledby="agree-fig">
-        <title id="agree-fig">変更前は、送信に失敗すると何も起きない。変更後は、10分以内に再送し、3回まで試して、結果を記録する。</title>
-        <text x="0" y="16" font-size="13" font-weight="600" style="fill:#4b5563">変更前</text>
-        <rect x="0" y="26" width="110" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="55" y="48" text-anchor="middle" font-size="13">メールを送る</text>
-        <rect x="150" y="26" width="110" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="205" y="48" text-anchor="middle" font-size="13">送信に失敗</text>
-        <rect x="300" y="26" width="200" height="34" rx="8" fill="#fff4ec" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="4 4"/><text x="400" y="48" text-anchor="middle" font-size="13" style="fill:#9a3412">何も起きない</text>
-        <text x="0" y="106" font-size="13" font-weight="600" style="fill:#4b5563">変更後</text>
-        <rect x="0" y="116" width="110" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="55" y="138" text-anchor="middle" font-size="13">メールを送る</text>
-        <rect x="150" y="116" width="110" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="205" y="138" text-anchor="middle" font-size="13">送信に失敗</text>
-        <rect x="300" y="116" width="200" height="34" rx="8" fill="#eff4ff" stroke="#2563eb" stroke-width="1.5"/><text x="400" y="138" text-anchor="middle" font-size="13" style="fill:#1d4ed8">10分以内に再送（3回まで）</text>
-        <text x="400" y="172" text-anchor="middle" font-size="12" style="fill:#1d4ed8">結果を記録し、管理画面で見られる</text>
-        <g stroke="#64748b" stroke-width="1.5">
-          <line x1="112" y1="43" x2="148" y2="43"/><line x1="262" y1="43" x2="298" y2="43"/>
-          <line x1="112" y1="133" x2="148" y2="133"/><line x1="262" y1="133" x2="298" y2="133"/>
-        </g>
-      </svg>
-    </figure>
-  </div>
-  <h3 style="margin-top:16px">受け入れの条件</h3>
+  <figure style="margin:0 0 12px">
+    <svg viewBox="0 0 1080 96" role="img" aria-labelledby="agree-fig">
+      <title id="agree-fig">変更前は、送信に失敗すると何も起きない。変更後は、10分以内に再送し、3回まで試して、結果を記録する。</title>
+      <g font-size="13">
+        <text x="0" y="28" font-weight="600" style="fill:#4b5563">変更前</text>
+        <rect x="70" y="6" width="120" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="130" y="28" text-anchor="middle">メールを送る</text>
+        <rect x="230" y="6" width="120" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="290" y="28" text-anchor="middle">送信に失敗</text>
+        <rect x="390" y="6" width="220" height="34" rx="8" fill="#fff4ec" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="4 4"/><text x="500" y="28" text-anchor="middle" style="fill:#9a3412">何も起きない</text>
+        <text x="0" y="78" font-weight="600" style="fill:#4b5563">変更後</text>
+        <rect x="70" y="56" width="120" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="130" y="78" text-anchor="middle">メールを送る</text>
+        <rect x="230" y="56" width="120" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="290" y="78" text-anchor="middle">送信に失敗</text>
+        <rect x="390" y="56" width="220" height="34" rx="8" fill="#eff4ff" stroke="#2563eb" stroke-width="1.5"/><text x="500" y="78" text-anchor="middle" style="fill:#1d4ed8">10分以内に再送（3回まで）</text>
+        <rect x="650" y="56" width="300" height="34" rx="8" fill="#eff4ff" stroke="#2563eb" stroke-width="1.5"/><text x="800" y="78" text-anchor="middle" style="fill:#1d4ed8">結果を記録し、管理画面で見られる</text>
+      </g>
+      <g stroke="#64748b" stroke-width="1.5">
+        <line x1="192" y1="23" x2="228" y2="23"/><line x1="352" y1="23" x2="388" y2="23"/>
+        <line x1="192" y1="73" x2="228" y2="73"/><line x1="352" y1="73" x2="388" y2="73"/><line x1="612" y1="73" x2="648" y2="73"/>
+      </g>
+    </svg>
+  </figure>
+  <dl class="tiles" style="grid-template-columns:repeat(3,1fr);margin:0 0 16px">
+    <div><dt>目標</dt><dd>送信に失敗した予約確認メールを、10分以内に自動で再送する</dd></div>
+    <div><dt>今日の到達点</dt><dd>A1〜A4を終え、A5の時刻を決める</dd></div>
+    <div><dt>上限</dt><dd>今日 24:00 まで。超えそうなら、止めて知らせる</dd></div>
+    <div><dt>このゴールだけの許可</dt><dd>検証用の環境への反映は、聞かずに行ってよい</dd></div>
+    <div><dt>次の候補</dt><dd>再送の結果を、利用者にも知らせる</dd></div>
+    <div><dt>合意した時</dt><dd>2026-04-14 11:05 JST。任せる範囲の版：<code>main@8d21e07</code></dd></div>
+  </dl>
   <table>
-    <thead><tr><th scope="col">番号</th><th scope="col">条件</th><th scope="col">確かめ方</th></tr></thead>
+    <thead><tr><th scope="col">番号</th><th scope="col">受け入れの条件</th><th scope="col">確かめ方</th></tr></thead>
     <tbody>
       <tr><td class="t">A1</td><td>送信に失敗したメールが、10分以内に再送される</td><td>再送のテストが通る</td></tr>
       <tr><td class="t">A2</td><td>再送は3回で打ち切られる</td><td>4回目を送らないテストが通る</td></tr>
@@ -229,17 +326,20 @@ svg text { font-family: var(--font-sans); fill: var(--text); }
 </section>
 
 <section id="handover" class="card" aria-labelledby="handover-h">
-  <h2 id="handover-h" style="margin-top:0">引き継ぎの情報</h2>
-  <dl class="kv">
-    <dt>ホストとセッション</dt><dd>このPCの、案件 booking-site のセッション（名前：resend）。</dd>
-    <dt>worktree</dt><dd>案件のリポジトリの隣の <code>booking-site-resend</code>。</dd>
-    <dt>ブランチ</dt><dd><code>resend-failed-mail</code></dd>
-    <dt>最後に検査した版</dt><dd><code>3f9c2ab</code>（A1とA2）。</dd>
-    <dt>PR</dt><dd>再送の仕組みのPRを1件、下書きで作成済み。</dd>
-    <dt>実行中の処理</dt><dd>なし。</dd>
-    <dt>このゴールで作ったもの</dt><dd>worktree <code>booking-site-resend</code>、ブランチ <code>resend-confirmation-mail</code>、検証用のコンテナ <code>resend-mailbox</code>（label <code>goal=resend-confirmation-mail</code>）。終える時に片付ける。</dd>
-    <dt>再開時に照合すること</dt><dd>ブランチの最新の版、PRとCIの状態、Q1に返事が来ているか。結果が分からない操作は、状態を確かめるまで実行し直さない。</dd>
-  </dl>
+  <h2 id="handover-h" style="margin:0">引き継ぎの情報</h2>
+  <details>
+    <summary>別のセッションが再開するための情報（ふだんは読まなくてよい）</summary>
+    <dl class="kv" style="margin-top:10px">
+      <dt>ホストとセッション</dt><dd>このPCの、案件 booking-site のセッション（名前：resend）。</dd>
+      <dt>worktree</dt><dd>案件のリポジトリの隣の <code>booking-site-resend</code>。</dd>
+      <dt>ブランチ</dt><dd><code>resend-confirmation-mail</code></dd>
+      <dt>最後に検査した版</dt><dd><code>3f9c2ab</code>（A1とA2）。</dd>
+      <dt>PR</dt><dd>再送の仕組みのPRを1件、下書きで作成済み。</dd>
+      <dt>実行中の処理</dt><dd>なし。</dd>
+      <dt>このゴールで作ったもの</dt><dd>worktree <code>booking-site-resend</code>、ブランチ <code>resend-confirmation-mail</code>、検証用のコンテナ <code>resend-mailbox</code>（label <code>goal=resend-confirmation-mail</code>）。終える時に片付ける。</dd>
+      <dt>再開時に照合すること</dt><dd>ブランチの最新の版、PRとCIの状態、Q1に返事が来ているか。結果が分からない操作は、状態を確かめるまで実行し直さない。</dd>
+    </dl>
+  </details>
 </section>
 
 <section id="record" aria-labelledby="record-h">
