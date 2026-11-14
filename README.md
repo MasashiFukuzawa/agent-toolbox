@@ -6,19 +6,21 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 25 | Research, review, model selection, testing, visualization, human-facing reporting, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 24 | Research, review, model selection, testing, visualization, human-facing reporting, and engineering decisions | Per-skill; see each `SKILL.md` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
 
 ### Skill catalog
 
-- `toolbox` (25, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `human-briefing`, `human-notify`, `model-selection`, `owner-board`, `progress-report`, `step-back`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
+- `toolbox` (24, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `human-briefing`, `human-notify`, `model-selection`, `owner-board`, `progress-report`, `second-opinion`, `step-back`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
 - `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.
 - `github-operations` (2, Claude Code and Codex): `github-project-provisioning` and `github-issue-create`.
 
-Autopilot delegates bounded work while the controller retains artifact review and shipping-quality responsibility. Model selection is shared by autopilot and both review skills; install the complete toolbox plugin rather than copying a review skill alone. Done accepts revision-bound evidence rather than repeating worker checks. Runtime servicing uses actual host task state, not a separate snapshot checker. No daemon or automatic host restart is installed; see the [runtime contract](plugins/toolbox/skills/autopilot/references/controller-runtime.md) for these limits.
+Autopilot delegates bounded work while the controller retains artifact review and shipping-quality responsibility. Model selection is shared by autopilot and `second-opinion`; install the complete toolbox plugin rather than copying one skill alone. Done accepts revision-bound evidence rather than repeating worker checks. Runtime servicing uses actual host task state, not a separate snapshot checker. No daemon or automatic host restart is installed; see the [runtime contract](plugins/toolbox/skills/autopilot/references/controller-runtime.md) for these limits.
+
+`second-opinion` launches the Claude or Codex CLI as an independent instance, from either host. It reviews a diff or a design against named viewpoints (missing, not asked for, implemented wrongly, documented-rule violations) and asks for a failure scenario with every finding. For a change whose behavior is visible from outside and whose gate tier is the deepest, the third party first runs the change on a fixed snapshot and checks the acceptance criteria. The caller acts only on findings that were reproduced or would be costly to miss.
 
 ## Install
 
@@ -52,7 +54,7 @@ progress-report --html Focus on the release outlook
 
 ### Step back
 
-`step-back` re-examines the decision an agent has just made when its view has narrowed, for example a recommendation to revert a change made for a purpose, or to act before the cause is known. It splits the goal into constraints to keep, the function to restore and its deadline, and the chosen means; checks cause hypotheses against primary sources read-only; and rebuilds the options with reversibility, impact, and fit with the goal before stating a recommendation. It starts one read-only third-party review from the opposite provider (Claude to `codex-review`, Codex to `claude-review`) and reports any disagreement with the observation that would settle it. It runs only when invoked explicitly and does not delay an approved emergency rollback.
+`step-back` re-examines the decision an agent has just made when its view has narrowed, for example a recommendation to revert a change made for a purpose, or to act before the cause is known. It splits the goal into constraints to keep, the function to restore and its deadline, and the chosen means; checks cause hypotheses against primary sources read-only; and rebuilds the options with reversibility, impact, and fit with the goal before stating a recommendation. It starts one read-only third-party review from the opposite provider through `second-opinion` (a Claude host launches Codex, a Codex host launches Claude) and reports any disagreement with the observation that would settle it. It runs only when invoked explicitly and does not delay an approved emergency rollback.
 
 ### Claude Code
 

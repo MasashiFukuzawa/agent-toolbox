@@ -12,9 +12,9 @@ skills:
     canonical_name: model-selection
     category: orchestration
     positive_triggers: ["workerのモデルを選んで", "タスクに適したモデルとeffortを決めて"]
-    nearest_neighbors: [autopilot, codex-review, claude-review]
+    nearest_neighbors: [autopilot, second-opinion]
     negative_triggers: ["レビューを実行して", "バックログを全部処理して"]
-    ambiguous_precedence: "モデル選択だけならmodel-selection、実行はreview skill、自律進行はautopilot"
+    ambiguous_precedence: "モデル選択だけならmodel-selection、実行はsecond-opinion、自律進行はautopilot"
   technical-research:
     canonical_name: technical-research
     category: research
@@ -45,33 +45,23 @@ skills:
     nearest_neighbors: [done]
     negative_triggers: ["既存テストを実行するだけ"]
     ambiguous_precedence: "テスト設計・実装は behavioral-testing、完了報告直前の品質ゲートは done を優先"
-  claude-review:
-    canonical_name: claude-review
+  second-opinion:
+    canonical_name: second-opinion
     category: review
     supported_hosts: [claude-code, codex]
-    runtime_dependencies: [claude]
-    side_effect_level: read-only
-    positive_triggers: ["Claudeでレビューして", "Anthropicの別視点が欲しい", "claude-reviewで", "Claudeに見てもらって", "sonnetに見てもらって", "opusに相談して", "fableに相談して"]
-    nearest_neighbors: [codex-review]
-    negative_triggers: ["Codexでレビューして", "第三者レビューして"]
-    ambiguous_precedence: "provider未指定で選択権限も未委任なら確認、委任済みならmodel-selectionで選択"
-  codex-review:
-    canonical_name: codex-review
-    category: review
-    supported_hosts: [claude-code, codex]
-    runtime_dependencies: [codex]
-    side_effect_level: read-only
-    positive_triggers: ["Codexでレビューして", "OpenAIの別視点が欲しい", "codex-reviewで", "Codexに見てもらって", "solに相談して", "astraに相談して"]
-    nearest_neighbors: [claude-review]
-    negative_triggers: ["Claudeでレビューして", "第三者レビューして"]
-    ambiguous_precedence: "provider未指定で選択権限も未委任なら確認、委任済みならmodel-selectionで選択"
+    runtime_dependencies: [claude, codex]
+    side_effect_level: workspace-write
+    positive_triggers: ["Claudeでレビューして", "Codexでレビューして", "Anthropicの別視点が欲しい", "OpenAIの別視点が欲しい", "Claudeに見てもらって", "Codexに見てもらって", "sonnetに見てもらって", "opusに相談して", "fableに相談して", "solに相談して", "astraに相談して", "セカンドオピニオンが欲しい", "第三者に動かして確かめてもらって"]
+    nearest_neighbors: [codebase-audit, done]
+    negative_triggers: ["コードベース全体を監査して", "完了前の品質ゲートを通して"]
+    ambiguous_precedence: "provider未指定で選択権限も未委任なら確認、委任済みならmodel-selectionで選択。全体の監査はcodebase-audit、合否の判定はdone"
   adr: {<<: *defaults, canonical_name: adr, category: architecture, side_effect_level: workspace-write, positive_triggers: ["ADRにして"], nearest_neighbors: [codebase-audit], negative_triggers: ["コードベース全体の監査"]}
   ascii-diagram: {<<: *defaults, canonical_name: ascii-diagram, category: visualization, positive_triggers: ["ASCII図で"], nearest_neighbors: [html-artifact], negative_triggers: ["保存する一枚物"]}
   autopilot: {<<: *defaults, canonical_name: autopilot, category: orchestration, side_effect_level: external-write, positive_triggers: ["バックログを自律で処理して"], nearest_neighbors: [git-worktrees, owner-board], negative_triggers: ["単発タスク", "連絡板だけを管理して"]}
   browser-operations: {<<: *defaults, canonical_name: browser-operations, category: browser, side_effect_level: external-write, positive_triggers: ["ブラウザを操作して"], nearest_neighbors: [e2e-capability-verification], negative_triggers: ["staging E2E検証"]}
   cloudflare-data-pipeline: {<<: *defaults, canonical_name: cloudflare-data-pipeline, category: cloudflare, positive_triggers: ["D1とQueuesの整合性を設計して"], nearest_neighbors: [cloudflare-worker-cd], negative_triggers: ["単一WorkerのCD"]}
   cloudflare-worker-cd: {<<: *defaults, canonical_name: cloudflare-worker-cd, category: cloudflare, side_effect_level: workspace-write, positive_triggers: ["WorkersのCDを設計して"], nearest_neighbors: [cloudflare-data-pipeline], negative_triggers: ["複数サービスのデータ整合性"]}
-  codebase-audit: {<<: *defaults, canonical_name: codebase-audit, category: review, positive_triggers: ["コードベース全体を監査して"], nearest_neighbors: [codex-review], negative_triggers: ["単一PRレビュー"]}
+  codebase-audit: {<<: *defaults, canonical_name: codebase-audit, category: review, positive_triggers: ["コードベース全体を監査して"], nearest_neighbors: [second-opinion], negative_triggers: ["単一PRレビュー"]}
   context-handoff: {<<: *defaults, canonical_name: context-handoff, category: communication, side_effect_level: workspace-write, positive_triggers: ["引き継ぎを作って"], nearest_neighbors: [progress-report], negative_triggers: ["判断者向け進捗報告"]}
   e2e-capability-verification: {<<: *defaults, canonical_name: e2e-capability-verification, category: testing, side_effect_level: external-write, positive_triggers: ["stagingでE2E確認して"], nearest_neighbors: [browser-operations], negative_triggers: ["アドホックなブラウザ操作"]}
   html-artifact: {<<: *defaults, canonical_name: html-artifact, category: visualization, side_effect_level: workspace-write, positive_triggers: ["HTMLで図解して", "HTML一枚物を作って", "比較をHTMLで可視化して", "HTMLをシンプルに", "HTMLを図解多めで", "HTMLを文章少なめで", "HTMLをぱっと見で分かるように", "疲れてるので図解HTMLにして", "読む気力がないのでHTMLで要点だけ"], nearest_neighbors: [ascii-diagram, owner-board], negative_triggers: ["会話内の小さな図", "通常のチャットを要点だけで返して", "人間への依頼と回答を連絡板で継続管理して"]}
@@ -104,7 +94,7 @@ skills:
     ambiguous_precedence: "最大24時間の作業の合意と進捗ページはdaily-plan、単発の報告はprogress-report、人への依頼はowner-board、一般的な表示はhtml-artifact、実行の管理はautopilot"
   progress-report: {<<: *defaults, canonical_name: progress-report, category: communication, side_effect_level: workspace-write, positive_triggers: ["進捗を報告して"], nearest_neighbors: [context-handoff, owner-board], negative_triggers: ["再開可能な引き継ぎ", "人間への依頼と回答を連絡板で継続管理して"]}
   ai-native-engineering: {<<: *defaults, canonical_name: ai-native-engineering, category: architecture, positive_triggers: ["この機能の実装計画を作って", "認証基盤をどう設計する", "コア機能のUXをどこまで作り込む", "セキュリティ対策がtoo muchか判断して", "MVPのスコープを決めたい", "まず簡易版で始めてよいか判断して", "将来の拡張をどこまで考慮する", "どれくらいで実装できる", "この構成はoverengineeringかレビューして"], nearest_neighbors: [adr, autopilot, technical-research], negative_triggers: ["仕様と手段が確定した単純修正", "技術調査だけ", "進捗報告だけ"], ambiguous_precedence: "判断を作る段階ではai-native-engineering、決定の記録はadr、複数タスクの自律実行はautopilot、根拠調査はtechnical-researchを優先"}
-  step-back: {<<: *defaults, canonical_name: step-back, category: review, positive_triggers: ["step-backして", "step-backで考え直して"], nearest_neighbors: [ai-native-engineering, codex-review, claude-review], negative_triggers: ["障害の原因を調べて", "この機能の実装計画を作って"], ambiguous_precedence: "step-backが明示されたときだけstep-back、計画・設計を最初から作るならai-native-engineering、成果物のレビューだけならcodex-review/claude-review"}
+  step-back: {<<: *defaults, canonical_name: step-back, category: review, positive_triggers: ["step-backして", "step-backで考え直して"], nearest_neighbors: [ai-native-engineering, second-opinion], negative_triggers: ["障害の原因を調べて", "この機能の実装計画を作って"], ambiguous_precedence: "step-backが明示されたときだけstep-back、計画・設計を最初から作るならai-native-engineering、成果物のレビューだけならsecond-opinion"}
   structured-text-parsing: {<<: *defaults, canonical_name: structured-text-parsing, category: parsing, positive_triggers: ["ログから抽出して"], nearest_neighbors: [technical-research], negative_triggers: ["曖昧な自然言語理解"]}
   typescript-project-foundation: {<<: *defaults, canonical_name: typescript-project-foundation, category: architecture, runtime_dependencies: [python3], side_effect_level: workspace-write, positive_triggers: ["新規TypeScriptプロジェクトの基盤を作って", "TypeScriptの初期構成を設計して", "greenfieldのscaffold計画をレビューして"], nearest_neighbors: [ai-native-engineering, technical-research], negative_triggers: ["既存TypeScriptプロジェクトの通常機能実装", "単独のframework API調査"], ambiguous_precedence: "greenfieldの具体的なTypeScript foundationはtypescript-project-foundation、一般的なscope・設計判断はai-native-engineering、根拠調査だけならtechnical-researchを優先"}
   done: {<<: *defaults, canonical_name: done, category: delivery, side_effect_level: workspace-write, positive_triggers: ["完了前の品質ゲートを通して"], nearest_neighbors: [behavioral-testing], negative_triggers: ["実装途中の反復検証"], ambiguous_precedence: "完了報告直前の品質ゲートは done、テストの設計・追加は behavioral-testing を優先"}

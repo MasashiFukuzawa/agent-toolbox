@@ -49,7 +49,7 @@ def main() -> int:
         selected = parse_selected_skill(output)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
-    # Hosts prepend the plugin namespace ("toolbox:codex-review"); the registry
+    # Hosts prepend the plugin namespace ("toolbox:second-opinion"); the registry
     # and matrix use bare canonical names. Measured live: 11 of 14 failures in
     # the first real run were this prefix, not wrong selection.
     if ":" in selected and selected.split(":", 1)[1] in skills:

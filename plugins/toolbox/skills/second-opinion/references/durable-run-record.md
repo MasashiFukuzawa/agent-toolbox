@@ -1,6 +1,6 @@
-# Durable review run record
+# 実行記録（durable run record）
 
-Claude/Codex の review payload は、この契約を実装する host wrapper の内側で実行する。wrapper は provider 固有CLIとは独立させ、同じ lifecycle を使う。
+Claude・Codex のどちらを起動するときも、レビューでも動作確認でも、CLIのコマンドはこの契約を実装するhost wrapperの内側で実行する。wrapperはprovider固有のCLIから独立させ、同じlifecycleを使う。ホストがClaude CodeでもCodexでも同じである。
 
 ## 最小 schema
 
@@ -9,6 +9,7 @@ Claude/Codex の review payload は、この契約を実装する host wrapper �
   "schema_version": 1,
   "run_id": "UUID",
   "provider": "claude|codex",
+  "mode": "review|verify",
   "session_id": "UUID|null",
   "state": "prepared|running|exited",
   "cwd": "/resolved/path",
@@ -32,5 +33,7 @@ Claude/Codex の review payload は、この契約を実装する host wrapper �
 4. providerの初期eventからsession IDを検証してrecordへ原子的に追記する。Claudeは採番UUIDとの一致、Codexは`thread.started.thread_id`を確認する。
 5. 子processをwaitし、`exited_at`とexit statusを設定した`exited` recordへ原子的に更新して、同じstatusをhostへ返す。signal終了もstatusへ残す。
 6. wrapper自身が中断され`running`が残った場合、復旧側はPIDと開始時刻を両方照合する。一致processがなければ終了済み・status不明としてeventとstderrを調べる。
+
+`mode`は、resumeのときに元と同じ権限（レビューはread-only、動作確認は写しの中だけ書き込み）を選ぶために使う。
 
 record更新に上書き直書きは使わない。host固有のdurable task metadataが同じschema・原子性・再発見性を保証する場合だけ、それを同等実装として利用できる。

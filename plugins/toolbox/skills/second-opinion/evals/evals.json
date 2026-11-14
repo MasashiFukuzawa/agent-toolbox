@@ -1,0 +1,237 @@
+{
+  "skill_name": "second-opinion",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Claudeの第三者レビューを使って $HOME/project のコードをレビューしてください。Effort は medium で。",
+      "expected_output": "effort が明示されているので medium を尊重し、claude -p コマンドを --model <model-selectionで解決したID> --effort medium で実行して、対象プロジェクトのコードレビュー結果を要約、直す指摘、検査しなかった範囲を報告する",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "認証周りのセキュリティについてセカンドオピニオンが欲しい。カレントディレクトリで Claudeの第三者レビュー を xhigh effort で動かして。",
+      "expected_output": "effort が明示されているのでガードレール5に従い xhigh を尊重し、claude -p コマンドを --effort xhigh で実行する。対応effortを確認し、未対応なら黙って置換せず報告する。モデルは、設計そのものが対象だと判断できる材料が依頼に無く、題材が認証であること自体は昇格理由にならないため、既定の --model <model-selectionで解決したID> を維持する。セキュリティ観点の分析結果を構造化して報告する",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Claudeの別インスタンスに $HOME/project を軽くチェックしてもらいたい（low effort）",
+      "expected_output": "effort が明示されているので low を尊重し、claude -p コマンドを --model <model-selectionで解決したID> --effort low で実行して、対象プロジェクトの概要レビューを報告する",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "詳細設計どおりに実装した差分がある。Claudeの第三者レビュー で実装者が気づいていない観点を見てほしい",
+      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定のまま --model <model-selectionで解決したID>、effortはmodel-selectionのモデル別初期値を選ぶ。新しいrun UUIDとsession UUIDを採番し、永続state rootの専用run directoryを作ってlocatorを通知する。CLI payloadはdurable wrapper内で --output-format stream-json --verbose、read-only flags、引用済みのevent/stderr pathを指定して実行する。wrapperはrecord.jsonへprocess identityとprepared/running/exited・exit statusを原子的に記録する。初期eventのsession ID一致をsession成立根拠とし、result eventから最終本文を回収する。依頼文には対象と範囲、確かめる基準、観点（欠け・頼まれていない・実装違い・規約違反）、返す形式（各指摘に path:line と失敗シナリオ、未検証の懸念は最大3件、検査しなかった範囲、字数の上限）を含め、起動直後に所要時間と中断不要を予告する",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "まだ実装していない新しい配信基盤のアーキテクチャ方針をまとめた。前例が無い方式なので Claudeの第三者レビュー で見てほしい",
+      "expected_output": "プランニング段階かつ不確実性が高い対象なので昇格条件に該当し、--model <model-selectionで解決したID> を選ぶ。所要時間が伸びるため昇格理由を一言添えてから起動する。effortはmodel-selectionのモデル別初期値（effortは共通方針と許可範囲に従う）。依頼文には対象と範囲、確かめる基準、観点（欠け・頼まれていない・実装違い・規約違反）、返す形式（各指摘に path:line と失敗シナリオ、未検証の懸念は最大3件、検査しなかった範囲、字数の上限）を含め、--permission-mode plan と --disallowedTools 'Edit,Write,NotebookEdit' を両方付けて実行し、結果を構造化して報告する",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "READMEのtypo修正と変数名リネームだけの差分がある。念のため Claudeの第三者レビュー で見てもらえる？",
+      "expected_output": "やり直しコストが低い差分であり、型チェック・lint・テストで検出できる範囲でもあるため、本スキルの適用対象ではないという見立てを述べる。代替案（型チェック・lint・テストの実行、その場での目視確認）を示した上で、実行可否の判断をユーザーへ返す。黙って実行も黙って拒否もしない。『念のため』はモデルIDやeffortレベル名を伴わない強調表現なので明示指定として扱わず、モデル昇格の理由にもしない",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "effort は high で Claudeの第三者レビュー にかけて。（実行したがホストのタイムアウトで kill された）",
+      "expected_output": "会話やホストのタイムアウトとレビュー失敗を同一視しない。通知済みrun UUIDからrecord.jsonを開き、lifecycle stateとprocess identityをホストハンドルより先に確認する。identity一致のprocessが生存中なら同じハンドルから待機し、終了済みならevent・stderr・exit statusを確認する。初期eventで成立を確認した正確なsession UUIDがある場合だけ、元のmodel・high effort・対象・read-only制約を維持して未完了部分をresumeする。resumeだけで同じtimeoutを再発させず、host-native非同期実行かscope縮小を組み合わせ、時間超過を理由に明示highを自動降格しない。調査済み範囲をゼロからやり直さず、--continueや推測IDは使わない。復旧不能なら新規レビューのコストと選択肢をユーザーへ説明する",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "Claudeの第三者レビュー を回している間に、別 worktree で次のタスクを実装しておきたい",
+      "expected_output": "待ち時間に対象リポジトリを触るため references/review-snapshot.md のスナップショット起動を選ぶ。実ツリーと index に触れずに untracked を含む状態を固定し、依頼文では対象を HEAD~1..HEAD の差分と伝える。汚染チェックはスナップショット worktree 側で行う（メインツリーは並行作業で変化するため偽陽性になる）。スナップショットを取らない場合は対象ツリーと index・参照 ref（fetch/pull しない）・共有 .git/config と hooks の3つを凍結する。依存変更のmergeはレビュー結果処理後とし、独立変更はcontrollerの承認と共有資源条件で判断する。委譲先にも同じ制約と再帰起動の禁止を伝える"
+    },
+    {
+      "id": 9,
+      "prompt": "Claudeの第三者レビューは完了したはずだが出力ハンドルを失った。起動時のsession UUIDは分かっている。結果だけ回収して。",
+      "expected_output": "record.jsonで元processが終了済みであることと、記録済みevent logのresultから既存本文を回収できないことを確認した上で、新規レビューを起動せず、正確なUUIDを指定したclaude -p --resume <session_uuid>で同じsessionを再開する。調査済み範囲をゼロからやり直さず、中断後の継続生成であって逐語的再掲ではないと明示し、今回検査した範囲と履歴から引き継いだ範囲を分けた「検査しなかった範囲」を要求する。元のmodel・effort・対象と--permission-mode plan・--disallowedToolsを維持する。--continueと--fork-sessionは使わない",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Claudeの第三者レビューを起動したが、CLIがpromptを受理する前にフラグエラーで終了した。事前採番したsession UUIDだけはある。復旧して。",
+      "expected_output": "事前採番したUUIDだけではsession成立の証拠にしない。process・出力・session metadataのいずれからも成立を確認できず、prompt受理前のフラグエラーなので起動失敗として扱う。存在しないsessionへの--resumeや--continueは使わず、フラグを修正して新しいUUIDを採番した新規sessionを起動する。これはsession成立後のレビューをゼロからやり直すことではない",
+      "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "さっきのClaudeの第三者レビューのFinding 2について、根拠をもっと詳しく聞きたい。",
+      "expected_output": "同じ結論の深掘り・根拠確認なので、品質不足を補う独立再レビューとは区別し、新規reviewを起動せず記録した正確なsession UUIDでclaude -p --resume <session_uuid>する。元processの終了確認と既存出力回収を先に行い、元のmodel・effort・対象・read-only制約を維持する。--continueと--fork-sessionは使わない",
+      "files": []
+    },
+    {
+      "id": 12,
+      "prompt": "fableに相談して、この設計の見落としを洗い出して。",
+      "expected_output": "Fable の明示指定として Claudeの第三者レビュー を適用し、現行の固定 ID --model <model-selectionで解決したID> を選ぶ。最上位モデルは選択権限が必要だが、この依頼ではユーザーのモデル指定を尊重する。effort は未指定なので model-selection の初期値に従い、read-only 制約と観点と返す形式を含む依頼文を維持して実行する",
+      "files": []
+    },
+    {
+      "id": 13,
+      "prompt": "sonnetに見てもらって、この実装差分に設計上の抜けがないか確認して。",
+      "expected_output": "Sonnet family の明示指定として Claudeの第三者レビュー を適用し、版なし family 名を現行の固定 ID --model <model-selectionで解決したID> へ解決する。設計上の観点が含まれていてもユーザーの明示モデルを自動判定で上書きせず、effort は未指定なので model-selection の初期値に従いする",
+      "files": []
+    },
+    {
+      "id": 14,
+      "prompt": "opusに相談して、詳細設計どおりの実装か確認して。",
+      "expected_output": "Opus family の明示指定として Claudeの第三者レビュー を適用し、版なし family 名を現行の固定 ID --model <model-selectionで解決したID> へ解決する。詳細設計済みの実装レビューでもユーザーの明示モデルを Sonnet へ自動変更せず、effort は未指定なので model-selection の初期値に従いする",
+      "files": []
+    },
+    {
+      "id": 15,
+      "prompt": "opus-5で、この設計の見落としを洗い出して。",
+      "expected_output": "model-selectionのモデル表を参照し、指定family/tierの最新版へ解決する。版の置換を起動前に通知し、系列と明示effortは変更しない。旧版固定そのものが要件なら衝突を先に解決する。",
+      "files": []
+    },
+    {
+      "id": 16,
+      "prompt": "Codexの第三者レビューで $HOME/project のコードを高精度でレビューして（effort: high）",
+      "expected_output": "effort が明示されているので high を尊重し、codex exec -s read-only -m <model-selectionで解決したID> -C <dir> -c model_reasoning_effort='high' を実行して、対象のレビュー結果を要約、直す指摘、検査しなかった範囲を報告する",
+      "files": []
+    },
+    {
+      "id": 17,
+      "prompt": "OpenAIのモデルでセカンドオピニオンを。カレントディレクトリ、effort はデフォルトで。設計上の問題があれば指摘してほしい。",
+      "expected_output": "model と effort は model-selection と許可範囲に従って解決し、codex exec -s read-only -m <model-selectionで解決したID> -c model_reasoning_effort='<解決したeffort>' を実行して、設計面の分析を構造化して報告する",
+      "files": []
+    },
+    {
+      "id": 18,
+      "prompt": "Codexの第三者レビューを使って今のuncommittedの変更を確認してほしい",
+      "expected_output": "差分レビューでも既定は汎用 codex exec を使う（codex exec review は観点も返す形式も渡せないため、ユーザー明示時のみ）。依頼文に『対象は作業ツリーの未コミット差分』と明記し、観点（欠け・頼まれていない・実装違い・規約違反）と返す形式（失敗シナリオ、検査しなかった範囲）を含める。effort 未指定なので model-selection の初期値、モデルは既定の <model-selectionで解決したID>。呼び出し元を解放する形（通知型のホストなら背景実行）で起動し、起動直後に予告を出してから差分レビュー結果を報告する",
+      "files": []
+    },
+    {
+      "id": 19,
+      "prompt": "詳細設計どおりに実装した差分がある。Codexの第三者レビュー で実装者が気づいていない観点を見てほしい",
+      "expected_output": "詳細設計済み・実装への信頼がある対象なので既定の -m <model-selectionで解決したID>、effort は model-selection の初期値を選ぶ。新しいrun UUIDを採番し、永続state rootの専用run directoryを作ってlocatorを通知する。codex exec --json -oをdurable wrapper内でread-only実行し、event/final/stderrは引用済みの新規専用pathへ保存する。wrapperはrecord.jsonへprocess identityとprepared/running/exited・exit statusを原子的に記録する。thread.startedの正確なsession IDをrecordへ保存する。依頼文には対象と範囲、確かめる基準、観点（欠け・頼まれていない・実装違い・規約違反）、返す形式（各指摘に path:line と失敗シナリオ、未検証の懸念は最大3件、検査しなかった範囲、字数の上限）を含め、起動直後に所要時間と中断不要を予告する",
+      "files": []
+    },
+    {
+      "id": 20,
+      "prompt": "さっきの Codexの第三者レビュー の Finding 2 について、根拠をもっと詳しく聞きたい",
+      "expected_output": "同じ結論の深掘り・根拠確認なので、元processの終了と既存出力を先に確認し、新規レビューを起動せず codex exec resume SESSION_ID -c sandbox_mode='read-only' で同じsessionを継続する。記録済みevent logのthread.startedにある正確なIDを使い、推測したIDや--lastで別sessionへ接続しない。これは昇格のための独立再レビューとは用途が異なる",
+      "files": []
+    },
+    {
+      "id": 21,
+      "prompt": "effort は high で Codexの第三者レビュー にかけて。（実行したがホストのタイムアウトで kill された）",
+      "expected_output": "会話やホストのタイムアウトとレビュー失敗を同一視しない。通知済みrun UUIDからrecord.jsonを開き、lifecycle stateとprocess identityをホストハンドルより先に確認する。identity一致のprocessが生存中なら同じハンドルから待機し、終了済みならevent・stderr・exit statusを確認する。thread.startedから記録した正確なsession IDがある場合だけ、元のmodel・high effort・対象・read-only制約を維持して未完了部分をresumeする。resumeだけで同じtimeoutを再発させず、host-native非同期実行かscope縮小を組み合わせ、時間超過を理由に明示highを自動降格しない。調査済み範囲をゼロからやり直さず、--lastや推測IDは使わない。復旧不能なら新規レビューのコストと選択肢をユーザーへ説明する",
+      "files": []
+    },
+    {
+      "id": 22,
+      "prompt": "Codex 上で Codexの第三者レビュー を使ってこの差分を見てほしい。待っている間に次のタスクも進めたい",
+      "expected_output": "ホストのコマンド実行ツールが yield 時間とセッションハンドルを持つためハンドル型にルートする。短い yield 時間で起動してハンドルを保持し制御を取り戻す。次回確認期限を記録して原則60秒を目安に短いread/waitで照合し、放置しない。シェルレベルの detach（nohup / setsid）は使わない。待ち時間にリポジトリを触る予定があるため references/review-snapshot.md のスナップショット起動を選び、依頼文では対象を HEAD~1..HEAD の差分と伝え .gitignore されたファイルが含まれない旨を添える。汚染チェックはスナップショット worktree 側で行う"
+    },
+    {
+      "id": 23,
+      "prompt": "Codexの第三者レビューは完了したはずだが出力ハンドルを失った。記録したsession IDは分かっている。結果だけ回収して。",
+      "expected_output": "元processが終了済みであることと、記録済みfinal outputから既存本文を回収できないことを確認した上で、新規レビューを起動せず、event logのthread.startedにある正確なIDを指定したcodex exec resume SESSION_ID -c sandbox_mode='read-only'で同じsessionを再開する。調査済み範囲をゼロからやり直さず、中断後の継続生成であって逐語的再掲ではないと明示し、今回検査した範囲と履歴から引き継いだ範囲を分けた「検査しなかった範囲」を要求する。元modelとeffortを維持し、-sと-Cは追加しない。--lastは使わない",
+      "files": []
+    },
+    {
+      "id": 24,
+      "prompt": "Codexの第三者レビューを起動したが、CLIがpromptを受理する前に-Cのパスエラーで終了し、session IDも出なかった。復旧して。",
+      "expected_output": "process・出力・session metadataのいずれからもsession成立を確認できず、prompt受理前のパスエラーなので起動失敗として扱う。推測ID、--last、resumeは使わず、パスを修正して新規sessionを起動する。これはsession成立後のレビューをゼロからやり直すことではない",
+      "files": []
+    },
+    {
+      "id": 25,
+      "prompt": "gpt-5.6-solで、この実装差分を見てほしい。",
+      "expected_output": "model-selectionのモデル表を参照し、指定family/tierの最新版へ解決する。版の置換を起動前に通知し、系列と明示effortは変更しない。旧版固定そのものが要件なら衝突を先に解決する。",
+      "files": []
+    },
+    {
+      "id": 26,
+      "prompt": "astraに相談して、この設計の見落としを洗い出して。",
+      "expected_output": "astra の明示指定として Codexの第三者レビュー を適用し、-m <model-selectionで解決したID> を選ぶ。最上位モデルは選択権限が必要だが、この依頼ではユーザーのモデル指定を尊重する。effort は未指定なので model-selection の初期値に従い、-s read-only と観点と返す形式を含む依頼文を維持して実行する",
+      "files": []
+    },
+    {
+      "id": 27,
+      "prompt": "（完了を通知する背景実行も、ハンドルを返すコマンド実行も持たないホストで）Claudeの第三者レビュー で全体を見て",
+      "expected_output": "起動と合流の型は「起動と合流」で判定する。完了を通知する背景実行もハンドルを返すコマンド実行も無いため同期型にルートし、foreground で実行する。発話窓は実行直前のみなので、そこで所要時間とハングではない旨を予告する。モデルは昇格条件に該当しないため既定の <model-selectionで解決したID>、effortはmodel-selectionのモデル別初期値（effortは共通方針と許可範囲に従う）。結果は標準出力（戻り値）から取得し、要約、直す指摘、検査しなかった範囲を報告する。同期型では待ち時間が存在しないため「レビュー中の並行作業」は適用外。シェルレベルの detach（nohup / setsid）で背景化しようとしない",
+      "files": []
+    },
+    {
+      "id": 28,
+      "prompt": "実装差分を Claudeの第三者レビュー に掛けたが、返ってきたのは一般論ばかりで path:line の裏付けも薄い。どうする？",
+      "expected_output": "結果が薄いレビューをそのまま採用しない。対象スコープと観点を具体化し、model-selection に従い許可範囲内で model/effort を再選択する。品質不足を補う独立再レビューなので新規 session を使い、前回の session を resume しない。再実行の理由と前回結果との差を報告する。",
+      "files": []
+    },
+    {
+      "id": 29,
+      "prompt": "Claudeの第三者レビュー が終わったみたい。結果を教えて",
+      "expected_output": "記録済みrunの実終了と出力を確認して回収する。引用の実在と「検査しなかった範囲」を確かめ、採用か再レビューかを推奨する。委任済みcontrollerは自分で判断し毎回人間へ確認しない。直すのは再現できた指摘と、外すと損害が大きい指摘に限り、命名や将来の拡張についての指摘は既定で直さない。",
+      "files": []
+    },
+    {
+      "id": 30,
+      "prompt": "Claudeの第三者レビューの実行中に会話が割り込まれた。結果を回収できなかったので、もう一度レビューして。元processはまだ動いている。",
+      "expected_output": "会話の割り込みをレビュー失敗と見なさず、新規レビューもresumeも起動しない。元processが生存中なので、記録済みのホストハンドル・task・出力先を使って待機し、同じprocessから結果を回収する。同じsessionへ同時にresumeすると二重実行になるため禁止する",
+      "files": []
+    },
+    {
+      "id": 31,
+      "prompt": "モデル選択はcontrollerに委任済み。完了通知を取りこぼした可能性があり、review handleは記録済み。",
+      "expected_output": "共通モデル方針を参照し、再選択より先に既存handleの状態・結果を照合する。二重起動せず回収し、許可範囲の判断を人間へ再質問しない。",
+      "files": []
+    },
+    {
+      "id": 32,
+      "prompt": "この差分を第三者に見てもらって。",
+      "expected_output": "providerが未指定で、選択権限も委任されていないので、ClaudeとCodexのどちらを使うかを確認する。黙ってどちらかを選ばない。選択権限が委任済みのcontrollerであれば、model-selectionと許可範囲に従って自分で選ぶ。",
+      "files": []
+    },
+    {
+      "id": 33,
+      "prompt": "（ホストはCodex）Claudeに見てもらって、この設計メモに抜けがないか確認して。",
+      "expected_output": "ホストがCodexでも同じ手順でClaude CLIを起動する。references/claude.md のread-onlyの形（--permission-mode plan と --disallowedTools 'Edit,Write,NotebookEdit' の両方）を使い、実行記録のwrapperの内側で実行する。Codexのコマンド実行は待ち時間の上限とセッションハンドルを持つのでハンドル型として扱い、短い待ち時間で起動してハンドルを保持し、60秒以内の短いread/waitで照合する。最終本文はstream-jsonのresult eventから取り出す。",
+      "files": []
+    },
+    {
+      "id": 34,
+      "prompt": "課金の計算を変える差分ができた。doneのtierはfullで、画面とAPIの結果が変わる。Codexに確かめてもらって。",
+      "expected_output": "振る舞いが外から見え、tierがfullなので、レビューの前に動作確認を行う。スナップショットの手順で写しのworktreeを作り、references/codex.md の動作確認の形（-s workspace-write、-C に写し、--add-dir なし）で起動する。依頼文には番号付きの受入条件、動かし方、返す形式（受入条件ごとの合格・不合格・確かめられず、実行したコマンド、終了コード）を入れ、コードは直させない。終了後に写しと本体のツリーのgit statusを確かめる。動作確認の結果を、続くread-onlyのレビューの依頼文へ貼り、不合格の原因を「実装違い」の観点で見させる。",
+      "files": []
+    },
+    {
+      "id": 35,
+      "prompt": "（ホストはCodex）このCLIの出力形式の変更を、Claudeに実際に動かして確かめてもらって。tierはfull。",
+      "expected_output": "写しのworktreeを作業directoryにして、references/claude.md の動作確認の形（--permission-mode acceptEdits、--allowedTools に動かし方のコマンドの接頭辞だけ、--add-dir なし）でClaude CLIを起動する。Claude CLIはBashの書き込み先を既定ではOSの水準で制限しないことを踏まえ、作業directory・許可するコマンドの絞り込み・依頼文で写しの外へ書かせない。OSの水準で止める必要があれば、Codexを検証役にするか、sandboxの設定を公式資料で確かめる。終了後に本体のツリーのgit statusが起動前と同じことを確かめる。",
+      "files": []
+    },
+    {
+      "id": 36,
+      "prompt": "設定ファイルの読み込み順を直した。受入条件は全部ユニットテストで確かめてあり、修正前に落ちて修正後に通るのも見せられる。tierはfull。Codexに見てもらって。",
+      "expected_output": "受入条件のすべてを実装者のテストで確かめられ、変更前に落ちて変更後に通る証拠があるので、第三者の動作確認は省く。read-onlyのレビューだけを起動し、依頼文に受入条件と観点、返す形式を入れる。",
+      "files": []
+    },
+    {
+      "id": 37,
+      "prompt": "stagingにログインしないと確かめられない画面の変更がある。Claudeに動作確認までしてもらって。",
+      "expected_output": "ログインが要るstagingでの確認は e2e-capability-verification の手順（認証の引き継ぎ、破壊的な操作のガードレール）に従う。認証情報を依頼文で第三者へ渡さない。第三者が環境を立ち上げられない受入条件は「確かめられず」と理由を返させ、粘らせない。確かめられる範囲のレビューは通常どおり行う。",
+      "files": []
+    },
+    {
+      "id": 38,
+      "prompt": "Codexのレビューが返ってきた。指摘は12件で、命名が5件、将来の拡張に備える提案が3件、失敗シナリオ付きの不具合が2件、権限チェックの抜けが1件、文言の好みが1件。どう扱う？",
+      "expected_output": "まず引用された path:line が実在するかを確かめる。直すのは、失敗シナリオを自分で実行するか落ちるテストを書いて再現できた不具合と、外したときの損害が大きい権限チェックの抜けに限る。権限チェックは再現できなくても、何と何を比べどこで強制しているかを実装まで辿って確かめる。命名・将来の拡張・文言の好みは既定で直さず、1件ずつの採否の記録も作らない。修正後は元の確認を再実行し、修正と再レビューの往復は既定で1回までにする。",
+      "files": []
+    },
+    {
+      "id": 39,
+      "prompt": "Claudeのレビューを受けて修正した。もう一度レビューに出して、指摘が無くなるまで繰り返して。",
+      "expected_output": "修正と再レビューの往復は既定で1回までである。修正後に元の確認を再実行し、再レビューを1回行ったら、残った指摘を採用基準（再現できた、または外すと損害が大きい）で振り分けて終える。それ以上続けるなら、理由と打ち切る条件を記録する。ユーザーが回数を明示して求めた場合は、その指定と打ち切り条件を確認して従う。",
+      "files": []
+    }
+  ]
+}
