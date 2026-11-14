@@ -7,7 +7,7 @@ description: >-
 
 ## ガードレール（必須）
 
-1. **削除系は必ず一覧提示 → 確認**: `git worktree remove` / `branch -D` は、対象の一覧と未コミット変更・未push コミットの有無を提示し、ユーザー確認を得てから実行する（自律実行モードでも、未コミット変更が残る worktree は勝手に消さない）
+1. **削除系は必ず一覧提示 → 確認**: `git worktree remove` / `branch -D` は、対象の一覧と未コミット変更・未push コミットの有無を提示し、ユーザー確認を得てから実行する（自律実行モードでも、未コミット変更が残る worktree は勝手に消さない）。例外は、autopilotのゴールを終える時の片付けである。そのゴールで作ったと記録にあり、未コミット変更も未pushコミットも無く、ブランチが統合済みのworktreeは、確認なしで消してよい
 2. worktree は **`~/.claude/skills/` や設定ディレクトリ配下に作らない**。作成先は repo の隣（repo の親 directory の直下の `<repo名>-<topic>`）
 3. 元 repo（main worktree）のチェックアウト状態を勝手に変えない（別ブランチ作業は必ず worktree 側で）
 
