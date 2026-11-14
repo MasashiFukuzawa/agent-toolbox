@@ -55,7 +55,7 @@ progress-report --html Focus on the release outlook
 ### Daily plan
 
 
-`daily-plan` agrees on up to 24 hours of work with a human — a working day, or an overnight run — and tracks it on one local HTML page per plan. The page shows the gap to the period's goals, a timeline of planned and actual work, waits, and time windows to protect, and each task's steps with a next step. A bundled standard-library Python script renders the page from a JSON plan, judges step states from GitHub (`gh`) or a watched file, and with `--watch` re-renders on an interval until the plan ends. Agreeing to a plan does not approve merges, applies, or production jobs inside it; requests to humans stay on the `owner-board` and are linked by question ID.
+`daily-plan` agrees on up to 24 hours of work with a human — a working day, or an overnight run — and tracks it on one local HTML page per plan. The page shows overall and per-task progress with each task's next step, time windows to protect, changes to the plan, each task's steps, and the gap to the period's goals. A bundled standard-library Python script renders the page from a JSON plan, judges step states from GitHub (`gh`) or a watched file, and with `--watch` re-renders on an interval until the plan ends. Agreeing to a plan does not approve merges, applies, or production jobs inside it; requests to humans stay on the `owner-board` and are linked by question ID.
 
 ### Step back
 

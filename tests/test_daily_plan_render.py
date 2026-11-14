@@ -147,58 +147,56 @@ class TestGoals:
             page(day, self.GOALS)
 
 
-class TestTimeline:
-    def bar_style(self, html, cls):
-        return re.findall(rf'class="tl-bar {cls}" style="left:([\d.]+)%;width:([\d.]+)%"', html)
+class TestPeriod:
+    def test_overnight_plan_is_titled_with_both_dates(self):
+        assert "4/14 20:00〜4/15 08:00 の作業" in text_of(page(plan()))
 
-    def test_overnight_plan_is_one_continuous_axis(self):
-        day = plan()
-        day["lanes"][0]["plan"] = {"start": "23:00", "end": "02:00"}
-        html = page(day)
-        # 20:00–08:00 is 720 minutes; 23:00 is 180 in, 02:00 is 360 in.
-        assert self.bar_style(html, "tl-plan") == [("25.000", "25.000")]
-        assert "4/15 0:00" in html
-        assert "4/14 20:00〜4/15 08:00" in text_of(html)
-
-    def test_open_actual_runs_until_now(self):
-        day = plan()
-        day["lanes"][0]["actual"] = {"start": "23:00"}
-        # now is 01:30 → 330 minutes in.
-        assert self.bar_style(page(day), "tl-actual") == [("25.000", "20.833")]
-
-    def test_paused_and_resumed_work_shows_each_actual_interval(self):
-        day = plan()
-        day["lanes"][0]["actual"] = [{"start": "21:00", "end": "23:00"}, {"start": "01:00"}]
-        html = page(day)
-        # 21:00–23:00 is 60–180 in; 01:00 until now (01:30) is 300–330 in.
-        assert self.bar_style(html, "tl-actual") == [("8.333", "16.667"), ("41.667", "4.167")]
-        assert "実績 21:00–23:00、01:00–" in text_of(html)
-
-    def test_bars_outside_the_period_are_clipped(self):
-        day = plan()
-        day["lanes"][0]["plan"] = {"start": "06:00", "end": "10:00"}
-        left, width = self.bar_style(page(day), "tl-plan")[0]
-        assert float(left) + float(width) == pytest.approx(100.0)
-
-    def test_constraints_are_drawn_and_listed(self):
-        day = plan(constraints=[{"start": "06:00", "end": "09:00", "label": "no downtime"}])
-        html = page(day)
-        assert 'class="tl-constraint"' in html
-        assert "no downtime 06:00–09:00" in text_of(html)
-
-    def test_now_line_only_inside_the_period(self):
-        day = plan()
-        day["lanes"][0]["plan"] = {"start": "21:00", "end": "23:00"}
-        assert "現在 01:30" in page(day)
+    def test_page_says_when_the_plan_has_ended(self):
         later = dt.datetime(2026, 4, 15, 9, 0, tzinfo=JST)
-        html = page(day, now=later)
-        assert "タイムライン" in html
-        assert "tl-now" not in html.split("<style>")[1].split("</style>")[1]
-        assert "を過ぎた" in text_of(html)
+        assert "計画の終わり（4/15 08:00）を過ぎた" in text_of(page(plan(), now=later))
 
     def test_plan_longer_than_a_day_is_rejected(self):
         with pytest.raises(render_mod.PlanError):
             page(plan(end="2026-04-15T21:00:00+09:00"))
+
+
+class TestConstraintsAndChanges:
+    def test_time_constraints_are_listed_above_the_progress(self):
+        day = plan(constraints=[{"start": "06:00", "end": "09:00", "label": "no downtime"}])
+        out = text_of(page(day))
+        assert "守る時間制約：no downtime 06:00–09:00" in out
+        assert out.index("守る時間制約") < out.index("作業の進捗")
+
+    def test_plan_changes_are_listed_between_the_progress_and_the_steps(self):
+        html = page(plan(changes=[{"at": "23:40", "text": "moved the import later"}]))
+        assert re.findall(r"<h2>([^<：（]+)", html) == ["作業の進捗", "計画の変更", "作業ごとの手順"]
+        assert "23:40 moved the import later" in text_of(html)
+
+    def test_a_plan_without_them_shows_neither(self):
+        out = text_of(page(plan()))
+        assert "守る時間制約" not in out
+        assert "計画の変更" not in out
+
+
+class TestPlansWrittenBeforeTheTimelineWasRemoved:
+    def old_plan(self):
+        day = plan(waits=[{"label": "vendor release", "start": "20:00", "ref": "Q7"}])
+        day["lanes"][0]["plan"] = {"start": "23:00", "end": "02:00"}
+        day["lanes"][0]["actual"] = [{"start": "21:00", "end": "23:00"}, {"start": "01:00"}]
+        return day
+
+    def test_still_renders_its_progress_and_draws_no_timeline(self):
+        out = text_of(page(self.old_plan()))
+        assert "作業の進捗：3手順のうち1が完了" in out
+        assert "タイムライン" not in out
+        for schedule_text in ("予定", "実績", "23:00", "vendor release"):
+            assert schedule_text not in out
+
+    def test_unreadable_schedule_values_do_not_stop_rendering(self):
+        day = plan(waits=[{"label": "vendor release", "start": "25:99"}])
+        day["lanes"][0]["plan"] = {"start": "not a time"}
+        day["lanes"][0]["actual"] = "23:00"
+        assert "作業の進捗：3手順のうち1が完了" in text_of(page(day))
 
 
 class TestOwnerBoardReferences:
@@ -218,7 +216,12 @@ class TestOwnerBoardReferences:
 class TestSafety:
     def test_untrusted_text_is_escaped_and_page_is_self_contained(self):
         evil = '<img src=x onerror="alert(1)">'
-        day = plan(title=evil, source={"label": evil, "href": "javascript:alert(1)"})
+        day = plan(
+            title=evil,
+            source={"label": evil, "href": "javascript:alert(1)"},
+            constraints=[{"start": evil, "end": evil, "label": evil}],
+            changes=[{"at": evil, "text": evil}],
+        )
         day["lanes"][0]["name"] = evil
         day["lanes"][0]["steps"][0]["note"] = evil
         html = page(day)
@@ -284,20 +287,16 @@ def test_bundled_example_renders():
     example = SKILL / "assets/example"
     day = json.loads((example / "2026-04-14_2000.json").read_text())
     goals = json.loads((example / day["goals"]).read_text())
-    html = page(day, goals, base=example)
-    assert "4/14 夜〜4/15 朝の作業" in html
-
-
-def test_timeline_is_omitted_when_nothing_is_scheduled():
-    assert "タイムライン" not in page(plan())
+    out = text_of(page(day, goals, base=example))
+    assert "4/14 夜〜4/15 朝の作業" in out
+    assert "守る時間制約：本番停止を避ける 06:00–09:00" in out
+    assert "計画の変更" in out
 
 
 def test_progress_comes_first_and_period_goals_come_last():
     goals = {"stages": ["design", "build"], "goals": [{"id": "g", "name": "G", "reached": None, "target": "build"}]}
-    day = plan()
-    day["lanes"][0]["plan"] = {"start": "21:00", "end": "23:00"}
-    headings = re.findall(r"<h2>([^<：（]+)", page(day, goals))
-    assert headings == ["作業の進捗", "タイムライン", "作業ごとの手順", "期間の目標"]
+    headings = re.findall(r"<h2>([^<：（]+)", page(plan(), goals))
+    assert headings == ["作業の進捗", "作業ごとの手順", "期間の目標"]
 
 
 @pytest.mark.parametrize(
