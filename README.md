@@ -6,14 +6,14 @@ Agent Toolbox is a public collection of reusable engineering skills for Claude C
 
 | Plugin | Skills | Purpose | Runtime dependency |
 | --- | ---: | --- | --- |
-| `toolbox` | 23 | Research, review, model selection, testing, visualization, and engineering decisions | Per-skill; see each `SKILL.md` |
+| `toolbox` | 25 | Research, review, model selection, testing, visualization, human-facing reporting, and engineering decisions | Per-skill; see each `SKILL.md` |
 | `done` | 1 | Repository-defined quality gate, with a Claude Code Stop adapter | Git, Bash, Python 3 |
 | `gog` | 2 | Read-only Google Calendar and Chat workflows | [`gog`](https://github.com/steipete/gogcli) |
 | `github-operations` | 2 | Guarded GitHub Project provisioning and Issue creation | Python 3.11+, `gh` |
 
 ### Skill catalog
 
-- `toolbox` (24, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `human-notify`, `model-selection`, `owner-board`, `progress-report`, `step-back`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
+- `toolbox` (25, Claude Code and Codex): `adr`, `ai-native-engineering`, `ascii-diagram`, `autopilot`, `behavioral-testing`, `browser-operations`, `claude-review`, `cloudflare-data-pipeline`, `cloudflare-worker-cd`, `codebase-audit`, `codex-review`, `context-handoff`, `daily-plan`, `e2e-capability-verification`, `git-worktrees`, `html-artifact`, `human-briefing`, `human-notify`, `model-selection`, `owner-board`, `progress-report`, `step-back`, `structured-text-parsing`, `technical-research`, and `typescript-project-foundation`.
 - `done` (1, Claude Code and Codex): `done`.
 - `gog` (2, Claude Code and Codex): `gog-calendar` and `gog-chat-readonly`.
 - `github-operations` (2, Claude Code and Codex): `github-project-provisioning` and `github-issue-create`.
@@ -33,9 +33,13 @@ progress-report --ascii Focus on blockers and dependencies
 progress-report --html Focus on the release outlook
 ```
 
+### Human briefing
+
+`human-briefing` is the single definition of how the skills write to a human, in chat or in a saved page. A request or report has four rows: background, problem, goal, and the ask (or what was done, when nothing is asked). A request carries one decision with one recommendation and its deciding reason, a figure placed before the options, and the checks an owner asks before replying: how large the change is, whether daily work changes, whether it can be undone, and why any waiting period exists. `html-artifact`, `owner-board`, `progress-report`, `context-handoff`, `daily-plan`, and `autopilot` point to it instead of restating the format.
+
 ### Owner board
 
-`owner-board` keeps one continuously updated local HTML board of decisions and tasks for a human owner. It opens with the current milestone and what is blocked, lists open requests, and writes each request as background, problem, goal, and the ask, with fixed question IDs and an archive page for answers, follow-ups, and relays. Agents edit the HTML directly from a self-contained example; there is no runtime dependency. Operational boards stay outside public repositories; creating a board does not authorize publishing it or adding external messaging. General presentation and the save location use `html-artifact`, progress context uses `progress-report`, and execution authority stays with `autopilot`.
+`owner-board` keeps one continuously updated local HTML board of decisions and tasks for a human owner. It opens with the current milestone and what is blocked, lists open requests, and writes each request in the `human-briefing` format — background, problem, goal, and the ask, with a figure before the options of every decision — with fixed question IDs and an archive page for answers, follow-ups, and relays. Agents edit the HTML directly from a self-contained example; there is no runtime dependency. Operational boards stay outside public repositories; creating a board does not authorize publishing it or adding external messaging. General presentation and the save location use `html-artifact`, progress context uses `progress-report`, and execution authority stays with `autopilot`.
 
 ### Human notifications
 
