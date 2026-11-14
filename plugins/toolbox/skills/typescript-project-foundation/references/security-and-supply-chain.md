@@ -1,33 +1,34 @@
 # Security and supply-chain foundation
 
-Apply the boundary controls to every production-intent project. Use OWASP ASVS 5 and the OWASP API Security Top 10 as threat-model-driven references, not as a ceremonial checklist.
+境界の管理策を、すべての production-intent project に適用する。現行の OWASP ASVS と OWASP API Security Top 10 を、儀式的な checklist ではなく、threat model に基づく参照として使う。
 
-## Identity and authorization
+## Identity と認可
 
-- Normalize provider identities into an internal identity model; retain provider subject values as opaque strings.
-- Decide secure cookie vs bearer credentials, domain/subdomain topology, SameSite, CSRF, and CORS together.
-- Enforce ownership/tenant scope in a shared data-access boundary, not only HTTP middleware.
-- Default deny when actor, tenant, resource ownership, or policy cannot be resolved.
-- Add negative tests for cross-user, cross-tenant, role escalation, object-level, and property-level access.
-- Treat background jobs and admin scripts as authorization callers with explicit principals and scopes.
+- provider の identity を内部の identity model へ正規化する。provider の subject は不透明な文字列として保持する。
+- secure cookie か bearer credential か、domain と subdomain の構成、SameSite、CSRF、CORS を一緒に決める。
+- 所有と tenant の scope は、HTTP middleware だけでなく、共有の data access の境界で強制する。
+- actor・tenant・資源の所有・policy を解決できない時は、既定で拒否する。
+- 利用者をまたぐ access、tenant をまたぐ access、role の昇格、object 単位と property 単位の access に negative test を足す。
+- background job と管理用 script を、明示的な principal と scope を持つ認可の呼び出し元として扱う。
+- 権限の変更や管理者の操作など、監査記録が必要な操作は [運用の標準](operational-standards.md) に従って記録する。
 
 References:
 
 - https://owasp.org/www-project-application-security-verification-standard/
-- https://owasp.org/API-Security/editions/2023/en/0x04-release-notes/
+- https://owasp.org/www-project-api-security/
 
-## Secrets and configuration
+## Secret と設定
 
-- Never commit real secrets, `.env`, `.dev.vars`, credentials, tokens, or copied production data.
-- Keep non-secret configuration versioned and environment-specific. Store secrets in the deployment platform or CI secret store.
-- Separate preview/staging/production credentials and grant least privilege.
-- Prefer short-lived federation/OIDC to long-lived cloud credentials when supported.
-- Run secret scanning on staged changes and full history in CI. Document narrowly justified false-positive allowlists.
-- Redact tokens, cookies, authorization headers, personal data, and sensitive domain fields before logging.
+- 実際の secret、`.env`、`.dev.vars`、credential、token、production の data の copy を commit しない。
+- secret でない設定は、version 管理して環境ごとに持つ。secret は deploy 先の platform か CI の secret store に置く。
+- preview・staging・production の credential を分け、最小権限にする。
+- 対応している場合は、長期の cloud credential より短命の federation・OIDC を優先する。
+- secret の走査を、staged な変更に対して hook で、履歴全体に対して CI で実行する。誤検知の allowlist は、狭い範囲と理由を文書化する。
+- token、cookie、authorization header、個人 data、機微な domain の field は、log に出す前に秘匿する。
 
-## pnpm controls
+## pnpm の管理策
 
-For production-intent repositories, put project security settings in `pnpm-workspace.yaml`, including single-package repositories:
+production-intent の repository では、単一 package であっても、project の security 設定を `pnpm-workspace.yaml` に置く。設定名は pnpm の release に依存するので、生成の前に公式の settings を確認する。
 
 ```yaml
 minimumReleaseAge: 10080
@@ -35,23 +36,23 @@ minimumReleaseAgeStrict: true
 blockExoticSubdeps: true
 ```
 
-Define a narrow `allowBuilds` mapping for dependencies whose lifecycle scripts are required. Do not use a broad allow-all switch. Cooling-period exceptions must name the smallest package scope and include reason, expiry, and removal trigger in the foundation record.
+lifecycle script が必要な依存には、狭い `allowBuilds` の対応表を定義する。すべてを許可する switch は使わない。cooling period の例外は、最小の package の範囲を名指しし、理由・期限・解除の trigger を foundation record に書く。
 
-## GitHub Actions and Pinact
+## GitHub Actions と Pinact
 
-Full commit SHA pinning is the baseline because tags and branches are mutable. GitHub Actions usage in a production-intent repository requires Pinact by default.
+tag と branch は可変なので、full commit SHA への pin を baseline にする。production-intent の repository で GitHub Actions を使う場合、既定で Pinact を必須にする。
 
-Required behavior:
+必須の振る舞い：
 
-1. Pin external actions and reusable workflows to a full commit SHA; keep the human-readable version comment.
-2. Configure Pinact with a default 3-day minimum age for action updates.
-3. Run an offline Pinact consistency check in a local hook and a verification/min-age check in CI.
-4. Enable Dependabot updates for the `github-actions` ecosystem.
-5. Pin Pinact itself and verify official release checksums, or acquire it through an equivalently verified tool manager.
-6. Exclude local `uses: ./...` references. Document any other technically unpinnable reference.
-7. Allow replacement only when organization policy and another tool enforce immutable references, verification, and automated updates at least as strongly.
+1. 外部の action と reusable workflow を full commit SHA に pin する。人が読める version の comment を残す。
+2. Pinact に、action の更新に対する既定3日の最小経過日数を設定する。
+3. local の hook で offline の Pinact 整合検査を、CI で検証と最小経過日数の検査を実行する。
+4. `github-actions` と package の両方の ecosystem に対して、Dependabot か同等の更新 service を有効にする。
+5. Pinact 自体を pin し、公式 release の checksum を検証する。または、同等に検証された tool manager から取得する。
+6. local の `uses: ./...` は対象外にする。それ以外で技術的に pin できない参照は文書化する。
+7. 置き換えは、組織の方針と別の tool が、不変の参照・検証・自動更新を同等以上に強制する時だけ許す。
 
-Minimal configuration (verify the current schema before generating it):
+最小の設定（生成の前に現行の schema を確認する）：
 
 ```yaml
 # .pinact.yaml
@@ -64,20 +65,24 @@ min_age:
   always: false
 ```
 
-Also:
+加えて：
 
-- Set workflow/job permissions to the minimum required.
-- Avoid interpolating untrusted event fields directly into shell scripts.
-- Treat `pull_request_target`, self-hosted runners, cache writes, artifact consumption, and workflow changes as elevated-risk surfaces.
-- Verify checksums/signatures for downloaded binaries.
-- Use CODEOWNERS or equivalent review ownership for workflow and security-policy changes when the repository supports it.
+- workflow と job の permissions を必要最小限にして明示する。
+- 信頼できない event の field を shell script へ直接埋め込まない。
+- `pull_request_target`、self-hosted runner、cache への書き込み、artifact の利用、workflow の変更を、危険度の高い面として扱う。
+- download した binary の checksum か署名を検証する。
+- repository が対応していれば、workflow と security 方針の変更に CODEOWNERS などの review の所有者を置く。
 
 Reference: https://docs.github.com/en/actions/reference/security/secure-use
 
-## Dependency maintenance
+## 依存の保守
 
-- Enable Dependabot or an equivalent update service for package and Actions ecosystems.
-- Run an audit gate at a documented severity and investigate reachable impact; do not auto-fix blindly.
-- Keep the lockfile immutable in CI.
-- Review newly introduced maintainers, install scripts, exotic sources, and transitive native binaries.
-- Record every supply-chain exception in a machine-checkable or reviewable ledger with an expiry.
+- package と Actions の ecosystem に対して、Dependabot か同等の更新 service を有効にする。
+- 文書化した severity で audit の gate を実行し、到達可能な影響を調べる。機械的に自動修正しない。
+- CI では lockfile を不変に保つ。
+- 新しく入る maintainer、install script、exotic な取得元、推移的な native binary を確認する。
+- supply chain の例外はすべて、期限付きで、機械的に検査できるか review できる台帳に記録する。
+
+## 検査の水準
+
+同梱の `check_invariants.py` は、曖昧さなく判定できるもの（package manager の正確な pin、lockfile、Action の不変な参照、Pinact、Actions の更新）を error にする。同等の tool で満たせるもの（secret の走査、hook の runner、package の更新 service、workflow の permissions、`noUncheckedIndexedAccess`）は warning にする。warning は、同等の手段を foundation record に書いた場合に限り受け入れてよい。

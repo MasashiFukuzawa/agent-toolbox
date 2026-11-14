@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Resolve cooled stable npm package candidates without modifying a project."""
+"""Resolve cooled stable npm package candidates without modifying a project.
+
+Run it on the day of the work: a new project installs the newest eligible stable
+versions resolved here and from official sources, never versions recalled from memory.
+The package lists below follow the default table in references/stack-and-version-policy.md;
+that table is the source of truth for which tool is the default and why.
+"""
 
 from __future__ import annotations
 
