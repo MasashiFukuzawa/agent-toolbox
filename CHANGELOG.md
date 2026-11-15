@@ -4,6 +4,10 @@ Changes that people who installed the plugins need to know about. Each plugin (`
 
 After updating a plugin, restart running sessions: a session keeps the plugin version it started with.
 
+## toolbox 0.20.1 (2026-11-15)
+
+- `autopilot` and the delegated-scope template now describe per-person gates (`actorOverrides` in `.agents/autopilot.json`): the default `gates` apply to everyone, and named GitHub accounts can be given a different value. Setting the default to a person's approval and granting automatic merge or deploy to named accounts keeps unlisted accounts on the safe side. The feature already existed; the rewritten instructions had stopped mentioning it.
+
 ## toolbox 0.20.0 (2026-11-15) — Breaking
 
 **Breaking**
