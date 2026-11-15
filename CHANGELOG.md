@@ -10,7 +10,7 @@ After updating a plugin, restart running sessions: a session keeps the plugin ve
 - A session no longer asks about, or recommends, an outside write that the goal does not need. It leaves a draft and records on the goal page that it did not go out.
 - `human-briefing` has a form for asking approval of an outside or irreversible operation: the heading and the first sentence name the operation itself (what is created, changed, or deleted, where, under whose name, who can see it, whether it can be undone), a recommendation to do it must say what cannot be achieved otherwise, and one request covers one destination and one text.
 - A complaint about being asked is not treated as permission. A rule that relaxes a must-ask item is recorded only after the person stated it or agreed to the exact line, and it does not cover the operation that prompted it.
-- If your delegated scope listed only "sending or publishing outside" under must-ask, review it: changing settings and deleting things in outside services are now covered too. To delegate an outside operation, name the destination and the operation under "may do without asking"; a named delegation takes precedence over the broad must-ask line.
+- If your delegated scope listed only "sending or publishing outside" under must-ask, review it: changing settings and deleting things in outside services are now covered too. A delegation under "may do without asking" that names the destination and the operation takes precedence over the broad must-ask line.
 
 ## toolbox 0.21.0 (2026-11-15)
 
