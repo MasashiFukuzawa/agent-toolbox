@@ -4,6 +4,14 @@ Changes that people who installed the plugins need to know about. Each plugin (`
 
 After updating a plugin, restart running sessions: a session keeps the plugin version it started with.
 
+## toolbox 0.22.0 (2026-11-15)
+
+- **A write outside the project is a person's decision.** `autopilot`, the delegated-scope template, and the global instructions now say that creating, changing, or deleting anything outside the repository being worked on and the places its instructions name (another repository, a public venue, an external service, mail or chat, a shared document) is done without asking only when the person asked for that operation or the delegated scope names the destination and the operation. Reading is unaffected. A broad phrase, harmless content, or a passed review by another model is not permission.
+- A session no longer asks about, or recommends, an outside write that the goal does not need. It leaves a draft and a note for the person.
+- `human-briefing` has a form for asking approval of an outside or irreversible operation: the heading and the first sentence name the operation itself (what appears where, under whose name, who can read it, whether it can be undone), the recommendation defaults to not doing it, and one approval covers one destination and one text.
+- A complaint about being asked is not treated as permission, and a rule that relaxes a must-ask item is recorded only after the person stated it or agreed to the exact line. It applies from then on, not to the operation that prompted it.
+- If your delegated scope relied on "sending or publishing outside" being the only outside operation that needs asking, review it: changing settings and deleting things in outside services are now covered too. To delegate one, name the destination and the operation under "may do without asking".
+
 ## toolbox 0.21.0 (2026-11-15)
 
 - `autopilot` preflight now recognizes repository and organization rulesets as well as classic branch protection. Automatic merge stays on when either one provides all three: a required status check, no force pushes, and no bypass. For a classic rule that means `enforce_admins`. For rulesets it means that the account about to merge cannot bypass the ruleset that requires the check or the one that blocks force pushes (`current_user_can_bypass: never`); other accounts are not examined. A ruleset the account can bypass or that cannot be read, and a rule in an unexpected shape, do not count. This removes the limit noted under 0.20.2.
