@@ -44,11 +44,11 @@ How a session decides, in order:
 2. An operation the person delegated explicitly (object, operation, condition): do it when the condition holds, even if its effect is wide, such as a merge.
 3. Anything else: decide only if it is small, reversible, and not on the must-ask list. Otherwise ask.
 
-One rule sits across that order: **a write outside the project is a person's decision.** The project is the repository being worked on (code, issues, pull requests) and the places its instructions name. Creating, changing, or deleting anything elsewhere (another repository, a public venue, an external service, mail or chat, a shared document) is done without asking only when the person asked for that operation or the delegated scope names the destination and the operation. Reading is free. Three things keep this from turning into a stream of questions that get approved unread:
+One rule sits across that order: **a write outside the project is a person's decision.** A write outside the project creates, changes, or deletes something that stays, somewhere on the network other than the repository being worked on (code, issues, pull requests) and the environments its own CI and CD deploy to: another repository, a public venue, an external service, mail or chat, a shared document. Reading, files and notices on the local machine, fetching dependencies, and queries to a configured model are not writes outside. It is done without asking only when the person asked for that operation directly, or the delegated scope names the destination and the operation; a destination that merely appears in the instructions is not delegated. Three things keep this from turning into a stream of questions that get approved unread:
 
-- If the goal can be accepted without the write, the session neither asks nor recommends it. It leaves a draft and a note, and the person decides whether anyone does it.
-- If the goal needs it, the question names the operation itself in its first line: what appears where, under whose name, who can read it, and whether it can be undone. One approval covers one destination and one text.
-- A complaint about being asked is not permission. A rule that relaxes a must-ask item exists only once the person has stated it or agreed to the exact line, and it applies from then on.
+- If the goal can be accepted without the write, the session neither asks nor recommends it. It leaves a draft, records that it did not go out, and continues.
+- If the goal needs it, the question names the operation itself in its first sentence: what is created, changed, or deleted, where, under whose name, who can see it, and whether it can be undone. One approval covers one destination and one text.
+- A complaint about being asked is not permission. A rule that relaxes a must-ask item exists only once the person has stated it or agreed to the exact line, and it does not cover the operation that prompted it.
 
 When a session stops it says how: done, waiting for a decision, waiting for a human action, waiting on something external, or interrupted, each with the condition for resuming. Handing something to the person does not count as done.
 
