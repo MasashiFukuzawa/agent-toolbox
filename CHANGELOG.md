@@ -4,6 +4,11 @@ Changes that people who installed the plugins need to know about. Each plugin (`
 
 After updating a plugin, restart running sessions: a session keeps the plugin version it started with.
 
+## toolbox 0.21.0 (2026-11-15)
+
+- `autopilot` preflight now recognizes repository and organization rulesets as well as classic branch protection. Automatic merge stays on when either one provides all three: a required status check, no force pushes, and no bypass. For a classic rule that means `enforce_admins`. For rulesets it means that the account about to merge cannot bypass the ruleset that requires the check or the one that blocks force pushes (`current_user_can_bypass: never`); other accounts are not examined. A ruleset the account can bypass or that cannot be read, and a rule in an unexpected shape, do not count. This removes the limit noted under 0.20.2.
+- To make automatic merge take effect in a repository: run the real check on pull requests, require it on the base branch, block force pushes, and remove the bypass for the accounts that merge.
+
 ## toolbox 0.20.2 (2026-11-15)
 
 - `autopilot` now says to act on the gates that `preflight` returns (`mergeGate`, `deployGate`), not on the values in the configuration file. `preflight` returns a human merge gate when the base branch has no branch protection with required status checks, enforcement for administrators, and force pushes disabled, even if the configuration asks for automatic merge. A review of a repository's instructions had found a merge condition written from the configured value alone.

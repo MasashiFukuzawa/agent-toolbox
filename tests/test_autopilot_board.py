@@ -204,6 +204,195 @@ class TestPreflight:
         assert board.main(["--config", str(config), "preflight"]) == 0
         assert json.loads(capsys.readouterr().out)["mergeGate"] == "auto"
 
+    # GitHub also protects branches through rulesets. The same three conditions apply there.
+    REQUIRED_CHECK = {
+        "type": "required_status_checks", "ruleset_source_type": "Repository",
+        "ruleset_source": "owner/name", "ruleset_id": 7,
+        "parameters": {"required_status_checks": [{"context": "check"}],
+                       "strict_required_status_checks_policy": False},
+    }
+    NO_FORCE_PUSH = {"type": "non_fast_forward", "ruleset_source_type": "Repository", "ruleset_id": 7}
+    HELD = {"current_user_can_bypass": "never"}
+
+    def _preflight_with_rulesets(self, tmp_path, monkeypatch, capsys, pages, rulesets):
+        """A repository with no classic rule.
+
+        `pages` is the branch-rules response, one item per page (a single list is one page);
+        `rulesets` maps a ruleset id to what the repository's ruleset endpoint returns.
+        """
+        if not pages or not isinstance(pages[0], list):
+            pages = [pages]
+
+        def fake(args):
+            if args[0] == "repo":
+                return json.dumps({"nameWithOwner": "owner/name"})
+            path, _, query = args[1].partition("?")
+            if path.endswith("/protection"):
+                raise board.Failure("gh api failed: HTTP 404: Branch not protected")
+            if path == "repos/owner/name/rules/branches/main":
+                page = int(dict(item.split("=") for item in query.split("&"))["page"])
+                body = pages[page - 1] if page <= len(pages) else []
+                return body if isinstance(body, str) else json.dumps(body)
+            prefix = "repos/owner/name/rulesets/"
+            if path.startswith(prefix) and int(path[len(prefix):]) in rulesets:
+                return json.dumps(rulesets[int(path[len(prefix):])])
+            raise board.Failure(f"gh api failed: HTTP 404: {path}")
+
+        monkeypatch.setattr(board, "run_gh", fake)
+        config = self._config(tmp_path, gates={"merge": "auto"})
+        assert board.main(["--config", str(config), "preflight"]) == 0
+        return json.loads(capsys.readouterr().out)
+
+    def test_a_ruleset_that_this_account_cannot_bypass_keeps_the_automatic_gate(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys, [self.REQUIRED_CHECK, self.NO_FORCE_PUSH], {7: self.HELD},
+        )
+        assert out["mergeGate"] == "auto"
+
+    @pytest.mark.parametrize("bypass", ["always", "pull_requests_only", "exempt", None])
+    def test_a_ruleset_that_this_account_can_bypass_does_not_count(
+        self, tmp_path, monkeypatch, capsys, bypass
+    ):
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys, [self.REQUIRED_CHECK, self.NO_FORCE_PUSH],
+            {7: {"current_user_can_bypass": bypass}},
+        )
+        assert out["mergeGate"] == "human"
+        assert "bypass" in out["notes"][0]
+
+    def test_a_ruleset_that_cannot_be_read_does_not_count(self, tmp_path, monkeypatch, capsys):
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys, [self.REQUIRED_CHECK, self.NO_FORCE_PUSH], {},
+        )
+        assert out["mergeGate"] == "human"
+
+    def test_a_ruleset_without_a_required_check_does_not_count(self, tmp_path, monkeypatch, capsys):
+        # Requiring a pull request and blocking force pushes does not verify anything.
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys,
+            [self.NO_FORCE_PUSH, {"type": "pull_request", "ruleset_id": 7, "parameters": {}}],
+            {7: self.HELD},
+        )
+        assert out["mergeGate"] == "human"
+        assert "no ruleset requires a status check" in out["notes"][0]
+
+    def test_a_ruleset_that_allows_force_pushes_does_not_count(self, tmp_path, monkeypatch, capsys):
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys, [self.REQUIRED_CHECK], {7: self.HELD},
+        )
+        assert out["mergeGate"] == "human"
+        assert "force pushes" in out["notes"][0]
+
+    def test_the_check_and_the_force_push_block_may_come_from_different_rulesets(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys,
+            [self.REQUIRED_CHECK, {**self.NO_FORCE_PUSH, "ruleset_id": 8}], {7: self.HELD, 8: self.HELD},
+        )
+        assert out["mergeGate"] == "auto"
+
+    @pytest.mark.parametrize(
+        "force_push_rule, rulesets",
+        [
+            ({"type": "non_fast_forward", "ruleset_id": 8}, {7: {"current_user_can_bypass": "never"},
+                                                             8: {"current_user_can_bypass": "always"}}),
+            ({"type": "non_fast_forward", "ruleset_id": 8}, {7: {"current_user_can_bypass": "never"}}),
+            ({"type": "non_fast_forward"}, {7: {"current_user_can_bypass": "never"}}),
+        ],
+        ids=["bypassable", "unreadable", "no ruleset id"],
+    )
+    def test_a_force_push_block_that_this_account_can_get_around_does_not_count(
+        self, tmp_path, monkeypatch, capsys, force_push_rule, rulesets
+    ):
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys, [self.REQUIRED_CHECK, force_push_rule], rulesets,
+        )
+        assert out["mergeGate"] == "human"
+        assert "force pushes" in out["notes"][0]
+
+    @pytest.mark.parametrize(
+        "ruleset_id, rulesets",
+        [
+            (8, {7: {"current_user_can_bypass": "never"}, 8: {"current_user_can_bypass": "always"}}),
+            (8, {7: {"current_user_can_bypass": "never"}}),
+            (None, {7: {"current_user_can_bypass": "never"}}),
+        ],
+        ids=["bypassable", "unreadable", "no ruleset id"],
+    )
+    def test_a_required_check_that_this_account_can_get_around_does_not_count(
+        self, tmp_path, monkeypatch, capsys, ruleset_id, rulesets
+    ):
+        rule = {**self.REQUIRED_CHECK, "ruleset_id": ruleset_id}
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys, [rule, self.NO_FORCE_PUSH], rulesets,
+        )
+        assert out["mergeGate"] == "human"
+        assert "requires a status check" in out["notes"][0]
+
+    @pytest.mark.parametrize(
+        "parameters",
+        [
+            {"required_status_checks": True},
+            {"required_status_checks": "check"},
+            {"required_status_checks": [None]},
+            {"required_status_checks": [{}]},
+            {"required_status_checks": [{"context": ""}]},
+            {"required_status_checks": [{"context": "check"}, {}]},
+            "required_status_checks",
+            None,
+        ],
+    )
+    def test_a_required_check_in_an_unexpected_shape_does_not_count(
+        self, tmp_path, monkeypatch, capsys, parameters
+    ):
+        rule = {**self.REQUIRED_CHECK, "parameters": parameters}
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys, [rule, self.NO_FORCE_PUSH], {7: self.HELD},
+        )
+        assert out["mergeGate"] == "human"
+
+    @pytest.mark.parametrize("body", ["not json", json.dumps({"message": "unexpected"})])
+    def test_rules_that_cannot_be_read_do_not_count(self, tmp_path, monkeypatch, capsys, body):
+        out = self._preflight_with_rulesets(tmp_path, monkeypatch, capsys, [body], {7: self.HELD})
+        assert out["mergeGate"] == "human"
+
+    def test_a_ruleset_from_the_organization_is_read_through_the_repository(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        # The organization's own endpoint needs organization administration; the repository's does not.
+        source = {"ruleset_source_type": "Organization", "ruleset_source": "owner"}
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys,
+            [{**self.REQUIRED_CHECK, **source}, {**self.NO_FORCE_PUSH, **source}], {7: self.HELD},
+        )
+        assert out["mergeGate"] == "auto"
+
+    def test_more_rules_than_are_read_is_reported_as_unreadable_not_as_unprotected(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        filler = [{"type": "creation", "ruleset_id": 9}] * board.RULES_PAGE_SIZE
+        pages = [filler] * board.RULES_PAGE_LIMIT + [[self.REQUIRED_CHECK, self.NO_FORCE_PUSH]]
+        out = self._preflight_with_rulesets(tmp_path, monkeypatch, capsys, pages, {7: self.HELD})
+        assert out["mergeGate"] == "human"
+        assert "could not be read" in out["notes"][0]
+        assert "no ruleset requires" not in out["notes"][0]
+
+    def test_rules_on_the_last_page_that_is_read_are_found(self, tmp_path, monkeypatch, capsys):
+        filler = [{"type": "creation", "ruleset_id": 9}] * board.RULES_PAGE_SIZE
+        pages = [filler] * (board.RULES_PAGE_LIMIT - 1) + [[self.REQUIRED_CHECK, self.NO_FORCE_PUSH]]
+        out = self._preflight_with_rulesets(tmp_path, monkeypatch, capsys, pages, {7: self.HELD})
+        assert out["mergeGate"] == "auto"
+
+    def test_rules_beyond_the_first_page_are_found(self, tmp_path, monkeypatch, capsys):
+        filler = [{"type": "creation", "ruleset_id": 9}] * board.RULES_PAGE_SIZE
+        out = self._preflight_with_rulesets(
+            tmp_path, monkeypatch, capsys, [filler, [self.REQUIRED_CHECK, self.NO_FORCE_PUSH]], {7: self.HELD},
+        )
+        assert out["mergeGate"] == "auto"
+
     def test_missing_config_stops_the_run(self, tmp_path, capsys):
         assert board.main(["--config", str(tmp_path / "absent.json"), "preflight"]) == 1
         assert "not found" in capsys.readouterr().err
