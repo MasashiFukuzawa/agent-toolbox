@@ -67,7 +67,7 @@ The remaining toolbox skills (`behavioral-testing`, `ai-native-engineering`, `ad
 | What | Where | Reach |
 |---|---|---|
 | Delegated scope (team) | A section of the project instruction file | Everyone who uses the repository |
-| Merge and production gates | `.agents/autopilot.json` | Same |
+| Merge and production gates, with per-person overrides | `.agents/autopilot.json` (`gates`, `actorOverrides`) | Same; a session's gates follow the GitHub account it is authenticated as |
 | Delegated scope (personal) | `<git-common-dir>/info/delegation.md` | One machine, all worktrees of the repository |
 | Goal pages | `~/Documents/agent-artifacts/<project>/` | One machine, outside the repository |
 | Goal marks and delivery records | `~/.local/state/human-notify/` | One machine, one mark per worktree |
