@@ -44,6 +44,12 @@ How a session decides, in order:
 2. An operation the person delegated explicitly (object, operation, condition): do it when the condition holds, even if its effect is wide, such as a merge.
 3. Anything else: decide only if it is small, reversible, and not on the must-ask list. Otherwise ask.
 
+One rule sits across that order: **a write outside the project is a person's decision.** It means creating, changing, or deleting something in a place other people can see, other than the repository being worked on and its product's deployment targets: another repository, a public venue, an external service, mail or chat, a shared document or setting. A session does it without asking only when the person asked for that operation directly, or the delegated scope, the agreement for the goal, or the project configuration names the destination and the operation. Three things keep this from turning into a stream of questions that get approved unread:
+
+- If the goal can be accepted without the write, the session neither asks nor recommends it. It leaves a draft, records that it did not go out, and continues.
+- If the goal needs it, the question names the operation itself in its first sentence: what is created, changed, or deleted, where, under whose name, who can see it, and whether it can be undone. One approval covers one destination and one text.
+- A complaint about being asked is not permission. A rule that relaxes a must-ask item exists only once the person has stated it or agreed to the exact line, and it does not cover the operation that prompted it.
+
 When a session stops it says how: done, waiting for a decision, waiting for a human action, waiting on something external, or interrupted, each with the condition for resuming. Handing something to the person does not count as done.
 
 ## Which skill owns what

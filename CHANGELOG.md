@@ -4,6 +4,14 @@ Changes that people who installed the plugins need to know about. Each plugin (`
 
 After updating a plugin, restart running sessions: a session keeps the plugin version it started with.
 
+## toolbox 0.22.0 (2026-11-15)
+
+- **A write outside the project is a person's decision.** `autopilot`, the delegated-scope template, and the global instructions define it as creating, changing, or deleting something in a place other people can see, other than the repository being worked on and its product's deployment targets (another repository, a public venue, an external service, mail or chat, a shared document or setting). Reading, queries to another model, and unshared local files are not affected. A session does it without asking only when the person asked for that operation directly, or the delegated scope, the agreement for the goal, or the project configuration names the destination and the operation; a configured task source delegates status updates and notes on the session's own tasks.
+- A session no longer asks about, or recommends, an outside write that the goal does not need. It leaves a draft and records on the goal page that it did not go out.
+- `human-briefing` has a form for asking approval of an outside or irreversible operation: the heading and the first sentence name the operation itself (what is created, changed, or deleted, where, under whose name, who can see it, whether it can be undone), a recommendation to do it must say what cannot be achieved otherwise, and one request covers one destination and one text.
+- A complaint about being asked is not treated as permission. A rule that relaxes a must-ask item is recorded only after the person stated it or agreed to the exact line, and it does not cover the operation that prompted it.
+- If your delegated scope listed only "sending or publishing outside" under must-ask, review it: changing settings and deleting things in outside services are now covered too. A delegation under "may do without asking" that names the destination and the operation takes precedence over the broad must-ask line.
+
 ## toolbox 0.21.0 (2026-11-15)
 
 - `autopilot` preflight now recognizes repository and organization rulesets as well as classic branch protection. Automatic merge stays on when either one provides all three: a required status check, no force pushes, and no bypass. For a classic rule that means `enforce_admins`. For rulesets it means that the account about to merge cannot bypass the ruleset that requires the check or the one that blocks force pushes (`current_user_can_bypass: never`); other accounts are not examined. A ruleset the account can bypass or that cannot be read, and a rule in an unexpected shape, do not count. This removes the limit noted under 0.20.2.
