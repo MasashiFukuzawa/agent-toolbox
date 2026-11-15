@@ -4,6 +4,11 @@ Changes that people who installed the plugins need to know about. Each plugin (`
 
 After updating a plugin, restart running sessions: a session keeps the plugin version it started with.
 
+## toolbox 0.20.2 (2026-11-15)
+
+- `autopilot` now says to act on the gates that `preflight` returns (`mergeGate`, `deployGate`), not on the values in the configuration file. `preflight` returns a human merge gate when the base branch has no branch protection with required status checks, enforcement for administrators, and force pushes disabled, even if the configuration asks for automatic merge. A review of a repository's instructions had found a merge condition written from the configured value alone.
+- Known limit: `preflight` reads classic branch protection only. A base branch protected only by repository rulesets, without classic branch protection, is reported as unprotected, so automatic merge stays off there.
+
 ## toolbox 0.20.1 (2026-11-15)
 
 - `autopilot` and the delegated-scope template now describe per-person gates (`actorOverrides` in `.agents/autopilot.json`): the default `gates` apply to everyone, and named GitHub accounts can be given a different value. Setting the default to a person's approval and granting automatic merge or deploy to named accounts keeps unlisted accounts on the safe side. The feature already existed; the rewritten instructions had stopped mentioning it.

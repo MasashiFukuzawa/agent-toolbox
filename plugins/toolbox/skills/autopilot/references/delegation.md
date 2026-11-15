@@ -31,7 +31,7 @@
 | 置き場 | 入れるもの | 読まれ方 |
 |---|---|---|
 | 案件の指示ファイル | チームで共有してよい決まり | ホストが自動で読む。worktreeは、最新の既定ブランチから作る |
-| `.agents/autopilot.json` | マージと本番への反映が自動か人の承認か（`gates`）、人ごとの上書き（`actorOverrides`）、タスクの取り方 | `autopilot_board.py preflight` で読む |
+| `.agents/autopilot.json` | マージと本番への反映が自動か人の承認か（`gates`）、人ごとの上書き（`actorOverrides`）、タスクの取り方 | `autopilot_board.py preflight` で読む。従うのは、`preflight` が返す値（`mergeGate`・`deployGate`） |
 | `<git-common-dir>/info/delegation.md` | 自分だけの決まり | autopilotが開始時に読む。そのPCの、同じリポジトリのworktreeで共有される |
 
 - 個人の決まりで、チームの決まりを緩めない。食い違う時は、チームの決まりに従い、人に伝える。
