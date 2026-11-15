@@ -22,7 +22,7 @@ description: >-
 始める前に、この案件で任されている範囲を確かめる。
 
 - 案件の指示ファイル（`AGENTS.md` など）の「任せる範囲」（英語の指示ファイルでは Delegated scope）。聞かずにやってよいこと、必ず聞くこと、検査とマージの決まりが書かれている。
-- 案件の設定 `.agents/autopilot.json`。あれば、対象のリポジトリを作業ディレクトリにしたまま `python3 <このスキルのdirectory>/scripts/autopilot_board.py preflight` を実行し、マージと本番への反映が自動か人の承認か、案件の注意書きを読む。**判断に使うのは、設定ファイルの `gates` の値ではなく、`preflight` が返す `mergeGate` と `deployGate` である。** 基準ブランチに、必須のチェック・管理者への適用・強制pushの禁止が揃ったブランチ保護が無いと、設定が自動でも `mergeGate` は人の承認になり、理由が `notes` に出る。マージの直前にも実行し直して確かめる。設定の形は [config.example.json](references/config.example.json)。設定は、いまいるリポジトリのものだけを使う。
+- 案件の設定 `.agents/autopilot.json`。あれば、対象のリポジトリを作業ディレクトリにしたまま `python3 <このスキルのdirectory>/scripts/autopilot_board.py preflight` を実行し、マージと本番への反映が自動か人の承認か、案件の注意書きを読む。**判断に使うのは、設定ファイルの `gates` の値ではなく、`preflight` が返す `mergeGate` と `deployGate` である。** 自動のマージを許すのは、マージするセッションとは別のものが、悪いマージを止められる時だけである。基準ブランチに、必須のチェック・強制pushの禁止・迂回できないこと、の3つが揃った保護が要る。従来のブランチ保護（管理者にも適用）でも、ルールセット（いま認証しているアカウントが迂回できない）でもよい。揃っていないと、設定が自動でも `mergeGate` は人の承認になり、足りないものが `notes` に出る。保護の設定を自分で変えて自動にしない。マージの直前にも実行し直して確かめる。設定の形は [config.example.json](references/config.example.json)。設定は、いまいるリポジトリのものだけを使う。
 - 個人の決まり。`git rev-parse --path-format=absolute --git-common-dir` で得たdirectoryの `info/delegation.md` にあれば読む（worktreeの間で共有される、そのPCだけの置き場）。チームの決まりより緩い内容は採らない。
 - どこにも無ければ、[雛形](references/delegation.md) を元に下書きし、合意の時に人に見せる。決まるまでは、雛形の「必ず聞くこと」を使う。
 - マージと本番への反映は、書かれた決まりに従う。自動でよいと書かれていなければ、人の承認を待つ。

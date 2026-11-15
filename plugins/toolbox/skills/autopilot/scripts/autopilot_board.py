@@ -246,8 +246,8 @@ def cmd_preflight(args: argparse.Namespace) -> dict[str, Any]:
     return result
 
 
-def branch_protection_state(repo: str, branch: str) -> tuple[bool, list[str]]:
-    """Whether the branch can enforce an unattended merge, and why not when it cannot.
+def classic_protection_state(repo: str, branch: str) -> tuple[bool, list[str]]:
+    """Protection from a classic branch protection rule.
 
     A missing or inaccessible protection endpoint is itself an answer: 404 means the
     branch is unprotected, 403 means the plan does not offer protection for this
@@ -263,6 +263,113 @@ def branch_protection_state(repo: str, branch: str) -> tuple[bool, list[str]]:
             return False, ["branch protection is not available for this repository"]
         raise
     return protection_is_enforced(json.loads(raw))
+
+
+RULES_PAGE_SIZE = 100
+RULES_PAGE_LIMIT = 10
+
+
+def _branch_rules(repo: str, branch: str) -> list[dict[str, Any]]:
+    """Every active rule that applies to the branch, from repository and parent rulesets."""
+    rules: list[dict[str, Any]] = []
+    for page in range(1, RULES_PAGE_LIMIT + 1):
+        batch = json.loads(run_gh([
+            "api", f"repos/{repo}/rules/branches/{branch}?per_page={RULES_PAGE_SIZE}&page={page}",
+        ]))
+        if not isinstance(batch, list):
+            raise ValueError("the rules for the branch are not a list")
+        rules.extend(rule for rule in batch if isinstance(rule, dict))
+        if len(batch) < RULES_PAGE_SIZE:
+            return rules
+    # Stopping here would report "no required check" for a branch whose rule is further on.
+    raise ValueError(f"more than {RULES_PAGE_SIZE * RULES_PAGE_LIMIT} rules apply to the branch")
+
+
+def _requires_a_check(rule: dict[str, Any]) -> bool:
+    """Whether the rule names at least one status check, in the shape the API documents."""
+    if rule.get("type") != "required_status_checks":
+        return False
+    parameters = rule.get("parameters")
+    checks = parameters.get("required_status_checks") if isinstance(parameters, dict) else None
+    return (
+        isinstance(checks, list) and bool(checks)
+        and all(
+            isinstance(check, dict) and isinstance(check.get("context"), str) and check["context"].strip()
+            for check in checks
+        )
+    )
+
+
+def ruleset_protection_state(repo: str, branch: str) -> tuple[bool, list[str]]:
+    """Protection from repository or organization rulesets that apply to the branch.
+
+    The same three things as for a classic rule: a required status check, no force
+    pushes, and no way around either for the account that is about to merge. A ruleset
+    this account may bypass stops nobody who runs as this account, so a rule from it
+    does not count -- for the status check and for the force-push block alike.
+    """
+    try:
+        rules = _branch_rules(repo, branch)
+    except Failure as exc:
+        message = str(exc)
+        if "404" in message or "Not Found" in message or "403" in message:
+            return False, ["no ruleset applies to the branch"]
+        raise
+    except ValueError as exc:
+        return False, [f"the rules for the branch could not be read ({exc})"]
+
+    held: dict[Any, bool] = {}
+
+    def holds(rule: dict[str, Any]) -> bool:
+        ruleset_id = rule.get("ruleset_id")
+        if not isinstance(ruleset_id, int) or isinstance(ruleset_id, bool):
+            return False
+        if ruleset_id not in held:
+            held[ruleset_id] = _cannot_bypass(repo, ruleset_id)
+        return held[ruleset_id]
+
+    requiring = [rule for rule in rules if _requires_a_check(rule)]
+    blocking = [rule for rule in rules if rule.get("type") == "non_fast_forward"]
+    reasons = []
+    if not requiring:
+        reasons.append("no ruleset requires a status check")
+    elif not any(holds(rule) for rule in requiring):
+        reasons.append("this account can bypass every ruleset that requires a status check")
+    if not blocking:
+        reasons.append("no ruleset blocks force pushes")
+    elif not any(holds(rule) for rule in blocking):
+        reasons.append("this account can bypass every ruleset that blocks force pushes")
+    return not reasons, reasons
+
+
+def _cannot_bypass(repo: str, ruleset_id: int) -> bool:
+    """Whether the current account is held to the ruleset.
+
+    Read through the repository, which also serves rulesets configured above it and
+    needs no organization administration permission. Anything short of a clear
+    "never" -- an unreadable ruleset, a missing field -- is treated as bypassable:
+    the merge gate must not rest on a guess.
+    """
+    try:
+        ruleset = json.loads(run_gh(["api", f"repos/{repo}/rulesets/{ruleset_id}?includes_parents=true"]))
+    except (Failure, ValueError):
+        return False
+    return isinstance(ruleset, dict) and ruleset.get("current_user_can_bypass") == "never"
+
+
+def branch_protection_state(repo: str, branch: str) -> tuple[bool, list[str]]:
+    """Whether the branch can enforce an unattended merge, and why not when it cannot.
+
+    GitHub protects a branch through a classic branch protection rule, through
+    rulesets, or both. Either one that meets every condition on its own is enough.
+    """
+    classic_ok, classic_reasons = classic_protection_state(repo, branch)
+    if classic_ok:
+        return True, []
+    ruleset_ok, ruleset_reasons = ruleset_protection_state(repo, branch)
+    if ruleset_ok:
+        return True, []
+    return False, classic_reasons + [f"rulesets: {reason}" for reason in ruleset_reasons]
 
 
 def cmd_next_task(args: argparse.Namespace) -> dict[str, Any]:
