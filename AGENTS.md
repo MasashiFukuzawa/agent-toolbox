@@ -26,7 +26,7 @@ This section is what `autopilot` reads as the delegated scope for this repositor
 
 - Removing or renaming a plugin or a skill, and any other change that breaks compatibility for people who installed the plugins.
 - Changing what a hook or a script does on users' machines beyond the stated goal.
-- Publishing outside this repository, and anything that needs credentials.
+- Creating, changing, or deleting anything outside this repository (another repository, a public venue, an external service), and anything that needs credentials other than the Git and GitHub access used for this repository's branches and pull requests.
 
 ### Checks and merge
 
