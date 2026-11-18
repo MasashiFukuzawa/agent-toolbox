@@ -4,28 +4,30 @@
 
 | Provider | モデルID | effort初期値 | 主な初期候補用途 |
 |---|---|---|---|
-| OpenAI | `gpt-6.1-sol` | `low` | 設計済みの実装、範囲の明確な調査・差分レビュー。力の入れ具合はeffortで調整する（下記） |
-| OpenAI | `gpt-6-astra` | `low` | ゴールを進めるセッション、特に難しい横断判断。明示指定または選択権限が必要 |
+| OpenAI | `gpt-6.2-sol` | `low` | 設計済みの実装、範囲の明確な調査・差分レビュー。力の入れ具合はeffortで調整する（下記） |
+| OpenAI | `gpt-6.2-astra` | `low` | ゴールを進めるセッション、特に難しい横断判断。明示指定または選択権限が必要 |
 | Anthropic | `claude-sonnet-5-5` | `medium` | 設計済みの実装、範囲の明確な調査・差分レビュー |
 | Anthropic | `claude-opus-5-5` | `low` | 設計判断、高い不確実性、複雑な実装、ゴールを進めるセッション |
 | Anthropic | `claude-fable-5-2` | `low` | 特に難しい長時間課題。明示指定または選択権限が必要 |
 
-providerのみ指定された通常レビューは、そのproviderの表の先頭を初期候補とする。設計そのものが対象、不確実性が高い、拠り所の設計がない場合、OpenAIは上記のeffort段階を、Anthropicは次の候補を検討する。ゴールを進めるセッションに必ず特定モデルを要求する表ではない。
+providerのみ指定された通常レビューは、そのproviderの表の先頭を初期候補とする。設計そのものが対象、不確実性が高い、拠り所の設計がない場合、OpenAIは下記のeffort段階を、Anthropicは次の候補を検討する。ゴールを進めるセッションに必ず特定モデルを要求する表ではない。
 
 モデル指定はfamily/tierを尊重し、版付き指定もこの表の最新の同系列IDへ解決する（既存review skillの方針を維持）。指定版と異なる場合は起動前に置換を伝える。系列の変更はしない。表にない系列や利用不能なIDは推測せず確認する。ユーザーが旧版への固定自体を要件として明示した場合は、この既定との衝突を説明して解決してから起動する。
 
-OpenAIのリリース発表（2026-09-30）とAPIモデルページでGPT-6.1 SolのAPI ID `gpt-6.1-sol`（ハイフン区切りではなくドット）、Codexでの提供、対応effort `low`/`medium`（API既定）/`high`/`xhigh`/`max`（`none`/`minimal`は非対応）を確認: <https://openai.com/index/introducing-gpt-6-1-sol/>, <https://developers.openai.com/api/docs/models/gpt-6.1-sol>. `gpt-6-sol`はこの版で置き換え、`sol`指定は`gpt-6.1-sol`へ解決する。API既定の`medium`ではなく`low`を初期値とする。`gpt-6-luna`は運用上の品質不足のため候補から外した。`luna`を指定された場合は表にない系列として扱い、黙って`sol`へ置換せず確認する。
+`sol` と `astra` はそれぞれ `gpt-6.2-sol` と `gpt-6.2-astra` に解決する。初期値は両方とも `low` とする。`luna` は候補外の系列として扱い、指定されたら確認する。
+
+OpenAIのAPI変更履歴（2026-11-17）で両モデルのIDを確認した。Codexのモデル一覧（2026-11-18確認）では、両モデルとも `low` / `medium` / `high` / `xhigh` / `max` / `ultra` に対応する。利用するホストで選べるeffortを起動前に確かめる。<https://developers.openai.com/api/docs/changelog>
 
 ## OpenAI: effortによるレビュー強度
 
-OpenAIではモデルを`gpt-6.1-sol`に固定し、まずeffortでレビュー・調査の力の入れ具合を変える。`gpt-6-astra`への変更はeffortを上げても横断判断が足りない場合に限る。
+OpenAIの通常レビュー・調査は `gpt-6.2-sol` から始め、必要に応じてeffortを上げる。通常レビューで Sol から `gpt-6.2-astra` への自動切り替えを検討するのは、effortを上げても横断判断が足りず、Astraを含む選択権限がある場合に限る。
 
 | effort | 使う場面 |
 |---|---|
 | `low` | 既定。設計済みの差分レビュー、範囲の明確な実装・調査 |
 | `medium` | 設計判断そのものが対象、不確実性が高い、拠り所の設計がない |
 | `high` | 不可逆操作・セキュリティ境界・広範囲への影響など、見落としの影響が大きく理由を記録できる場合 |
-| `xhigh` / `max` | 明示指定または明示的な選択権限がある場合のみ |
+| `xhigh` / `max` / `ultra` | 明示指定または明示的な選択権限がある場合のみ |
 
 Anthropicのリリース発表（2026-09-28）でSonnet 5.5のAPI ID `claude-sonnet-5-5` と提供開始を確認: <https://www.anthropic.com/claude-sonnet-5-5>.
 
