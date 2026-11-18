@@ -4,6 +4,10 @@ Changes that people who installed the plugins need to know about. Each plugin (`
 
 After updating a plugin, restart running sessions: a session keeps the plugin version it started with.
 
+## toolbox 0.22.1 (2026-11-18)
+
+- `model-selection` now resolves Sol and Astra requests to GPT-6.2 Sol and GPT-6.2 Astra, respectively. Both start at low effort. When a request explicitly requires an older version, resolve the version requirement with the user before launch.
+
 ## toolbox 0.22.0 (2026-11-15)
 
 - **A write outside the project is a person's decision.** `autopilot`, the delegated-scope template, and the global instructions define it as creating, changing, or deleting something in a place other people can see, other than the repository being worked on and its product's deployment targets (another repository, a public venue, an external service, mail or chat, a shared document or setting). Reading, queries to another model, and unshared local files are not affected. A session does it without asking only when the person asked for that operation directly, or the delegated scope, the agreement for the goal, or the project configuration names the destination and the operation; a configured task source delegates status updates and notes on the session's own tasks.
