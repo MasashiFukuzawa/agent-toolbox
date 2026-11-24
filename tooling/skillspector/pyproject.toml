@@ -9,4 +9,4 @@ dependencies = ["skillspector"]
 package = false
 
 [tool.uv.sources]
-skillspector = { git = "https://github.com/NVIDIA/skillspector", tag = "v2.13.4" }
+skillspector = { git = "https://github.com/NVIDIA/skillspector", tag = "v2.13.6" }
